@@ -1190,6 +1190,8 @@ class SolveOptions:
 
     # Time-stepping (híbrido)
     time_step: float = 1e-5
+    # Internal numerical policy; the campaign selects this by mechanism.
+    pseudo_time_method: str = "ptc-ser"  # "ptc-ser" | "backward-euler"
     time_step_grow: float = 1.5
     time_step_shrink: float = 0.5
     time_step_factor: float | None = None
@@ -1279,6 +1281,8 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
     Newton estacionario convergido (como el callback steady en Cantera).
     Devuelve (x, converged, history).
     """
+    if opts.pseudo_time_method not in ("ptc-ser", "backward-euler"):
+        raise ValueError("pseudo_time_method must be ptc-ser or backward-euler")
     x = np.asarray(x0, dtype=float).copy()
     history: list[dict] = []
     trace_enabled = bool(getattr(opts, "trace_solver", False))
@@ -1525,8 +1529,9 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
 
             # One linearly implicit PTC-SER correction. A rejected step
             # falls back to a fully converged Backward Euler subproblem.
-            use_ptc = successive_failures == 0
-            scheme = "PTC-SER" if use_ptc else "BE-fallback"
+            use_ptc = opts.pseudo_time_method == "ptc-ser" and successive_failures == 0
+            scheme = ("PTC-SER" if use_ptc else
+                      "BE-direct" if opts.pseudo_time_method == "backward-euler" else "BE-fallback")
 
             jac_evals_before = int(jac.n_evals) if jac is not None else 0
 

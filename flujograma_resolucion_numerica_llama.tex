@@ -1,0 +1,23 @@
+% !TeX program = pdflatex
+% Compilar desde la raíz del proyecto TFM.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{lmodern,amsmath,amssymb,bm,tikz,hyperref}
+\usepackage[a3paper,landscape,margin=18mm]{geometry}
+\usetikzlibrary{arrows.meta,shapes.geometric,babel}
+\definecolor{azulTFM}{HTML}{155C8A}
+\definecolor{verdeTFM}{HTML}{2D7F5E}
+\definecolor{naranjaTFM}{HTML}{D97706}
+\newcommand{\vect}[1]{\bm{#1}}
+\pagestyle{empty}
+\begin{document}
+\centering
+{\LARGE\bfseries Resolución numérica de la llama\par}
+\vspace{3mm}
+{\large Esquema global de KFLAME: del estado inicial a la aceptación\par}
+\vspace{5mm}
+\input{.local/research/thesis/figuras/flujograma_resolucion_numerica_llama.tikz.tex}
+
+\end{document}

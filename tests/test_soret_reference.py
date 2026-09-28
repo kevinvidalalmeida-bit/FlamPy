@@ -54,6 +54,26 @@ def _case(*, soret: bool, transport: str = "multicomponent"):
 
 
 class SoretReferenceTransportTests(unittest.TestCase):
+    def test_direct_euler_never_attempts_ptc_and_returns_to_steady_newton(self):
+        p = FreeFlameProblem(_case(soret=True), n_points=4)
+        p.solve_energy = True
+        x = p.make_initial_guess()
+        opts = SolveOptions(verbose=False, pseudo_time_method='backward-euler',
+                            time_step_sequence=(1,), max_time_step_count=2)
+        calls = []
+        def newton(fun, state, problem, **kw):
+            calls.append(kw)
+            ok = kw['rdt'] > 0 or len(calls) >= 3
+            return state, ok, [{'status':'ok' if ok else 'no_damp','normF':10.,'s1':.1}], None
+        with patch('kflame.flame.solver.newton_solve',side_effect=newton), \
+             patch('kflame.flame.solver._residual_inf',return_value=10.):
+            _, ok, history = _hybrid_newton(p,x,opts)
+        self.assertTrue(ok)
+        self.assertEqual([bool(c['rdt']) for c in calls],[False,True,False])
+        self.assertFalse(calls[1]['residual_damping'])
+        self.assertEqual(calls[1]['max_iter'],opts.transient_max_iter)
+        self.assertEqual([h['scheme'] for h in history if h['phase']=='transient'],['BE-direct'])
+
     def test_removed_experimental_options_fail_explicitly(self):
         for name, value in (("transient_scheme", "ptc-auto"),
                             ("newton_fixed_weights", True)):
