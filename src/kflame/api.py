@@ -174,12 +174,17 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  ratio=2.5, slope=0.04, curve=0.08, prune=0.003, max_points=1600,
                  max_time=180.0, output=None, plots=False, verbose=False, export=True,
                  species=('CO2', 'H2O'), progress_species='CO2:1.0,H2O:1.0,CO:1.0,H2:0.5',
-                 progress_points=241):
+                 progress_points=241, adaptive_phi=False, target_defect=0.01,
+                 max_bridges_per_round=10, max_adaptive_rounds=64,
+                 max_flamelets=256):
     """Generate a native FGM with adaptive c coordinates and certified flames.
 
     Output contains the full NPZ table, raw profiles, metadata, optional
     FlameMaster/CSV tables and the established FGM figures. Composition is
-    parameterized by phis and mole-basis fuel/oxidizer streams. Returns Path.
+    parameterized by phis and mole-basis fuel/oxidizer streams. With
+    adaptive_phi=True, phis are the initial certified flamelets and logarithmic
+    bridge flamelets are solved until the leave-one-out defect reaches
+    target_defect. Returns Path.
     """
     from kflame.fgm.generate import main
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
@@ -191,6 +196,15 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     phis = np.asarray(phis, dtype=float)
     if phis.ndim != 1 or phis.size < 2 or not np.isfinite(phis).all() or np.any(phis <= 0) or np.any(np.diff(phis) <= 0):
         raise ValueError('phis must contain at least two finite, positive, strictly increasing values')
+    if adaptive_phi:
+        if phis.size < 3:
+            raise ValueError('adaptive_phi requires at least three initial phis')
+        if not np.isfinite(target_defect) or target_defect <= 0:
+            raise ValueError('target_defect must be finite and positive')
+        if not all(isinstance(value, int) and value >= minimum for value, minimum in (
+            (max_bridges_per_round, 1), (max_adaptive_rounds, 0), (max_flamelets, phis.size)
+        )):
+            raise ValueError('Invalid adaptive FGM refinement limits')
     mech = load_mechanism(resolve_mechanism(str(mechanism)))
     fresh_mixture(mech, float(phis[0]), _stream(fuel), _stream(oxidizer))
     if plots:
@@ -198,11 +212,25 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
             raise ValueError('FGM plots require two species present in the mechanism')
         from kflame.fgm.plot import main as plot
     folder = _output(output, 'fgm')
-    main([*argv, '--fuel', _stream(fuel), '--oxidizer', _stream(oxidizer),
-          '--phi-values', ','.join(map(str, phis)), '--save-raw-profiles',
-          '--disable-seed-cache', '--parallel-workers', '1',
-          '--progress-species', progress_species, '--n-c', str(progress_points),
-          '--output-root', str(folder.parent), '--run-name', folder.name])
+    command = [*argv, '--fuel', _stream(fuel), '--oxidizer', _stream(oxidizer),
+               '--phi-values', ','.join(map(str, phis)), '--save-raw-profiles',
+               '--disable-seed-cache', '--parallel-workers', '1',
+               '--progress-species', progress_species, '--n-c', str(progress_points),
+               '--output-root', str(folder.parent), '--run-name', folder.name]
+    if adaptive_phi:
+        from kflame.fgm.adaptive import build_adaptive_fgm
+        from kflame.fgm.generate import build_argparser
+        build_adaptive_fgm(
+            args=build_argparser().parse_args(command),
+            initial_phis=phis,
+            output_dir=folder,
+            target_defect=target_defect,
+            max_bridges_per_round=max_bridges_per_round,
+            max_rounds=max_adaptive_rounds,
+            max_flames=max_flamelets,
+        )
+    else:
+        main(command)
     meta = json.loads((folder / 'metadata.json').read_text(encoding='utf-8'))
     if not meta['all_final_accepted'] or not meta['table_validation']['valid']:
         raise RuntimeError(f'FGM failed acceptance or table validation; diagnostics: {folder}')

@@ -16,8 +16,8 @@ import kflame
 
 
 # %% FGM CASE CONFIGURATION
-# These are the five requested flamelets that start the adaptive thesis family.
-# A production adaptive campaign inserts bridge flamelets until its defect target.
+# These five flamelets start the adaptive family.  The solver adds and resolves
+# logarithmic bridge flamelets until the interpolation-defect target is met.
 FGM_CASE = {
     "mechanism": "gri30.yaml",  # Or "h2o2.yaml" with fuel="H2".
     "fuel": "CH4",
@@ -28,9 +28,15 @@ FGM_CASE = {
     "width": 0.03,  # Initial domain width [m].
     "transport": "mixture-averaged",  # Or "multicomponent".
     "soret": False,  # Thermal diffusion; requires multicomponent transport.
-    "progress_species": "CO2:1.0,H2O:1.0",  # Weighted progress variable.
+    # C4: the validated CH4 progress variable used in the thesis workflow.
+    "progress_species": "CO2:1.0,H2O:1.0,CO:1.0,H2:0.5",
     "progress_points": 241,  # Number of adaptive c points.
-    "verbose": True,  # Show flamelet progress in the console.
+    "adaptive_phi": True,
+    "target_defect": 0.01,  # 1% leave-one-out interpolation defect.
+    "max_bridges_per_round": 10,
+    # The FGM generator always prints one summary per flamelet.  Keep the
+    # nonlinear solver trace disabled so the console remains readable.
+    "verbose": False,
     "output": None,  # Or Path("runs/my_fgm_table").
 }
 
@@ -40,7 +46,7 @@ PLOT_SPECIES = ("CO2", "H2O")
 # %% BUILD, LOAD, AND SAVE NUMERICAL DATA
 print("[1/3] Building the FGM table...", flush=True)
 started = time.perf_counter()
-output_dir = Path(kflame.generate_fgm(**FGM_CASE, export=True, plots=False))
+output_dir = Path(kflame.generate_fgm(**FGM_CASE, export=False, plots=False))
 print(f"[1/3] FGM table accepted in {time.perf_counter() - started:.1f} s.", flush=True)
 
 print("[2/3] Loading arrays and writing the numerical matrix...", flush=True)
