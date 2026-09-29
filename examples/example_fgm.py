@@ -10,6 +10,8 @@ from pathlib import Path
 import time
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import numpy as np
 
 import kflame
@@ -40,7 +42,8 @@ FGM_CASE = {
     "output": None,  # Or Path("runs/my_fgm_table").
 }
 
-PLOT_SPECIES = ("CO2", "H2O")
+# The fields below reproduce the CH4/air manifold layout used in the thesis.
+PLOT_SPECIES = ("CO2", "CO")
 
 
 # %% BUILD, LOAD, AND SAVE NUMERICAL DATA
@@ -51,22 +54,31 @@ print(f"[1/3] FGM table accepted in {time.perf_counter() - started:.1f} s.", flu
 
 print("[2/3] Loading arrays and writing the numerical matrix...", flush=True)
 with np.load(output_dir / "fgm_table.npz", allow_pickle=False) as data:
-    phi = data["phi_grid"]
-    burning_velocity = data["Su"]
     mixture_fraction = data["Z_grid"]
     progress = data["c_grid"]
     temperature = data["T"]
+    velocity = data["u"]
     density = data["rho"]
+    conductivity = data["conductivity"]
     heat_release = data["qdot"]
+    progress_source = data["omega_c"]
     species_names = data["species_names"].astype(str).tolist()
     species_indices = [species_names.index(name) for name in PLOT_SPECIES]
     mass_fractions = data["Y"][:, species_indices, :]
 
-# One matrix row corresponds to one FGM state (Z, c).
+# Z_star labels the flamelet family independently of the chosen phi values.
+z_span = mixture_fraction[-1] - mixture_fraction[0]
+if z_span <= 0.0:
+    raise RuntimeError("The FGM mixture-fraction coordinate must be increasing.")
+mixture_fraction_star = (mixture_fraction - mixture_fraction[0]) / z_span
+
+# One matrix row corresponds to one FGM state (Z, Z_star, c).
 Z_matrix, c_matrix = np.meshgrid(mixture_fraction, progress, indexing="ij")
+Z_star_matrix, _ = np.meshgrid(mixture_fraction_star, progress, indexing="ij")
 fgm_matrix = np.column_stack(
     (
         Z_matrix.ravel(),
+        Z_star_matrix.ravel(),
         c_matrix.ravel(),
         temperature.ravel(),
         density.ravel(),
@@ -74,7 +86,9 @@ fgm_matrix = np.column_stack(
         *(mass_fractions[:, index, :].ravel() for index in range(len(PLOT_SPECIES))),
     )
 )
-matrix_header = ",".join(("Z", "c", "T_K", "rho_kg_m3", "qdot_W_m3", *PLOT_SPECIES))
+matrix_header = ",".join(
+    ("Z", "Z_star", "c", "T_K", "rho_kg_m3", "qdot_W_m3", *PLOT_SPECIES)
+)
 np.savetxt(
     output_dir / "fgm_matrix.csv",
     fgm_matrix,
@@ -87,24 +101,63 @@ np.savetxt(
 # %% PLOTS
 # Modify this section freely: it uses only the arrays loaded above.
 print("[3/3] Creating plots...", flush=True)
-figure, axes = plt.subplots(2, 2, figsize=(10, 7), layout="constrained")
+figure, axes = plt.subplots(4, 2, figsize=(10, 13), layout="constrained")
+profile_colormap = plt.get_cmap("turbo")
 
-plot_fields = (
-    (temperature, "Temperature [K]"),
-    (heat_release, "Heat release [W m$^{-3}$]"),
-    (mass_fractions[:, 0, :], f"{PLOT_SPECIES[0]} mass fraction"),
+profile_fields = (
+    ("Temperature", temperature, "T [K]"),
+    ("Local velocity", velocity, "u [m s$^{-1}$]"),
+    ("Carbon dioxide", mass_fractions[:, 0, :], r"$Y_{CO_2}$ [kg kg$^{-1}$]"),
+    ("Carbon monoxide", mass_fractions[:, 1, :], r"$Y_{CO}$ [kg kg$^{-1}$]"),
 )
-for axis, (field, title) in zip(axes.flat[:3], plot_fields, strict=True):
-    mesh = axis.pcolormesh(progress, mixture_fraction, field, shading="auto")
-    axis.set(xlabel="Progress variable, c", ylabel="Mixture fraction, Z", title=title)
-    figure.colorbar(mesh, ax=axis)
+map_fields = (
+    ("Density", density, r"$\rho$ [kg m$^{-3}$]", "viridis"),
+    ("Thermal conductivity", conductivity, r"$\lambda$ [W m$^{-1}$ K$^{-1}$]", "viridis"),
+    ("Heat release", heat_release / 1.0e9, r"$\dot q$ [GW m$^{-3}$]", "magma"),
+    ("Progress source", progress_source, r"$\dot\omega_c$ [kg m$^{-3}$ s$^{-1}$]", "magma"),
+)
 
-axes[1, 1].plot(phi, burning_velocity, marker="o")
-axes[1, 1].set(
-    xlabel="Equivalence ratio, phi",
-    ylabel="Burning velocity [m s$^{-1}$]",
-    title="Flamelets used to build the table",
+for (profile_title, profile_values, profile_label), (map_title, map_values, map_label, map_colormap), row in zip(
+    profile_fields, map_fields, axes, strict=True
+):
+    profile_axis, map_axis = row
+    for index, values in enumerate(profile_values):
+        profile_axis.plot(progress, values, color=profile_colormap(mixture_fraction_star[index]), linewidth=0.85)
+    profile_axis.set(xlim=(0.0, 1.0), xlabel="Progress variable, c", ylabel=profile_label, title=profile_title)
+
+    contour = map_axis.contourf(
+        mixture_fraction_star,
+        progress,
+        map_values.T,
+        levels=np.linspace(float(map_values.min()), float(map_values.max()), 65),
+        cmap=map_colormap,
+        antialiased=False,
+    )
+    contour.set_edgecolor("face")
+    map_axis.plot(mixture_fraction_star, np.ones_like(mixture_fraction_star), "|", markersize=4, color="black", clip_on=False)
+    map_axis.set(
+        xlim=(0.0, 1.0),
+        ylim=(0.0, 1.0),
+        xlabel=r"Normalized mixture fraction, $Z^\star$",
+        ylabel="Progress variable, c",
+        title=map_title,
+    )
+    colorbar = figure.colorbar(contour, ax=map_axis, fraction=0.046, pad=0.03)
+    colorbar.locator = MaxNLocator(nbins=5)
+    colorbar.update_ticks()
+    colorbar.set_label(map_label)
+    for axis in row:
+        axis.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+
+profile_colorbar = figure.colorbar(
+    plt.cm.ScalarMappable(norm=Normalize(0.0, 1.0), cmap=profile_colormap),
+    ax=list(axes[:, 0]),
+    location="bottom",
+    fraction=0.035,
+    pad=0.02,
+    aspect=35,
 )
+profile_colorbar.set_label(r"Profile color: normalized mixture fraction, $Z^\star$")
 
 figure.savefig(output_dir / "custom_fgm_plots.pdf", bbox_inches="tight")
 # Uncomment in an interactive session to display the figure immediately.
