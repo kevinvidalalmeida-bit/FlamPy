@@ -16,20 +16,20 @@ import kflame
 
 
 # %% FGM CASE CONFIGURATION
-# This intentionally small set of flamelets is suitable for an example. Add
-# more phi values for a denser table in a production calculation.
+# These are the five requested flamelets that start the adaptive thesis family.
+# A production adaptive campaign inserts bridge flamelets until its defect target.
 FGM_CASE = {
     "mechanism": "gri30.yaml",  # Or "h2o2.yaml" with fuel="H2".
     "fuel": "CH4",
     "oxidizer": "O2:1, N2:3.76",
-    "phis": (0.8, 1.0, 1.2),
+    "phis": (0.7, 0.9, 1.0, 1.1, 1.4),
     "temperature": 300.0,  # Unburned-gas temperature [K].
     "pressure": 101325.0,  # Pressure [Pa].
     "width": 0.03,  # Initial domain width [m].
     "transport": "mixture-averaged",  # Or "multicomponent".
     "soret": False,  # Thermal diffusion; requires multicomponent transport.
-    "progress_variable": "CO2 + H2O",
-    "progress_points": 241,
+    "progress_species": "CO2:1.0,H2O:1.0",  # Weighted progress variable.
+    "progress_points": 241,  # Number of adaptive c points.
     "verbose": True,  # Show flamelet progress in the console.
     "output": None,  # Or Path("runs/my_fgm_table").
 }

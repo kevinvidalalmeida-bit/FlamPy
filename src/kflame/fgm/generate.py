@@ -1578,9 +1578,9 @@ def main(argv=None) -> Path:
 
     np.savez_compressed(
         out_dir / "fgm_table.npz",
-        species_names=np.array(species_names, dtype=object),
-        used_progress_species=np.array(used_progress_species, dtype=object),
-        indicator_species=np.array(indicator_species, dtype=object),
+        species_names=np.asarray(species_names, dtype=str),
+        used_progress_species=np.asarray(used_progress_species, dtype=str),
+        indicator_species=np.asarray(indicator_species, dtype=str),
         indicator_fine_c=c_fine,
         indicator_fine_value=indicator,
         **tables,

@@ -173,7 +173,8 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  width=0.03, initial_points=8, transport='mixture-averaged', soret=False,
                  ratio=2.5, slope=0.04, curve=0.08, prune=0.003, max_points=1600,
                  max_time=180.0, output=None, plots=False, verbose=False, export=True,
-                 species=('CO2', 'H2O')):
+                 species=('CO2', 'H2O'), progress_species='CO2:1.0,H2O:1.0,CO:1.0,H2:0.5',
+                 progress_points=241):
     """Generate a native FGM with adaptive c coordinates and certified flames.
 
     Output contains the full NPZ table, raw profiles, metadata, optional
@@ -183,6 +184,10 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     from kflame.fgm.generate import main
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
                      initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
+    if not isinstance(progress_species, str) or not progress_species.strip():
+        raise ValueError('progress_species must be a non-empty weighted species string')
+    if not isinstance(progress_points, int) or progress_points < 2:
+        raise ValueError('progress_points must be an integer greater than one')
     phis = np.asarray(phis, dtype=float)
     if phis.ndim != 1 or phis.size < 2 or not np.isfinite(phis).all() or np.any(phis <= 0) or np.any(np.diff(phis) <= 0):
         raise ValueError('phis must contain at least two finite, positive, strictly increasing values')
@@ -196,6 +201,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     main([*argv, '--fuel', _stream(fuel), '--oxidizer', _stream(oxidizer),
           '--phi-values', ','.join(map(str, phis)), '--save-raw-profiles',
           '--disable-seed-cache', '--parallel-workers', '1',
+          '--progress-species', progress_species, '--n-c', str(progress_points),
           '--output-root', str(folder.parent), '--run-name', folder.name])
     meta = json.loads((folder / 'metadata.json').read_text(encoding='utf-8'))
     if not meta['all_final_accepted'] or not meta['table_validation']['valid']:
