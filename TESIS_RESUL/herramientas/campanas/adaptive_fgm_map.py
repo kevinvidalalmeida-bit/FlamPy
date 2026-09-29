@@ -1,6 +1,6 @@
 ﻿"""Recreate the adaptive FGM map used in the thesis.
 
-Run from the repository root after installing ``.[plot]``. The schedule has
+Run from the repository root after installing ``matplotlib``. The schedule has
 five requested CH4/air flamelets and 39 certified bridge flamelets. It was
 selected with a 1% leave-one-out interpolation-defect criterion.
 """

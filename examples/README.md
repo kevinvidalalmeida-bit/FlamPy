@@ -3,7 +3,7 @@
 Install the package with plotting support from the repository root:
 
 ```powershell
-python -m pip install -e ".[plot]"
+python -m pip install -e . matplotlib
 ```
 
 The examples use the same transparent workflow as a typical Cantera script:

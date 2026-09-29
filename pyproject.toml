@@ -17,7 +17,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-plot = ["matplotlib>=3.8,<4"]
 reference = ["cantera==3.2.0", "matplotlib>=3.8,<4"]
 
 [project.scripts]

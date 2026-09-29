@@ -2,7 +2,7 @@
 
 Run from the repository root after installing the optional plotting extras:
 
-    python -m pip install -e ".[plot]"
+    python -m pip install -e . matplotlib
     python examples/example.py
 """
 

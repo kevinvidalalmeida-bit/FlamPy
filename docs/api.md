@@ -43,7 +43,7 @@ species names, `Su`, acceptance report, runtime and output Path. `Y` has shape
 mesh certificate raises an error after saving diagnostics. `generate_fgm`
 returns the output Path only after checking every flame and the table.
 
-Figures require `pip install ".[plot]"`; Cantera is needed only for
+Figures require `python -m pip install matplotlib`; Cantera is needed only for
 independent reference comparisons (`.[reference]`). Soret mixture-averaged uses
 the distinct Cantera 3.2 mixture closure, not multicomponent coefficients with
 a renamed flag. Its adapted formulation retains attribution in the bundled
