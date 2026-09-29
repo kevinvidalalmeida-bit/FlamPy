@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'benchmarks'))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'TESIS_RESUL/herramientas/campanas'))
 import benchmark_fgm_adaptive_campaign as adaptive
 from benchmark_fgm_campaign import digest
 
@@ -28,7 +28,7 @@ def make_manifest(smoke=False):
     m.update(kind='fgm-solver-comparison', conditions=design())
     m['environment']['versions']['cantera'] = importlib.metadata.version('cantera')
     m['settings']['loglevel'] = 0
-    for path in (Path(__file__).resolve(), ROOT/'benchmarks/fgm_cantera_adapter.py'):
+    for path in (Path(__file__).resolve(), ROOT/'TESIS_RESUL/herramientas/campanas/fgm_cantera_adapter.py'):
         m['code'][path.relative_to(ROOT).as_posix()] = digest(path)
     m['protocol'].update(
         continuation='KFLAME native secant; Cantera set_initial_guess(previous SolutionArray); within-family lower-phi states only',

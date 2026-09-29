@@ -9,7 +9,6 @@ COMMANDS = {
     'plot': 'kflame.fgm.plot',
     'refine-table': 'kflame.fgm.refine',
     'validate-table': 'kflame.fgm.validate',
-    'soret': 'kflame.benchmarks.soret',
     'compare': 'kflame.reference.compare',
     'reference-fgm': 'kflame.reference.generate_fgm',
 }

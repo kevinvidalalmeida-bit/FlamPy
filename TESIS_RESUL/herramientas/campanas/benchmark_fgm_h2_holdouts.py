@@ -13,9 +13,9 @@ from pathlib import Path
 import sys
 import time
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "src"))
-sys.path.insert(0, str(ROOT / "benchmarks"))
+sys.path.insert(0, str(ROOT / "TESIS_RESUL/herramientas/campanas"))
 
 import numpy as np
 

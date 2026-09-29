@@ -12,8 +12,8 @@ import shutil
 import subprocess
 import sys
 
-ROOT=Path(__file__).resolve().parents[1]
-spec=importlib.util.spec_from_file_location('sweeps',ROOT/'benchmarks/benchmark_flame_sweeps.py')
+ROOT=Path(__file__).resolve().parents[3]
+spec=importlib.util.spec_from_file_location('sweeps',ROOT/'TESIS_RESUL/herramientas/campanas/benchmark_flame_sweeps.py')
 runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
 
 
@@ -107,7 +107,7 @@ def main(argv=None):
             raise
         finally:
             # Offline figure updates are useful even when a pair was interrupted.
-            subprocess.run([sys.executable,str(ROOT/'tools/postprocess_flame_mesh_sensitivity.py'),
+            subprocess.run([sys.executable,str(ROOT/'TESIS_RESUL/herramientas/postprocesado/postprocess_flame_mesh_sensitivity.py'),
                 '--input',str(out),'--output',str(root/'report')],cwd=ROOT,check=True)
     print('Spatial study complete; production L3 unchanged. Inspect sensitivity_report.tex and JSON.')
     return 0

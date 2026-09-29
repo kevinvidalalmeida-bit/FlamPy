@@ -17,8 +17,8 @@ import subprocess
 import sys
 import time
 
-ROOT=Path(__file__).resolve().parents[1]
-spec=importlib.util.spec_from_file_location('sweeps',ROOT/'benchmarks/benchmark_flame_sweeps.py')
+ROOT=Path(__file__).resolve().parents[3]
+spec=importlib.util.spec_from_file_location('sweeps',ROOT/'TESIS_RESUL/herramientas/campanas/benchmark_flame_sweeps.py')
 runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
 
 

@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'benchmarks'))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'TESIS_RESUL/herramientas/campanas'))
 from benchmark_fgm_campaign import atomic, completed, latest, verify_artifacts
 
 LABELS = dict(P='Promediado', PS='Promediado + Soret', M='Multicomponente', MS='Multicomponente + Soret')

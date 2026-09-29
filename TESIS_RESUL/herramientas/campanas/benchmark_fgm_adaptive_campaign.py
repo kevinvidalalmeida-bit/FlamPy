@@ -20,8 +20,8 @@ import sys
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'benchmarks'))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'TESIS_RESUL/herramientas/campanas'))
 sys.path.insert(0, str(ROOT / 'src'))
 from benchmark_fgm_campaign import (THREADS, atomic, completed, digest, latest,
                                     tabulate, verify_artifacts)
@@ -51,7 +51,7 @@ def make_manifest(smoke=False):
     if smoke: settings['n_c'] = 61
     files = sorted((ROOT / 'src/kflame').rglob('*.py'))
     files += sorted((ROOT / 'src/kflame/chemistry/data').rglob('*.yaml'))
-    files += [Path(__file__).resolve(), ROOT / 'benchmarks/benchmark_fgm_campaign.py']
+    files += [Path(__file__).resolve(), ROOT / 'TESIS_RESUL/herramientas/campanas/benchmark_fgm_campaign.py']
     return dict(schema=1, kind='adaptive-fgm-sweeps', technical_check=smoke,
                 conditions=design(smoke), repetitions=1, settings=settings,
                 adaptation=dict(initial_phi=[.9, 1., 1.1] if smoke else [.7, .9, 1., 1.1, 1.4],

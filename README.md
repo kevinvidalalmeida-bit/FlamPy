@@ -18,12 +18,11 @@ ejecuciones se crean fuera del paquete bajo `runs/` y están ignoradas por Git.
 ## Estructura
 
 ```text
-src/kflame/       solver, química, transporte y FGM
-benchmarks/       campañas reproducibles de llamas y FGM
-tools/            posprocesado de las campañas conservadas
-examples/         entradas mínimas editables
-docs/             API, arquitectura y compatibilidad
-TESIS_RESUL/      manuscrito final, figuras y corridas locales de tesis
+src/kflame/                    solver, química, transporte y FGM
+examples/                      entradas mínimas editables
+docs/                          API, arquitectura y compatibilidad
+TESIS_RESUL/CAPITULO_RESULTADOS/ manuscrito y PDF finales de la tesis
+TESIS_RESUL/herramientas/       campañas y posprocesado exclusivos de tesis
 ```
 
 `TESIS_RESUL/corridas/` conserva localmente las corridas que respaldan el

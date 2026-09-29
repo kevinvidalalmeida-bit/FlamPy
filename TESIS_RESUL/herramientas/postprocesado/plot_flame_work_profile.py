@@ -16,7 +16,7 @@ Los títulos de cada fila se colocan verticalmente y se centran usando
 la posición real de los ejes, evitando desfases visuales.
 
 Uso:
-    python tools/plot_flame_work_profile.py \
+    python TESIS_RESUL/herramientas/postprocesado/plot_flame_work_profile.py \
         --input 17_trabajo_por_llama.csv \
         --output-dir TESIS_RESUL/CAPITULO_RESULTADOS/llamas_individuales
 

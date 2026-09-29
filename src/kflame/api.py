@@ -66,7 +66,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     from kflame.flame.problem import FreeFlameProblem
     from kflame.flame.solver import solve_free_flame
     from kflame.flame.state import unpack_state
-    from kflame.benchmarks.soret import json_safe
+    from kflame.serialization import json_safe
 
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
                      initial_points, ratio, slope, curve, prune, max_points, max_time)

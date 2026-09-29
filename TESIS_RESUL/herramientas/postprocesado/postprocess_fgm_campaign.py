@@ -15,11 +15,11 @@ import sys
 import time
 from types import SimpleNamespace
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 for _key in ('OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','OMP_NUM_THREADS'):
     os.environ[_key] = '1'
 sys.path.insert(0, str(ROOT/'src'))
-sys.path.insert(0, str(ROOT/'benchmarks'))
+sys.path.insert(0, str(ROOT/'TESIS_RESUL/herramientas/campanas'))
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from benchmark_fgm_campaign import atomic, completed, latest, verify_artifacts, digest

@@ -17,8 +17,8 @@ import time
 import diagnose_flame_campaign as diagnostic
 
 runner = diagnostic.runner
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools'))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'TESIS_RESUL/herramientas/postprocesado'))
 import postprocess_flame_sweeps as pp
 
 
@@ -55,7 +55,7 @@ def main(argv=None):
     env = runner.environment()
     if env != source['environment']:
         raise ValueError('Code or environment differs from the original campaign; do not mix diagnostic protocols.')
-    files = [Path(__file__), Path(diagnostic.__file__), ROOT / 'benchmarks/benchmark_flame_sweeps.py']
+    files = [Path(__file__), Path(diagnostic.__file__), ROOT / 'TESIS_RESUL/herramientas/campanas/benchmark_flame_sweeps.py']
     manifest = dict(kind='flame-recovery-104', diagnostic_only=True, parent=str(root),
         parent_manifest_sha256=runner.digest(root / 'manifest.json'),
         extension_sha256=runner.digest(root / 'transport_extension.json'),

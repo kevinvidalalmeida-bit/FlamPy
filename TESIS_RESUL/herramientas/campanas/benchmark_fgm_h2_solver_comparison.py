@@ -13,8 +13,8 @@ import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "benchmarks"))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "TESIS_RESUL/herramientas/campanas"))
 import benchmark_fgm_adaptive_campaign as adaptive
 from benchmark_fgm_campaign import digest
 

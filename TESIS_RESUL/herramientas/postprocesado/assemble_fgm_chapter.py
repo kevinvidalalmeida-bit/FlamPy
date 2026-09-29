@@ -11,8 +11,8 @@ import shutil
 import sys
 import numpy as np
 
-ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'benchmarks'))
+ROOT=Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT/'TESIS_RESUL/herramientas/campanas'))
 from benchmark_fgm_campaign import atomic, digest, completed, latest, verify_artifacts
 from postprocess_fgm_adaptive_campaign import collect, LABELS
 
@@ -166,8 +166,8 @@ def main(argv=None):
         'a errores independientes, concordancia entre tablas, costes, consultas y controles del apéndice. '
         'provenance.json identifica los archivos originales. Los tiempos de construcción son individuales; '
         'las consultas se resumen mediante cinco mediciones, sin nuevas resoluciones de llama.\n\n'
-        'Regenerar desde la raíz: `python tools/postprocess_fgm_solver_comparison.py` y '
-        '`python tools/assemble_fgm_chapter.py`. Usar `--benchmark-queries` solo para repetir '
+        'Regenerar desde la raíz: `python TESIS_RESUL/herramientas/postprocesado/postprocess_fgm_solver_comparison.py` y '
+        '`python TESIS_RESUL/herramientas/postprocesado/assemble_fgm_chapter.py`. Usar `--benchmark-queries` solo para repetir '
         'el ensayo breve de consultas en memoria.\n',encoding='utf-8')
     print(f'{len(rows)} accepted FGM; {sum(r["n_flames"] for r in rows)} stored flame profiles. Chapter folder: {out}')
 

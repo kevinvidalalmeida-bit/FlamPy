@@ -9,8 +9,8 @@ import sys
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "benchmarks"))
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "TESIS_RESUL/herramientas/campanas"))
 from postprocess_fgm_adaptive_campaign import collect, LABELS
 
 

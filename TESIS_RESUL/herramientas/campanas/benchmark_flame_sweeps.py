@@ -21,7 +21,7 @@ import tempfile
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'src'))
 THREADS = dict(OPENBLAS_NUM_THREADS='1', MKL_NUM_THREADS='1', OMP_NUM_THREADS='1', NUMBA_NUM_THREADS='4')
 SCHEMA = 2
@@ -204,6 +204,19 @@ def clear_molecular_caches():
     _MECHANISM_CACHE.clear()
 
 
+def campaign_options(profile=False):
+    """Return the fixed L3 campaign options without importing retired probes."""
+    from kflame.flame.solver import SolveOptions
+    return SolveOptions(
+        verbose=False, profile=profile, max_total_time_s=180,
+        max_refine_passes=12, require_grid_convergence=True,
+        refine_max_points=1600, refine_ratio=2.5, refine_slope=.04,
+        refine_curve=.08, refine_prune=.003, acceptance_criterion='cantera',
+        residual_guard_inf=1e4, final_Finf_limit=1e4, refine_Finf_limit=1e4,
+        jacobian_mode='block_tridiag', auto_bootstrap_grids=False,
+    )
+
+
 def solve(c, s, backend, mechanism, variant):
     import numpy as np
     from kflame.flame.config import FlameCase
@@ -213,12 +226,11 @@ def solve(c, s, backend, mechanism, variant):
                    flux_gradient_basis='molar', steady_rtol=s['rtol'], steady_atol=s['atol'],
                    ratio=s['ratio'], slope=s['slope'], curve=s['curve'], prune=s['prune'])
     if backend == 'native':
-        from kflame.benchmarks.soret import benchmark_options
         from kflame.chemistry.backend import NativeSpeciesBackend
         from kflame.flame.problem import FreeFlameProblem
         from kflame.flame.solver import solve_free_flame
         from kflame.flame.state import unpack_state
-        opts = replace(benchmark_options(False), max_total_time_s=s['max_seconds'],
+        opts = replace(campaign_options(False), max_total_time_s=s['max_seconds'],
                        pseudo_time_method=STRATEGIES[c['mechanism']],
                        max_refine_passes=25, refine_max_points=s['max_points'],
                        refine_ratio=s['ratio'], refine_slope=s['slope'],

@@ -21,7 +21,7 @@ import time
 import traceback
 import uuid
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'src'))
 THREADS = dict(NUMBA_NUM_THREADS='4', OPENBLAS_NUM_THREADS='1',
                MKL_NUM_THREADS='1', OMP_NUM_THREADS='1')
