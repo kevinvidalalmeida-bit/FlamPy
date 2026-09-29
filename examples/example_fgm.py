@@ -108,8 +108,8 @@ profile_fields = (
 map_fields = (
     ("Density", density, r"$\rho$ [kg m$^{-3}$]", "viridis"),
     ("Thermal conductivity", conductivity, r"$\lambda$ [W m$^{-1}$ K$^{-1}$]", "viridis"),
-    ("Heat release", heat_release / 1.0e9, r"$\dot q$ [GW m$^{-3}$]", "magma"),
-    ("Progress source", progress_source, r"$\dot\omega_c$ [kg m$^{-3}$ s$^{-1}$]", "magma"),
+    ("Heat release", heat_release / 1.0e9, r"$\dot q$ [GW m$^{-3}$]", "viridis"),
+    ("Progress source", progress_source, r"$\dot\omega_c$ [kg m$^{-3}$ s$^{-1}$]", "viridis"),
 )
 
 figure, axes = plt.subplots(4, 2, figsize=(8.7, 10.6), layout="constrained")
