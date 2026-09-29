@@ -16,13 +16,12 @@ Los títulos de cada fila se colocan verticalmente y se centran usando
 la posición real de los ejes, evitando desfases visuales.
 
 Uso:
-    python plot_trabajo_por_llama_limpio.py \
+    python tools/plot_flame_work_profile.py \
         --input 17_trabajo_por_llama.csv \
-        --output-dir revision_figures
+        --output-dir TESIS_RESUL/CAPITULO_RESULTADOS/llamas_individuales
 
-Salidas:
-    revision_figures/17_trabajo_por_llama.pdf
-    revision_figures/17_trabajo_por_llama.png
+Salida:
+    17_trabajo_por_llama.pdf
 """
 
 from __future__ import annotations
@@ -84,7 +83,7 @@ def _values(
     return values
 
 
-def make_figure(rows: list[dict[str, str]], out_pdf: Path, out_png: Path) -> None:
+def make_figure(rows: list[dict[str, str]], output_path: Path) -> None:
     # Tipografía y exportación vectorial compatibles con el documento LaTeX.
     plt.rcParams.update({
         "font.family": "DejaVu Serif",
@@ -252,19 +251,8 @@ def make_figure(rows: list[dict[str, str]], out_pdf: Path, out_png: Path) -> Non
             linespacing=1.05,
         )
 
-    out_pdf.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.savefig(
-        out_pdf,
-        bbox_inches="tight",
-        facecolor="white",
-    )
-    fig.savefig(
-        out_png,
-        dpi=240,
-        bbox_inches="tight",
-        facecolor="white",
-    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -273,13 +261,13 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("runs/thesis_flames_L3/report_expanded/revision_figures/17_trabajo_por_llama.csv"),
+        default=Path("TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3/report_expanded/revision_figures/17_trabajo_por_llama.csv"),
         help="CSV generado por el diagnóstico.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("runs/thesis_flames_L3/report_expanded/revision_figures"),
+        default=Path("TESIS_RESUL/corridas/reproduccion/figuras_llamas"),
         help="Directorio de salida.",
     )
     args = parser.parse_args()
@@ -289,13 +277,9 @@ def main() -> None:
 
     rows = _load_rows(input_path)
 
-    out_pdf = output_dir / "17_trabajo_por_llama.pdf"
-    out_png = output_dir / "17_trabajo_por_llama.png"
-
-    make_figure(rows, out_pdf, out_png)
-
-    print(f"PDF: {out_pdf}")
-    print(f"PNG: {out_png}")
+    output_path = output_dir / "17_trabajo_por_llama.pdf"
+    make_figure(rows, output_path)
+    print(f"PDF: {output_path}")
 
 
 if __name__ == "__main__":

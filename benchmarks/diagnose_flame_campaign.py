@@ -119,8 +119,10 @@ def instrument(backend):
 
 def main(argv=None):
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--input',type=Path,default=Path('runs/thesis_flames_L3'))
-    ap.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L3_diagnostics'))
+    ap.add_argument('--input', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    ap.add_argument('--output', type=Path,
+                    default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_diagnostics'))
     ap.add_argument('--resume',action='store_true')
     ap.add_argument('--worker',type=Path)
     args=ap.parse_args(argv)

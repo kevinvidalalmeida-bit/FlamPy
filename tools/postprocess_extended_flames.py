@@ -121,8 +121,10 @@ def write_sensitivity_table_compact(source, out):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, default=Path('runs/thesis_flames_L3'))
-    parser.add_argument('--output', type=Path, default=Path('runs/thesis_flames_L3/report_expanded'))
+    parser.add_argument('--input', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    parser.add_argument('--output', type=Path,
+                        default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_report_expanded'))
     parser.add_argument('--tables-only', action='store_true')
     args = parser.parse_args(argv)
     root, out = args.input.resolve(), args.output.resolve()

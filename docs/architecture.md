@@ -40,7 +40,6 @@ temperatura base y su perturbación, no para cada especie. La dependencia
 completa de composición, terceros cuerpos y falloff se recalcula en cada
 columna. La reutilización es exacta y local al lote; no envejece coeficientes
 entre iteraciones. Los lotes sin ese patrón conservan el evaluador general.
-Véase `validation/OPTIMIZATION_STAGES_20260920.md` para costes y validación.
 
 ## Continuación FGM
 
@@ -75,5 +74,3 @@ funcionan sin Cantera. Los comparadores lo importan explícitamente.
 Los parámetros de pares moleculares y los ajustes de conductividad también se
 reutilizan en cachés inmutables de hasta ocho entradas. Nunca se cachea aquí un
 estado de llama ni se congelan sus propiedades dependientes de T, Y o presión.
-La auditoría sin instalación de Cantera y con polinomios históricos bloqueados
-está en `validation/NATIVE_ALL_STAGES_20260920.md`.

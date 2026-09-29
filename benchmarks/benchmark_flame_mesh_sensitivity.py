@@ -64,8 +64,10 @@ def study_manifest(root,manifest,rows):
 
 def main(argv=None):
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--input',type=Path,default=Path('runs/thesis_flames_L3'))
-    ap.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L3_sensitivity'))
+    ap.add_argument('--input', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    ap.add_argument('--output', type=Path,
+                    default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_sensitivity'))
     ap.add_argument('--resume',action='store_true')
     ap.add_argument('--dry-run',action='store_true')
     args=ap.parse_args(argv);root=args.input.resolve();out=args.output.resolve()

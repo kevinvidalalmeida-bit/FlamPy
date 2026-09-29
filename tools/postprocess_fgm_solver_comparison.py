@@ -34,14 +34,16 @@ def compare_tables(kpath, cpath):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--input',type=Path,default=Path('runs/thesis_fgm_comparison'))
-    p.add_argument('--output',type=Path)
+    p.add_argument('--input', type=Path,
+                   default=Path('TESIS_RESUL/corridas/FGM/thesis_fgm_comparison'))
+    p.add_argument('--output', type=Path,
+                   default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm_comparison_report'))
     p.add_argument('--h2',action='store_true',help='Process an H2/h2o2 campaign with H2-specific fields.')
     args=p.parse_args(argv); source=args.input.resolve()
     if not (source/'manifest.json').exists(): print('No campaign yet; no files written.');return 0
     expected_kind='fgm-h2-solver-comparison' if args.h2 else 'fgm-solver-comparison'
     m,rows,attempts=collect(source,expected_kind=expected_kind)
-    out=args.output or source/'report';out.mkdir(parents=True,exist_ok=True)
+    out=args.output.resolve(); out.mkdir(parents=True,exist_ok=True)
     write_csv(out/'conditions.csv',rows);atomic(out/'conditions.json',rows);atomic(out/'attempts.json',attempts)
     counts={s:sum(r['status']==s for r in rows) for s in ('accepted','failed','pending','incomplete')}
     atomic(out/'status.json',dict(counts,expected=8,repetitions=1,technical_check=m['technical_check']))

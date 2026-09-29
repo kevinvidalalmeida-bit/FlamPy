@@ -282,11 +282,13 @@ def save_figure(fig, out, name, caption):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--input',type=Path,default=Path('runs/thesis_fgm'))
-    p.add_argument('--output',type=Path)
+    p.add_argument('--input', type=Path,
+                   default=Path('TESIS_RESUL/corridas/FGM/thesis_fgm'))
+    p.add_argument('--output', type=Path,
+                   default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm_report'))
     p.add_argument('--benchmark-queries',action='store_true',help='Five lookup batches per batch size; no flames')
     args=p.parse_args(argv)
-    root=args.input.resolve();out=(args.output or root/'report').resolve()
+    root=args.input.resolve(); out=args.output.resolve()
     if out==root or root in out.parents and out.parts[len(root.parts)] in ('family','holdout','inputs'):
         raise ValueError('Report must not overwrite scientific records.')
     if not (root/'manifest.json').exists():

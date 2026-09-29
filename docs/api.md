@@ -3,8 +3,8 @@
 `import kflame` exposes `solve_flame` and `generate_fgm`. The examples are
 ready-to-edit user input files. Both functions select the CPU-native solver.
 Jacobian aging, linear algebra, PTC and damping remain internal defaults.
-The default Jacobian now uses analytic thermal and spatial blocks with frozen
-transport coefficients; see the [validation report](validation/ANALYTIC_SPATIAL_20260921.md).
+The default Jacobian uses analytic thermal and spatial blocks with frozen
+transport coefficients during each linearization.
 
 The organization follows Cantera's separation of
 [mixture state, transport and free-flame refinement](https://cantera.org/3.2/examples/python/onedim/adiabatic_flame.html).
@@ -43,8 +43,8 @@ species names, `Su`, acceptance report, runtime and output Path. `Y` has shape
 mesh certificate raises an error after saving diagnostics. `generate_fgm`
 returns the output Path only after checking every flame and the table.
 
-Figures require `pip install ".[plot]"`; Cantera is needed only for the
-independent reference tests (`.[reference,test]`). Soret mixture-averaged uses
+Figures require `pip install ".[plot]"`; Cantera is needed only for
+independent reference comparisons (`.[reference]`). Soret mixture-averaged uses
 the distinct Cantera 3.2 mixture closure, not multicomponent coefficients with
 a renamed flag. Its adapted formulation retains attribution in the bundled
 transport license.

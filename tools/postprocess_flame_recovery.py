@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import hashlib
-import json
 from pathlib import Path
 
 import numpy as np
@@ -66,9 +65,12 @@ def same_solution(reference, diagnostic):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, default=Path('runs/thesis_flames_L3'))
-    parser.add_argument('--diagnostics', type=Path, default=Path('runs/thesis_flames_L3_recovery'))
-    parser.add_argument('--output', type=Path, default=Path('runs/thesis_flames_L3/report_expanded/revision_figures'))
+    parser.add_argument('--input', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    parser.add_argument('--diagnostics', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_recovery'))
+    parser.add_argument('--output', type=Path,
+                        default=Path('TESIS_RESUL/corridas/reproduccion/figuras_llamas'))
     args = parser.parse_args(argv)
     root, diag, out = args.input.resolve(), args.diagnostics.resolve(), args.output.resolve()
     manifest = pp.load_manifest(root)

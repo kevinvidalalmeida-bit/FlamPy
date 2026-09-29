@@ -56,7 +56,8 @@ def make_manifest(smoke=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("runs/thesis_fgm_h2_comparison"))
+    parser.add_argument("--output", type=Path,
+                        default=Path("TESIS_RESUL/corridas/reproduccion/thesis_fgm_h2_comparison"))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--smoke", action="store_true", help="Separate technical check: three initial rows, Nc=61, 10%% target")

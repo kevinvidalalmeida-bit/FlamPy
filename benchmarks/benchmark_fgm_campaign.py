@@ -274,7 +274,8 @@ def selected_jobs(phase, repeats, family_repetition=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--phase', choices=['family','holdout','all'], default='all')
-    parser.add_argument('--output', type=Path, default=Path('runs/thesis_fgm'))
+    parser.add_argument('--output', type=Path,
+                        default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm'))
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--smoke', action='store_true', help='Separate 2-flame + 1-holdout technical check')

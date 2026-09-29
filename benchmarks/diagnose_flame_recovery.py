@@ -24,8 +24,10 @@ import postprocess_flame_sweeps as pp
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, default=ROOT / 'runs/thesis_flames_L3')
-    parser.add_argument('--output', type=Path, default=ROOT / 'runs/thesis_flames_L3_recovery')
+    parser.add_argument('--input', type=Path,
+                        default=ROOT / 'TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3')
+    parser.add_argument('--output', type=Path,
+                        default=ROOT / 'TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_recovery')
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--case-id', help='Execute only this condition; the manifest retains the full design.')

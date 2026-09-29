@@ -68,10 +68,14 @@ def fmt(v):return '--' if v is None else str(v) if isinstance(v,int) else f'{v:.
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--input',type=Path,default=Path('runs/thesis_flames_L3_diagnostics'))
-    ap.add_argument('--campaign',type=Path,default=Path('runs/thesis_flames_L3'))
-    ap.add_argument('--conditioning',type=Path,default=Path('runs/thesis_flames_L3_conditioning_v2'))
-    ap.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L3/report'))
+    ap.add_argument('--input', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_diagnostics'))
+    ap.add_argument('--campaign', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    ap.add_argument('--conditioning', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_conditioning_v2'))
+    ap.add_argument('--output', type=Path,
+                    default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_report'))
     args=ap.parse_args();out=args.output;out.mkdir(parents=True,exist_ok=True)
     records=pp.read(args.input/'index.json');prod=pp.read(args.campaign/'index.json')
     summary=pp.read(args.campaign/'report/summary.json');ss={s['id']:s for s in summary['conditions']}

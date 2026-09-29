@@ -91,7 +91,8 @@ def validate_saved_extension(root, planned, pairs, settings):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--campaign', type=Path, default=Path('runs/thesis_flames_L3'))
+    parser.add_argument('--campaign', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args(argv)

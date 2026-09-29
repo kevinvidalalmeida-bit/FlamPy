@@ -190,7 +190,7 @@ def main():
         '--input',
         type=Path,
         default=Path(
-            'runs/thesis_flames_L3_sensitivity'
+            'TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_sensitivity'
         ),
         help='Directorio de entrada de la campaña de sensibilidad.',
     )
@@ -199,7 +199,7 @@ def main():
         '--output',
         type=Path,
         default=Path(
-            'runs/thesis_flames_L3/report'
+            'TESIS_RESUL/corridas/reproduccion/figuras_llamas'
         ),
         help='Directorio de salida.',
     )

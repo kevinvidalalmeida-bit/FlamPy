@@ -12,9 +12,12 @@ from postprocess_flame_recovery import classify, same_solution, MODES
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, default=Path('runs/thesis_flames_L3'))
-    parser.add_argument('--diagnostics', type=Path, default=Path('runs/thesis_flames_L3_diagnostics'))
-    parser.add_argument('--output', type=Path, default=Path('runs/thesis_flames_L3/report_expanded/revision_figures'))
+    parser.add_argument('--input', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    parser.add_argument('--diagnostics', type=Path,
+                        default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_diagnostics'))
+    parser.add_argument('--output', type=Path,
+                        default=Path('TESIS_RESUL/corridas/reproduccion/figuras_llamas'))
     args = parser.parse_args(argv)
     root, diag, out = args.input.resolve(), args.diagnostics.resolve(), args.output.resolve()
     records = [r for r in pp.load_records(root) if r['phase'] == 'main' and r['variant'] in ('native', 'cantera') and r.get('usable')]
@@ -113,25 +116,8 @@ def main(argv=None):
     fig.legend(handles=[Patch(facecolor=colors[b], label=n) for b, n in
                         [('native', 'KFLAME'), ('cantera', 'Cantera')]],
                loc='outside lower center', ncol=2, frameon=False)
-    for ext in ('pdf', 'png'):
-        fig.savefig(out / f'17_trabajo_por_llama.{ext}', dpi=240, bbox_inches='tight')
+    fig.savefig(out / '17_trabajo_por_llama.pdf', bbox_inches='tight')
     plt.close(fig)
-    caption = (r'Trabajo registrado de KFLAME y Cantera en los ocho casos centrales: '
-        r'$\phi=1$, 300 K y 1 atm. Una ejecución instrumentada por solver y caso, la misma '
-        r'del desglose temporal. Los recuentos comparten escala entre mecanismos; el tiempo '
-        r'por Jacobiano tiene escala propia por mecanismo, común a ambos solvers. El tiempo medio por '
-        r'Jacobiano es $t_J/N_J$ de esa ejecución; los demás paneles muestran recuentos. '
-        r'Cantera excluye del residual las evaluaciones internas de diferencias finitas '
-        r'y sus estadísticas finales pueden omitir etapas interrumpidas al ampliar el dominio. '
-        r'KFLAME incluye las etapas preliminares. Los pasos Euler aceptados de Cantera '
-        r'proceden de callbacks; KFLAME combina Euler con PTC en metano. El desglose químico '
-        r'y lineal específico se conserva en los cuadros, con su disponibilidad por solver.')
-    (out / '17_trabajo_por_llama.tex').write_text(
-        '\\clearpage\n\\begin{figure}[p]\\centering\n'
-        '\\includegraphics[width=\\textwidth,height=.76\\textheight,keepaspectratio]'
-        '{\\SweepReportRoot/revision_figures/17_trabajo_por_llama.pdf}\n'
-        '\\caption[Contadores de trabajo de los ocho casos centrales]{' + caption + '}\n'
-        '\\label{fig:rev-17-trabajo-por-llama}\n\\end{figure}\n\\clearpage\n', encoding='utf-8')
     print(f'16 diagnostic profiles verified across eight central cases. Figure: {out / "17_trabajo_por_llama.pdf"}')
 
 

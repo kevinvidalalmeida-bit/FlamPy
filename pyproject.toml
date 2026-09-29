@@ -19,7 +19,6 @@ dependencies = [
 [project.optional-dependencies]
 plot = ["matplotlib>=3.8,<4"]
 reference = ["cantera==3.2.0", "matplotlib>=3.8,<4"]
-test = ["pytest>=8,<10"]
 
 [project.scripts]
 kflame = "kflame.cli:main"
@@ -29,6 +28,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "kflame.chemistry" = ["data/*.yaml", "data/*.json", "data/*.txt", "data/*.md"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]

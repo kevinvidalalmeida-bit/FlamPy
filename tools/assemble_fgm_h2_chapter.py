@@ -21,8 +21,10 @@ def save(fig, out, name):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("runs/thesis_fgm_h2_comparison"))
-    parser.add_argument("--output", type=Path, default=Path(".local/research/thesis/figuras/FGM_H2"))
+    parser.add_argument("--input", type=Path,
+                        default=Path("TESIS_RESUL/corridas/FGM/thesis_fgm_h2_comparison"))
+    parser.add_argument("--output", type=Path,
+                        default=Path("TESIS_RESUL/corridas/reproduccion/figuras_FGM_H2"))
     args = parser.parse_args(argv)
     campaign, out = args.input.resolve(), args.output.resolve()
     manifest, rows, _ = collect(campaign, expected_kind="fgm-h2-solver-comparison")

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -43,8 +42,9 @@ def holdout_design(phi_grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--construction", type=Path,
-                        default=Path("runs/thesis_fgm_h2_comparison/cases/H2_T300_p1_P_kflame/attempt-001"))
-    parser.add_argument("--output", type=Path, default=Path("runs/thesis_fgm_h2_holdouts"))
+                        default=Path("TESIS_RESUL/corridas/FGM/thesis_fgm_h2_comparison/cases/H2_T300_p1_P_kflame/attempt-001"))
+    parser.add_argument("--output", type=Path,
+                        default=Path("TESIS_RESUL/corridas/reproduccion/thesis_fgm_h2_holdouts"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
     args_cli = parser.parse_args(argv)

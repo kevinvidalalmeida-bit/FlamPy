@@ -280,7 +280,8 @@ def run_case(out, case, retry_failed=False, entrypoint=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--output', type=Path, default=Path('runs/thesis_fgm_sweeps_max10'))
+    p.add_argument('--output', type=Path,
+                   default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm_adaptive'))
     p.add_argument('--resume', action='store_true')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--smoke', action='store_true', help='Separate technical protocol: base only, 3 initial rows, 10%% indicator, Nc=61')

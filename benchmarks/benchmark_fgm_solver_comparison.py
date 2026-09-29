@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'benchmarks'))
 import benchmark_fgm_adaptive_campaign as adaptive
-from benchmark_fgm_campaign import atomic, digest
+from benchmark_fgm_campaign import digest
 
 
 def design():
@@ -41,7 +41,8 @@ def make_manifest(smoke=False):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--output', type=Path, default=Path('runs/thesis_fgm_comparison'))
+    p.add_argument('--output', type=Path,
+                   default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm_comparison'))
     p.add_argument('--resume', action='store_true')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--smoke', action='store_true', help='Separate technical test: phi=.9,1,1.1 initially, Nc=61, indicator=10%%')

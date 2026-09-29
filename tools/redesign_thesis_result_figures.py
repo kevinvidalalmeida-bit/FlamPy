@@ -698,36 +698,6 @@ def plot_timing(ax, rows, field):
 
 
 def timing_figures(rows, out):
-    fig, axes = plt.subplots(2, 3, figsize=(8.3, 5.4))
-    fig.subplots_adjust(left=.13, right=.99, top=.83, bottom=.11,
-                        wspace=.43, hspace=.43)
-    for i, fuel in enumerate(("CH4", "H2")):
-        rr = [r for r in rows if r["fuel"] == fuel and representative(r)]
-        all_times = [t for r in rr for b in SOLVERS for t in r["timing"][b]["times"]]
-        for j, (field, label, rule) in enumerate(SWEEPS):
-            ax = axes[i, j]
-            subset = sorted([r for r in rr if rule(r)], key=lambda r: r[field])
-            plot_timing(ax, subset, field)
-            ax.set_ylim(min(all_times) / 1.25, max(all_times) * 1.25)
-            ax.set_xlabel(label)
-            ax.set_ylabel("Tiempo [s]")
-            if i == 0:
-                ax.set_title(("Composición", "Presión", "Temperatura")[j])
-        row_label(axes[i, 0], fuel)
-    fig.legend(handles=timing_handles(), ncol=2, loc="upper center", frameon=False)
-    if False:  # Figura auxiliar retirada del capítulo y de las salidas activas.
-        save(fig, out, "07_tiempos",
-         r"Tiempos absolutos de producción frente a composición, presión y temperatura, "
-         r"como complemento de la razón temporal $S_t$. CH$_4$/GRI-Mech 3.0: promediado "
-         r"sin Soret; H$_2$/h2o2: multicomponente con Soret. Composición a 1 atm y 300 K; "
-         r"presión a $\phi=1$ y 300 K; temperatura a $\phi=1$ y 1 atm. "
-         r"Los puntos pequeños muestran las cinco ejecuciones, con desplazamientos "
-         r"horizontales únicamente visuales; las líneas unen sus medianas y las barras "
-         r"abarcan los cuartiles 25 y 75. El eje temporal es logarítmico y sus límites "
-         r"son comunes a los tres barridos de cada mecanismo. Se conservan todas las "
-         r"observaciones, incluidas las más lentas; se excluyen las ejecuciones instrumentadas. "
-         r"Los cuartiles describen dispersión de tiempos, no un intervalo de confianza.")
-
     timing_detail(rows, out, 0, "09_tiempos_transportes")
     if full_transport(rows):
         timing_detail(rows, out, 1, "09_tiempos_presion")
@@ -1033,12 +1003,13 @@ def inventory(out, report, source_files):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", type=Path, default=Path("runs/thesis_flames_L3"))
+    ap.add_argument("--input", type=Path,
+                    default=Path("TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3"))
     ap.add_argument("--report", type=Path, help="Offline CSV report; diagnostics remain in the original report")
     ap.add_argument("--sensitivity", type=Path,
-                    default=Path("runs/thesis_flames_L3/report/sensibilidad_L3.json"))
+                    default=Path("TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3/report/sensibilidad_L3.json"))
     ap.add_argument("--output", type=Path,
-                    default=Path("runs/thesis_flames_L3/report/revision_figures"))
+                    default=Path("TESIS_RESUL/corridas/reproduccion/figuras_llamas"))
     args = ap.parse_args(argv)
     OUTPUTS.clear()
     CAPTIONS.clear()

@@ -66,8 +66,10 @@ def analyze(manifest,records,parent_root=None,study_root=None):
 
 def main(argv=None):
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--input',type=Path,default=Path('runs/thesis_flames_L3_sensitivity'))
-    ap.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L3/report'))
+    ap.add_argument('--input', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3_sensitivity'))
+    ap.add_argument('--output', type=Path,
+                    default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_report'))
     args=ap.parse_args(argv);out=args.output;out.mkdir(parents=True,exist_ok=True)
     m=pp.read(args.input/'manifest.json')
     if m.get('kind')!='L3_spatial_sensitivity':raise ValueError('Expected independent L3 spatial study')

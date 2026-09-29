@@ -27,9 +27,12 @@ def wrapper(out,name,caption,label,height='.58'):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--reference',type=Path,default=ROOT/'runs/thesis_fgm')
-    p.add_argument('--comparison',type=Path,default=ROOT/'runs/thesis_fgm_comparison')
-    p.add_argument('--output',type=Path,default=ROOT/'.local/research/thesis/figuras/FGM')
+    p.add_argument('--reference', type=Path,
+                   default=ROOT/'TESIS_RESUL/corridas/FGM/thesis_fgm')
+    p.add_argument('--comparison', type=Path,
+                   default=ROOT/'TESIS_RESUL/corridas/FGM/thesis_fgm_comparison')
+    p.add_argument('--output', type=Path,
+                   default=ROOT/'TESIS_RESUL/corridas/reproduccion/figuras_FGM_CH4')
     p.add_argument('--benchmark-queries',action='store_true')
     args=p.parse_args(argv); out=args.output.resolve()
     reference=args.reference.resolve(); comparison=args.comparison.resolve()

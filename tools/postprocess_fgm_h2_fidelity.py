@@ -31,9 +31,12 @@ def scalar(value):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--construction", type=Path, default=Path("runs/thesis_fgm_h2_comparison/cases/H2_T300_p1_P_kflame/attempt-001"))
-    p.add_argument("--holdouts", type=Path, default=Path("runs/thesis_fgm_h2_holdouts"))
-    p.add_argument("--output", type=Path, default=Path(".local/research/thesis/figuras/FGM_H2"))
+    p.add_argument("--construction", type=Path,
+                   default=Path("TESIS_RESUL/corridas/FGM/thesis_fgm_h2_comparison/cases/H2_T300_p1_P_kflame/attempt-001"))
+    p.add_argument("--holdouts", type=Path,
+                   default=Path("TESIS_RESUL/corridas/FGM/thesis_fgm_h2_holdouts"))
+    p.add_argument("--output", type=Path,
+                   default=Path("TESIS_RESUL/corridas/reproduccion/figuras_FGM_H2"))
     args = p.parse_args(argv)
     construction, holdouts, out = args.construction.resolve(), args.holdouts.resolve(), args.output.resolve()
     result = json.loads((holdouts / "result.json").read_text(encoding="utf-8"))

@@ -113,8 +113,10 @@ def worker(root,out,c,backend):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--input',type=Path,default=Path('runs/thesis_flames_L3'))
-    ap.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L3_conditioning'))
+    ap.add_argument('--input', type=Path,
+                    default=Path('TESIS_RESUL/corridas/llamas_individuales/thesis_flames_L3'))
+    ap.add_argument('--output', type=Path,
+                    default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3_conditioning_v2'))
     ap.add_argument('--worker');ap.add_argument('--backend',choices=['native','cantera'])
     args=ap.parse_args();root=args.input.resolve();out=args.output.resolve()
     m=runner.read(root/'manifest.json')

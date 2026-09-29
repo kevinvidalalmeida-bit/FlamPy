@@ -102,14 +102,16 @@ def figures(out, manifest, rows):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--input', type=Path, default=Path('runs/thesis_fgm_sweeps_max10'))
-    p.add_argument('--output', type=Path)
+    p.add_argument('--input', type=Path,
+                   default=Path('TESIS_RESUL/corridas/FGM/thesis_fgm_comparison'))
+    p.add_argument('--output', type=Path,
+                   default=Path('TESIS_RESUL/corridas/reproduccion/thesis_fgm_adaptive_report'))
     args = p.parse_args(argv)
     source = args.input.resolve()
     if not (source / 'manifest.json').exists():
         print('Campaign not created yet; no files written.'); return 0
     manifest, rows, attempts = collect(source)
-    out = args.output or source / 'report'
+    out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     write_csv(out / 'conditions.csv', rows)
     atomic(out / 'conditions.json', rows)

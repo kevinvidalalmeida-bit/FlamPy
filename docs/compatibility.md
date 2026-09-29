@@ -14,17 +14,10 @@ global Python installation. Use a virtual environment per matrix below.
 | PyYAML | 6.0.3 | 6.0.3 |
 | Cantera (optional reference) | 3.2.0 | 3.2.0 |
 | Matplotlib (optional plots) | 3.11.1 | 3.11.2 |
-| pytest (optional tests) | 9.0.3 | 9.1.1 |
 
 The NumPy 2.4 and SciPy 1.17 lines work with both supported Numba lines.
-`pip install .` resolves the CPU stack; `pip install ".[reference,test]"` adds
-the reference and testing tools.
+`pip install .` resolves the CPU stack; `pip install ".[reference]"` adds the
+reference-comparison tools.
 
-KFLAME is CPU/Numba by design. CuPy/GPU perturbation experiments are retained
-only as a rejected strategy in `DECISIONES_DESCARTADAS.md`: their transfer and
-dispatch costs did not justify a second numerical backend for this workload.
-
-The native/reference timing protocol is
-`benchmarks/benchmark_native_vs_cantera.py`. It measures subprocess wall time,
-records first-use JIT separately, and compares cold, unseeded FGM and
-individual flames with fixed CPU thread counts.
+KFLAME is CPU/Numba by design. GPU and historical optimization experiments are
+not part of the maintained numerical workflow.

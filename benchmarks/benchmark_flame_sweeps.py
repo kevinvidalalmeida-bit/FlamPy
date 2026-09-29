@@ -525,9 +525,10 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--phase',choices=['smoke','verify','main','ablation'],default='main')
     parser.add_argument('--pairs',type=int,default=5)
-    parser.add_argument('--spatial-policy',choices=['verified-L4','fixed-L3'],default='verified-L4',
+    parser.add_argument('--spatial-policy', choices=['verified-L4', 'fixed-L3'], default='fixed-L3',
                         help='fixed-L3 starts production directly, without a spatial verification prerequisite')
-    parser.add_argument('--output',type=Path,default=Path('runs/thesis_flames_L4'))
+    parser.add_argument('--output', type=Path,
+                        default=Path('TESIS_RESUL/corridas/reproduccion/thesis_flames_L3'))
     parser.add_argument('--max-seconds',type=float,default=600.)
     parser.add_argument('--resume',action='store_true')
     parser.add_argument('--dry-run',action='store_true')
