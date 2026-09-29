@@ -715,7 +715,8 @@ def timing_figures(rows, out):
                 ax.set_title(("Composición", "Presión", "Temperatura")[j])
         row_label(axes[i, 0], fuel)
     fig.legend(handles=timing_handles(), ncol=2, loc="upper center", frameon=False)
-    save(fig, out, "07_tiempos",
+    if False:  # Figura auxiliar retirada del capítulo y de las salidas activas.
+        save(fig, out, "07_tiempos",
          r"Tiempos absolutos de producción frente a composición, presión y temperatura, "
          r"como complemento de la razón temporal $S_t$. CH$_4$/GRI-Mech 3.0: promediado "
          r"sin Soret; H$_2$/h2o2: multicomponente con Soret. Composición a 1 atm y 300 K; "
@@ -1005,7 +1006,7 @@ def inventory(out, report, source_files):
                 "cost_units": "seconds", "cost_stacks_close": True}
     (out / "figure_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     order = ["02_perfiles_CH4", "02_perfiles_H2", "11_sensibilidad_L3",
-             "12_concordancia_global", "13_respuesta_fisica", "06_transporte",
+             "12_concordancia_global",
              "09_tiempos_transportes", "14_speedup_global",
              "15_precision_speedup", "16_origen_coste", "10_mallas_finales"]
     for name in ("09_tiempos_presion", "09_tiempos_temperatura"):
@@ -1056,13 +1057,10 @@ def main(argv=None):
     records = pp.load_records(campaign)
     profile_figures(campaign, records, out)
     errors_figure(errors, config, out)
-    physical_figure(rows, out)
     speedup_figure(rows, out)
     accuracy_speedup(rows, errors, out)
     cost_figure(diagnostic, out)
     sensitivity_figure(json.loads(args.sensitivity.read_text(encoding="utf-8")), out)
-    transport_figure(rows, out)
-    ablation_figure(records, out)
     timing_figures(rows, out)
     mesh_figure(campaign, records, out)
     coverage_audit(campaign, records, rows, out)

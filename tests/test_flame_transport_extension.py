@@ -150,7 +150,7 @@ def test_full_timing_details_preserve_five_observations(monkeypatch, tmp_path):
     saved = {}
     monkeypatch.setattr(figures,'save',lambda fig,out,name,caption:saved.update({name:fig}))
     figures.timing_figures(rows, tmp_path)
-    assert set(saved) == {'07_tiempos','09_tiempos_transportes','09_tiempos_presion','09_tiempos_temperatura'}
+    assert set(saved) == {'09_tiempos_transportes','09_tiempos_presion','09_tiempos_temperatura'}
     for name in ('09_tiempos_presion','09_tiempos_temperatura'):
         assert len(saved[name].axes) == 8
         assert all(len(ax.lines) == 2 and all(len(line.get_xdata()) == 5 for line in ax.lines)

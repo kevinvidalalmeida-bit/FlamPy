@@ -2,6 +2,7 @@
 /.local/
 /tmp/
 /runs/
+/TESIS_RESUL/corridas/
 
 # Python, Numba and build artifacts.
 __pycache__/
@@ -43,5 +44,4 @@ resultados/
 *.toc
 *.bbl
 *.blg
-
 
