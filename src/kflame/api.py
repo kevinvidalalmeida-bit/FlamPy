@@ -174,7 +174,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  ratio=2.5, slope=0.04, curve=0.08, prune=0.003, max_points=1600,
                  max_time=180.0, output=None, plots=False, verbose=False, export=True,
                  species=('CO2', 'H2O'), progress_species='CO2:1.0,H2O:1.0,CO:1.0,H2:0.5',
-                 progress_points=241, adaptive_phi=False, target_defect=0.01,
+                 progress_points=241, adaptive_phi=True, target_defect=0.01,
                  max_bridges_per_round=10, max_adaptive_rounds=64,
                  max_flamelets=256):
     """Generate a native FGM with adaptive c coordinates and certified flames.
@@ -182,9 +182,9 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     Output contains the full NPZ table, raw profiles, metadata, optional
     FlameMaster/CSV tables and the established FGM figures. Composition is
     parameterized by phis and mole-basis fuel/oxidizer streams. With
-    adaptive_phi=True, phis are the initial certified flamelets and logarithmic
-    bridge flamelets are solved until the leave-one-out defect reaches
-    target_defect. Returns Path.
+    By default, phis are the initial certified flamelets and logarithmic bridge
+    flamelets are solved until the leave-one-out defect reaches target_defect.
+    Set adaptive_phi=False only to build a fixed composition grid. Returns Path.
     """
     from kflame.fgm.generate import main
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
