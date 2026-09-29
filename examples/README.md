@@ -1,40 +1,28 @@
-﻿# User examples
+# User examples
 
-Install from the repository root with `python -m pip install ".[plot]"`.
-Run `python examples/example.py` for one flame or
-`python examples/example_fgm.py` for a quick five-flamelet FGM table.
-
-`python examples/example_fgm_adaptive_map.py` recreates the adaptive FGM map
-used in the thesis. It solves the validated 44-row schedule: five requested
-CH4/air flamelets plus 39 bridge flamelets. The generated
-`fgm_mapa_adaptativo.pdf` contains:
-
-- CO2 and CO profiles for the rows actually solved;
-- qdot and absolute omega_c reconstructed only with the table's bilinear
-  interpolant in `(Z*, c)`;
-- dotted vertical lines at every solved row, so interpolation is not presented
-  as an extra flamelet calculation.
-
-The bridge schedule was selected with the leave-one-out maximum relative L2
-interpolation defect at a 1% target. To derive a new bridge proposal from any
-certified table, run:
+Install KFLAME with plotting support from the repository root:
 
 ```sh
-python -m kflame refine-table \
-  --table runs/fgm/RUN_NAME/fgm_table.npz \
-  --output runs/fgm/RUN_NAME/next_schedule.json \
-  --target-defect 0.01 --max-bridges 99
+python -m pip install ".[plot]"
 ```
 
-Pass the resulting JSON to `kflame fgm --phi-schedule-json ...`, certify the
-new table, and repeat the defect check until no bridge is proposed.
+Run one premixed flame:
 
-Every run creates a fresh folder under `runs/flame/` or `runs/fgm/`, ignored by
-Git. Specify `output='runs/my_case'` for a chosen name; an existing directory
-is rejected to preserve previous calculations.
+```sh
+python examples/example.py
+```
 
-The single-flame example writes all species in `flame.npz`, selected species
-in `profiles.csv`, solver diagnostics in `metadata.json`, and a four-panel
-PDF/PNG showing temperature, heat release, species and adaptive mesh spacing.
-The quick FGM example exports the complete table, individual flamelets and
-figures. See [the public API](../docs/api.md) for units and supported inputs.
+Run one small FGM construction:
+
+```sh
+python examples/example_fgm.py
+```
+
+Both examples use neutral CH4/air conditions at 300 K and 1 atm. Every keyword
+is documented beside its value, including the accepted transport and Soret
+options. The output directory contains the numerical data, metadata, selected
+profiles, and PDF/PNG plots. Set `output=Path("runs/my_case")` only when that
+directory does not already exist.
+
+The thesis-specific adaptive-map workflow is intentionally kept outside these
+examples in `TESIS_RESUL/herramientas/campanas/`.

@@ -11,7 +11,7 @@ from kflame.fgm.plot import main as plot_fgm
 
 
 if __name__ == "__main__":
-    schedule = Path(__file__).with_name("fgm_adaptive_map_schedule.json")
+    schedule = Path(__file__).with_name("adaptive_fgm_map_schedule.json")
     run_dir = generate_fgm([
         "--mech", "gri30.yaml",
         "--fuel", "CH4",
