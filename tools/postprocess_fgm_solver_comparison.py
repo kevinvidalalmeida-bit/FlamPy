@@ -14,7 +14,10 @@ def compare_tables(kpath, cpath):
     with np.load(cpath, allow_pickle=False) as d: c = dict(d)
     zs = np.linspace(max(k['Z_grid'][0],c['Z_grid'][0]), min(k['Z_grid'][-1],c['Z_grid'][-1]),101)
     cs = np.linspace(0,1,501)
-    fields = ['T', 'CO2', 'CO', 'omega_c']
+    common_species = set(k['species_names'].tolist()) & set(c['species_names'].tolist())
+    species_fields = (['H2O', 'OH', 'HO2'] if 'HO2' in common_species
+                      else ['CO2', 'CO'])
+    fields = ['T', *species_fields, 'omega_c']
     def sample(table, field):
         source = table[field] if field in ('T','omega_c') else table['Y'][:,list(table['species_names']).index(field),:]
         by_c = np.array([np.interp(cs,table['c_grid'],row) for row in source])
@@ -33,9 +36,11 @@ def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--input',type=Path,default=Path('runs/thesis_fgm_comparison'))
     p.add_argument('--output',type=Path)
+    p.add_argument('--h2',action='store_true',help='Process an H2/h2o2 campaign with H2-specific fields.')
     args=p.parse_args(argv); source=args.input.resolve()
     if not (source/'manifest.json').exists(): print('No campaign yet; no files written.');return 0
-    m,rows,attempts=collect(source,expected_kind='fgm-solver-comparison')
+    expected_kind='fgm-h2-solver-comparison' if args.h2 else 'fgm-solver-comparison'
+    m,rows,attempts=collect(source,expected_kind=expected_kind)
     out=args.output or source/'report';out.mkdir(parents=True,exist_ok=True)
     write_csv(out/'conditions.csv',rows);atomic(out/'conditions.json',rows);atomic(out/'attempts.json',attempts)
     counts={s:sum(r['status']==s for r in rows) for s in ('accepted','failed','pending','incomplete')}
@@ -45,6 +50,8 @@ def main(argv=None):
            r'\label{tab:fgm-comparison-cost}',
            r'\begin{tabular}{llrrrrr}\toprule',
            r'Solver & Transporte & $N_f$ & $t_f$ [s] & $t_a$ [s] & Total [s] & $d_{\max}$\\\midrule']
+    if args.h2:
+        lines[1] = lines[1].replace('CH$_4$--aire, GRI-Mech~3.0', 'H$_2$--aire, h2o2.yaml')
     for tag in LABELS:
         for solver in ('kflame','cantera'):
             r=next(r for r in rows if r['transport']==tag and r['solver']==solver)

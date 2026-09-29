@@ -73,9 +73,10 @@ def make_manifest(smoke=False):
 
 
 def settings_for(manifest, condition, out):
+    mechanism = Path(manifest['settings']['mech']).name
     return dict(manifest['settings'], T_in=float(condition['T_in_K']), P=condition['P_Pa'],
                 transport_model=condition['transport_model'], soret_enabled=condition['soret_enabled'],
-                mech=str(out / 'inputs/gri30.yaml'))
+                mech=str(out / 'inputs' / mechanism))
 
 
 def ensure_manifest(out, proposed, resume):
@@ -87,9 +88,12 @@ def ensure_manifest(out, proposed, resume):
     else:
         if out.exists() and any(out.iterdir()): raise ValueError('New output directory must be empty.')
         (out / 'inputs').mkdir(parents=True)
-        shutil.copy2(ROOT / 'src/kflame/chemistry/data/gri30.yaml', out / 'inputs/gri30.yaml')
+        mechanism = Path(proposed['settings']['mech']).name
+        shutil.copy2(ROOT / 'src/kflame/chemistry/data' / mechanism, out / 'inputs' / mechanism)
         atomic(path, proposed)
-    if digest(out / 'inputs/gri30.yaml') != proposed['code']['src/kflame/chemistry/data/gri30.yaml']:
+    mechanism = Path(proposed['settings']['mech']).name
+    code_key = f'src/kflame/chemistry/data/{mechanism}'
+    if digest(out / 'inputs' / mechanism) != proposed['code'][code_key]:
         raise ValueError('Mechanism copy changed.')
 
 
