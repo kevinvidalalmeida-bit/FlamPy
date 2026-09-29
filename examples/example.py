@@ -38,12 +38,10 @@ CASE = {
 PLOT_SPECIES = ("CH4", "O2", "CO2", "H2O", "OH")
 
 
-# %% SOLVE AND SAVE THE NUMERICAL DATA
+# %% SOLVE, LOAD, AND SAVE NUMERICAL DATA
 result = kflame.solve_flame(**CASE, species=PLOT_SPECIES, plots=False)
 output_dir = Path(result["output"])
 
-
-# %% LOAD THE SAVED ARRAYS
 with np.load(output_dir / "flame.npz", allow_pickle=False) as data:
     z = data["z"]
     temperature = data["T"]
@@ -53,9 +51,7 @@ with np.load(output_dir / "flame.npz", allow_pickle=False) as data:
     species_indices = [species_names.index(name) for name in PLOT_SPECIES]
     mass_fractions = data["Y"][species_indices]
 
-
-# %% NUMERICAL MATRIX
-# Each row corresponds to one grid point. Add or remove columns as needed.
+# One matrix row corresponds to one grid point.
 solution_matrix = np.column_stack(
     (z, temperature, velocity, heat_release, mass_fractions.T)
 )

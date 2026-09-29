@@ -35,11 +35,9 @@ FGM_CASE = {
 PLOT_SPECIES = ("CO2", "H2O")
 
 
-# %% BUILD AND SAVE THE FGM TABLE
+# %% BUILD, LOAD, AND SAVE NUMERICAL DATA
 output_dir = Path(kflame.generate_fgm(**FGM_CASE, export=True, plots=False))
 
-
-# %% LOAD THE SAVED ARRAYS
 with np.load(output_dir / "fgm_table.npz", allow_pickle=False) as data:
     phi = data["phi_grid"]
     burning_velocity = data["Su"]
@@ -52,9 +50,7 @@ with np.load(output_dir / "fgm_table.npz", allow_pickle=False) as data:
     species_indices = [species_names.index(name) for name in PLOT_SPECIES]
     mass_fractions = data["Y"][:, species_indices, :]
 
-
-# %% NUMERICAL MATRIX
-# Each row corresponds to one FGM state (Z, c). Add fields if you need them.
+# One matrix row corresponds to one FGM state (Z, c).
 Z_matrix, c_matrix = np.meshgrid(mixture_fraction, progress, indexing="ij")
 fgm_matrix = np.column_stack(
     (
