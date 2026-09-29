@@ -52,7 +52,7 @@
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
 \usepackage{graphicx}
-\graphicspath{{figuras/}{revision_figures/}}
+\graphicspath{{figuras/}{llamas_individuales/}{FGM/}}
 \usepackage{float}
 \usepackage{pdflscape}
 \usepackage[section]{placeins}
@@ -215,7 +215,7 @@ las diferencias entre L5 y L3, el número de nodos, \(E_2(T)\) y el cambio de
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/11_sensibilidad_L3.pdf}
+]{llamas_individuales/11_sensibilidad_L3.pdf}
 \caption{Sensibilidad espacial respecto a L3 para CH$_4$--aire con transporte
 promediado sin Soret y H$_2$--aire con transporte multicomponente y Soret, al
 modificar el nivel de refinamiento y duplicar la longitud inicial del dominio.}
@@ -303,7 +303,7 @@ coste computacional de cada nivel en la \cref{fig:rev-mesh-time}.
     width=\textwidth,
     height=.95\textheight,
     keepaspectratio
-]{revision_figures/tiempo_vs_malla.pdf}
+]{llamas_individuales/tiempo_vs_malla.pdf}
 \caption{Tiempo de resolución frente al nivel de refinamiento para los seis
 estados del estudio de sensibilidad. La fila superior corresponde a
 CH$_4$--aire con transporte promediado sin Soret y la inferior a
@@ -342,7 +342,7 @@ liberación de calor, junto con las métricas correspondientes.
     width=\textwidth,
     height=.90\textheight,
     keepaspectratio
-]{revision_figures/02_perfiles_CH4.pdf}
+]{llamas_individuales/02_perfiles_CH4.pdf}
 \caption{Comparación entre \KFLAME{} y \Cantera{} para CH$_4$--aire en las
 cuatro configuraciones de transporte. Las dos primeras columnas muestran los
 perfiles alineados respecto a \(x_{1/2}\), mientras que la tercera presenta
@@ -357,7 +357,7 @@ perfiles alineados respecto a \(x_{1/2}\), mientras que la tercera presenta
     width=\textwidth,
     height=.90\textheight,
     keepaspectratio
-]{revision_figures/02_perfiles_H2.pdf}
+]{llamas_individuales/02_perfiles_H2.pdf}
 \caption{Comparación entre \KFLAME{} y \Cantera{} para H$_2$--aire en las
 cuatro configuraciones de transporte. Las dos primeras columnas muestran los
 perfiles alineados respecto a \(x_{1/2}\), mientras que la tercera presenta
@@ -381,7 +381,7 @@ del frente para dos configuraciones representativas.
     width=\textwidth,
     height=.90\textheight,
     keepaspectratio
-]{revision_figures/10_mallas_finales.pdf}
+]{llamas_individuales/10_mallas_finales.pdf}
 \caption{Distribución espacial de la discretización para CH$_4$--aire con
 transporte promediado sin Soret y H$_2$--aire con transporte multicomponente y
 Soret, expresada respecto al punto medio térmico \(x_{1/2}\).}
@@ -404,7 +404,7 @@ construcción y los pasos Euler aceptados.
     width=\textwidth,
     height=.84\textheight,
     keepaspectratio
-]{revision_figures/17_trabajo_por_llama_a4.pdf}
+]{llamas_individuales/17_trabajo_por_llama_a4.pdf}
 \caption{Trabajo computacional registrado en las mismas ejecuciones
 instrumentadas de los ocho casos representativos para \KFLAME{} y
 \Cantera{}. Se muestran las evaluaciones del residual, las construcciones del
@@ -439,7 +439,7 @@ ejecuciones instrumentadas, presentado en la
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/16_origen_coste.pdf}
+]{llamas_individuales/16_origen_coste.pdf}
 \caption{Distribución del tiempo de las mismas ejecuciones instrumentadas de
 los ocho casos representativos. En \KFLAME{} se separan el residual, la
 construcción del Jacobiano, la factorización y las sustituciones, mientras que
@@ -550,7 +550,7 @@ percentil 95 y el máximo en la \cref{tab:concordance-summary}.
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/12_concordancia_global.pdf}
+]{llamas_individuales/12_concordancia_global.pdf}
 \caption{Concordancia entre \KFLAME{} y \Cantera{} en las 104 condiciones de
 la campaña L3. Cada punto representa la mediana de cinco pares de ejecuciones.}
 \label{fig:rev-12-concordancia-global}
@@ -622,7 +622,7 @@ composición, presión y temperatura.
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/14_speedup_global.pdf}
+]{llamas_individuales/14_speedup_global.pdf}
 \caption{Razón temporal \(S_t\) en las 104 condiciones de la campaña. Las
 barras muestran intervalos pareados del 95 por ciento y la línea \(S_t=1\)
 representa igualdad de tiempos.}
@@ -646,7 +646,7 @@ caso las condiciones fijas indicadas en la
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/09_tiempos_transportes.pdf}
+]{llamas_individuales/09_tiempos_transportes.pdf}
 \caption{Tiempo de resolución frente a la relación de equivalencia para las
 cuatro configuraciones de transporte, con
 \(p=\SI{1}{\atmosphere}\) y \(T_{\mathrm{u}}=\SI{300}{\kelvin}\).}
@@ -659,7 +659,7 @@ cuatro configuraciones de transporte, con
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/09_tiempos_presion.pdf}
+]{llamas_individuales/09_tiempos_presion.pdf}
 \caption{Tiempo de resolución frente a la presión para las cuatro
 configuraciones de transporte, con
 \(\phi=1\) y \(T_{\mathrm{u}}=\SI{300}{\kelvin}\).}
@@ -672,7 +672,7 @@ configuraciones de transporte, con
     width=\textwidth,
     height=.70\textheight,
     keepaspectratio
-]{revision_figures/09_tiempos_temperatura.pdf}
+]{llamas_individuales/09_tiempos_temperatura.pdf}
 \caption{Tiempo de resolución frente a la temperatura de entrada para las
 cuatro configuraciones de transporte, con
 \(\phi=1\) y \(p=\SI{1}{\atmosphere}\).}
@@ -700,7 +700,7 @@ de cambios en la concordancia entre ambas implementaciones.
     width=\textwidth,
     height=.60\textheight,
     keepaspectratio
-]{revision_figures/15_precision_speedup.pdf}
+]{llamas_individuales/15_precision_speedup.pdf}
 \caption{Discrepancia de \(\Su\) frente a la razón temporal \(S_t\) en las
 104 condiciones de la campaña. La línea vertical \(S_t=1\) indica igualdad
 de tiempos.}
@@ -771,7 +771,7 @@ no a un criterio de convergencia diferente.
     width=\textwidth,
     height=.53\textheight,
     keepaspectratio
-]{FGM_FIGURAS/CH4_04_refinamiento.pdf}
+]{FGM/CH4_04_refinamiento.pdf}
 \caption{Refinamiento adaptativo de las construcciones FGM de CH$_4$--aire.}
 \label{fig:fgm-ch4-refinement}
 \end{figure}
@@ -782,7 +782,7 @@ no a un criterio de convergencia diferente.
     width=\textwidth,
     height=.53\textheight,
     keepaspectratio
-]{FGM_FIGURAS/H2_04_refinamiento.pdf}
+]{FGM/H2_04_refinamiento.pdf}
 \caption{Refinamiento adaptativo de las construcciones FGM de H$_2$--aire.}
 \label{fig:fgm-h2-refinement}
 \end{figure}
@@ -805,7 +805,7 @@ progreso (\cref{fig:fgm-ch4-map,fig:fgm-h2-map}).
     width=\textwidth,
     height=.78\textheight,
     keepaspectratio
-]{FGM_FIGURAS/CH4_02_mapa.pdf}
+]{FGM/CH4_02_mapa.pdf}
 \caption{Manifold FGM representativo de CH$_4$--aire.}
 \label{fig:fgm-ch4-map}
 \end{figure}
@@ -816,7 +816,7 @@ progreso (\cref{fig:fgm-ch4-map,fig:fgm-h2-map}).
     width=\textwidth,
     height=.78\textheight,
     keepaspectratio
-]{FGM_FIGURAS/H2_02_mapa.pdf}
+]{FGM/H2_02_mapa.pdf}
 \caption{Manifold FGM representativo de H$_2$--aire.}
 \label{fig:fgm-h2-map}
 \end{figure}
@@ -843,7 +843,7 @@ simultánea del vector completo de especies
     width=\textwidth,
     height=.68\textheight,
     keepaspectratio
-]{FGM_FIGURAS/CH4_03_fidelidad.pdf}
+]{FGM/CH4_03_fidelidad.pdf}
 \caption{Fidelidad FGM en llamas retenidas de CH$_4$--aire.}
 \label{fig:fgm-ch4-fidelity}
 \end{figure}
@@ -893,7 +893,7 @@ manifold (\cref{fig:fgm-h2-fidelity,tab:fgm-h2-errors}).
     width=\textwidth,
     height=.68\textheight,
     keepaspectratio
-]{FGM_FIGURAS/H2_03_fidelidad.pdf}
+]{FGM/H2_03_fidelidad.pdf}
 \caption{Fidelidad FGM en llamas retenidas de H$_2$--aire.}
 \label{fig:fgm-h2-fidelity}
 \end{figure}
@@ -1091,7 +1091,7 @@ el tiempo acumulado de construcción.
     width=\textwidth,
     height=.78\textheight,
     keepaspectratio
-]{FGM_FIGURAS/CH4_01_familia.pdf}
+]{FGM/CH4_01_familia.pdf}
 \caption{Tiempo por flamelet en las construcciones FGM de CH$_4$--aire.}
 \label{fig:fgm-ch4-family}
 \end{figure}
@@ -1102,7 +1102,7 @@ el tiempo acumulado de construcción.
     width=\textwidth,
     height=.78\textheight,
     keepaspectratio
-]{FGM_FIGURAS/H2_01_familia.pdf}
+]{FGM/H2_01_familia.pdf}
 \caption{Tiempo por flamelet en las construcciones FGM de H$_2$--aire.}
 \label{fig:fgm-h2-family}
 \end{figure}
@@ -1137,7 +1137,7 @@ forma aislada al mecanismo, al transporte o a la política de continuación.
     width=\textwidth,
     height=.46\textheight,
     keepaspectratio
-]{FGM_FIGURAS/CH4_05_coste_comparado.pdf}
+]{FGM/CH4_05_coste_comparado.pdf}
 \caption{Coste de construcción de las tablas FGM de CH$_4$--aire.}
 \label{fig:fgm-ch4-cost}
 \end{figure}
@@ -1148,7 +1148,7 @@ forma aislada al mecanismo, al transporte o a la política de continuación.
     width=\textwidth,
     height=.46\textheight,
     keepaspectratio
-]{FGM_FIGURAS/H2_05_coste_comparado.pdf}
+]{FGM/H2_05_coste_comparado.pdf}
 \caption{Coste de construcción de las tablas FGM de H$_2$--aire.}
 \label{fig:fgm-h2-cost}
 \end{figure}
