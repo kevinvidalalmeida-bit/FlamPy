@@ -2,7 +2,7 @@
 
 Run from the repository root after installing the optional plotting extras:
 
-    pip install ".[plot]"
+    python -m pip install -e ".[plot]"
     python examples/example_fgm.py
 """
 

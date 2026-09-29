@@ -2,7 +2,7 @@
 
 Run from the repository root after installing the optional plotting extras:
 
-    pip install ".[plot]"
+    python -m pip install -e ".[plot]"
     python examples/example.py
 """
 
@@ -31,7 +31,7 @@ CASE = {
     "ratio": 2.5,
     "slope": 0.04,
     "curve": 0.08,
-    "prune": 0.01,
+    "prune": 0.003,
     "output": None,  # Or Path("runs/my_neutral_flame").
 }
 
