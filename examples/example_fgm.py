@@ -7,6 +7,7 @@ Run from the repository root after installing the optional plotting extras:
 """
 
 from pathlib import Path
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,6 +30,7 @@ FGM_CASE = {
     "soret": False,  # Thermal diffusion; requires multicomponent transport.
     "progress_variable": "CO2 + H2O",
     "progress_points": 241,
+    "verbose": True,  # Show flamelet progress in the console.
     "output": None,  # Or Path("runs/my_fgm_table").
 }
 
@@ -36,8 +38,12 @@ PLOT_SPECIES = ("CO2", "H2O")
 
 
 # %% BUILD, LOAD, AND SAVE NUMERICAL DATA
+print("[1/3] Building the FGM table...", flush=True)
+started = time.perf_counter()
 output_dir = Path(kflame.generate_fgm(**FGM_CASE, export=True, plots=False))
+print(f"[1/3] FGM table accepted in {time.perf_counter() - started:.1f} s.", flush=True)
 
+print("[2/3] Loading arrays and writing the numerical matrix...", flush=True)
 with np.load(output_dir / "fgm_table.npz", allow_pickle=False) as data:
     phi = data["phi_grid"]
     burning_velocity = data["Su"]
@@ -74,6 +80,7 @@ np.savetxt(
 
 # %% PLOTS
 # Modify this section freely: it uses only the arrays loaded above.
+print("[3/3] Creating plots...", flush=True)
 figure, axes = plt.subplots(2, 2, figsize=(10, 7), layout="constrained")
 
 plot_fields = (

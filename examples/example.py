@@ -7,6 +7,7 @@ Run from the repository root after installing the optional plotting extras:
 """
 
 from pathlib import Path
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,6 +33,7 @@ CASE = {
     "slope": 0.04,
     "curve": 0.08,
     "prune": 0.003,
+    "verbose": True,  # Show solver iterations and mesh refinement in the console.
     "output": None,  # Or Path("runs/my_neutral_flame").
 }
 
@@ -39,9 +41,13 @@ PLOT_SPECIES = ("CH4", "O2", "CO2", "H2O", "OH")
 
 
 # %% SOLVE, LOAD, AND SAVE NUMERICAL DATA
+print("[1/3] Solving the flame...", flush=True)
+started = time.perf_counter()
 result = kflame.solve_flame(**CASE, species=PLOT_SPECIES, plots=False)
 output_dir = Path(result["output"])
+print(f"[1/3] Flame accepted in {time.perf_counter() - started:.1f} s.", flush=True)
 
+print("[2/3] Loading arrays and writing the numerical matrix...", flush=True)
 with np.load(output_dir / "flame.npz", allow_pickle=False) as data:
     z = data["z"]
     temperature = data["T"]
@@ -67,6 +73,7 @@ np.savetxt(
 
 # %% PLOTS
 # Modify this section freely: it uses only the arrays loaded above.
+print("[3/3] Creating plots...", flush=True)
 z_mm = 1.0e3 * z
 figure, axes = plt.subplots(2, 2, figsize=(10, 7), layout="constrained")
 

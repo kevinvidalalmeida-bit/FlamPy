@@ -17,7 +17,7 @@ def _stream(value):
 
 
 def _settings(mechanism, temperature, pressure, width, transport, soret,
-              initial_points, ratio, slope, curve, prune, max_points, max_time):
+              initial_points, ratio, slope, curve, prune, max_points, max_time, verbose):
     if transport not in ('mixture-averaged', 'multicomponent'):
         raise ValueError("transport must be 'mixture-averaged' or 'multicomponent'")
     for name, value in dict(temperature=temperature, pressure=pressure, width=width, max_time=max_time).items():
@@ -34,6 +34,7 @@ def _settings(mechanism, temperature, pressure, width, transport, soret,
         '--initial-grid-points', str(initial_points), '--ratio', str(ratio),
         '--slope', str(slope), '--curve', str(curve), '--prune', str(prune),
         '--max-grid-points', str(max_points), '--max-flame-time-s', str(max_time),
+        *(['--loglevel', '1'] if verbose else []),
         *(['--soret-enabled'] if soret else []),
         *(['--multicomponent-bootstrap'] if transport == 'multicomponent' or soret else []),
     ]
@@ -50,7 +51,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 diluent=None, dilution=0.0, width=0.03, grid=None, initial_points=8,
                 transport='mixture-averaged', soret=False, ratio=2.5, slope=0.04,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
-                max_time=180.0, output=None, plots=False, species=('CH4', 'O2', 'CO2', 'H2O', 'OH')):
+                max_time=180.0, output=None, plots=False, verbose=False,
+                species=('CH4', 'O2', 'CO2', 'H2O', 'OH')):
     """Solve an adiabatic premixed free flame and save NPZ, CSV and metadata.
 
     Use one of phi with fuel/oxidizer, X (mole amounts), or Y (mass amounts).
@@ -69,7 +71,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     from kflame.serialization import json_safe
 
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
-                     initial_points, ratio, slope, curve, prune, max_points, max_time)
+                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
     args = build_argparser().parse_args(argv)
     mech = load_mechanism(args.mech)
     if sum(value is not None for value in (phi, X, Y)) > 1:
@@ -170,7 +172,8 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  temperature=300.0, pressure=101325.0, fuel='CH4', oxidizer='O2:1, N2:3.76',
                  width=0.03, initial_points=8, transport='mixture-averaged', soret=False,
                  ratio=2.5, slope=0.04, curve=0.08, prune=0.003, max_points=1600,
-                 max_time=180.0, output=None, plots=False, export=True, species=('CO2', 'H2O')):
+                 max_time=180.0, output=None, plots=False, verbose=False, export=True,
+                 species=('CO2', 'H2O')):
     """Generate a native FGM with adaptive c coordinates and certified flames.
 
     Output contains the full NPZ table, raw profiles, metadata, optional
@@ -179,7 +182,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     """
     from kflame.fgm.generate import main
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
-                     initial_points, ratio, slope, curve, prune, max_points, max_time)
+                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
     phis = np.asarray(phis, dtype=float)
     if phis.ndim != 1 or phis.size < 2 or not np.isfinite(phis).all() or np.any(phis <= 0) or np.any(np.diff(phis) <= 0):
         raise ValueError('phis must contain at least two finite, positive, strictly increasing values')
