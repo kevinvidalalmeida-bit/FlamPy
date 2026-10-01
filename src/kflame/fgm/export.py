@@ -281,7 +281,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--npz", type=str, required=True,
-        help="Ruta al archivo fgm_table.npz generado por KFLAME o su referencia opcional",
+        help="Ruta al archivo fgm_table.npz generado por FlamPy o su referencia opcional",
     )
     p.add_argument(
         "--out-dir", type=str, default="",

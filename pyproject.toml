@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kflame"
+name = "FlamPy"
 version = "0.1.0"
 description = "Native CPU free-flame solver and flamelet-generated manifold tables"
 readme = "README.md"
@@ -17,9 +17,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+plots = ["matplotlib>=3.8,<4"]
 reference = ["cantera==3.2.0", "matplotlib>=3.8,<4"]
 
+[project.urls]
+Repository = "https://github.com/kevinvidalalmeida-bit/FlamPy"
+Documentation = "https://github.com/kevinvidalalmeida-bit/FlamPy/tree/main/docs"
+Issues = "https://github.com/kevinvidalalmeida-bit/FlamPy/issues"
+
 [project.scripts]
+flampy = "kflame.cli:main"
 kflame = "kflame.cli:main"
 
 [tool.setuptools.packages.find]

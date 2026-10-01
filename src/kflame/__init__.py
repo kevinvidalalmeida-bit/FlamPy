@@ -1,4 +1,4 @@
-"""KFLAME: native free flames and FGM tables. Optional references load explicitly."""
+"""FlamPy: native free flames and FGM tables. Optional references load explicitly."""
 import os as _os
 
 # Configure before any scientific import; respect explicit user overrides.

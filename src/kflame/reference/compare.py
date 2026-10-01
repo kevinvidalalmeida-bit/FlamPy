@@ -1,4 +1,4 @@
-"""Run Cantera vs KFLAME and save comparison data plus plots."""
+"""Run Cantera vs FlamPy and save comparison data plus plots."""
 from __future__ import annotations
 
 import argparse
@@ -9,10 +9,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# Must be set before NumPy/SciPy are imported. The KFLAME block solver uses many
+# Must be set before NumPy/SciPy are imported. The FlamPy block solver uses many
 # small dense factorizations, where OpenBLAS thread management is overhead.
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-# Keep the standalone comparison on the same small-grid Numba default as KFLAME.
+# Keep the standalone comparison on the same small-grid Numba default as FlamPy.
 # An explicit NUMBA_NUM_THREADS value still takes precedence.
 os.environ.setdefault("NUMBA_NUM_THREADS", "4")
 
@@ -361,7 +361,7 @@ def run(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run and plot Cantera vs KFLAME comparison.")
+    parser = argparse.ArgumentParser(description="Run and plot Cantera vs FlamPy comparison.")
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -373,7 +373,7 @@ def main() -> None:
     parser.add_argument(
         "--verbose-ours",
         action="store_true",
-        help="Print detailed progress from the KFLAME solver.",
+        help="Print detailed progress from the FlamPy solver.",
     )
     parser.add_argument(
         "--compiled-block-substitution",

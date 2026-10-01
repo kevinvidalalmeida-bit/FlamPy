@@ -1,7 +1,7 @@
 """
 generate_fgm_tables_native.py  (kflame - Z-C space)
 
-Genera tablas FGM usando KFLAME con backend nativo CPU.
+Genera tablas FGM usando FlamPy con backend nativo CPU.
 Ahora almacena la fracción de mezcla de Bilger Z para cada flamelet,
 de modo que la tabla queda parametrizada en (Z, c) en lugar de (phi, c).
 
@@ -496,7 +496,7 @@ def make_solve_options(args: argparse.Namespace) -> SolveOptions:
 
 
 # ---------------------------------------------------------------------------
-# Resolución de flamelet con KFLAME / backend nativo CPU
+# Resolución de flamelet con FlamPy / backend nativo CPU
 # ---------------------------------------------------------------------------
 
 def tabulated_properties(problem, T, Y, progress_weights):
@@ -589,7 +589,7 @@ def solve_flame_native(
         if str(args.transport_backend).strip().lower() == "cantera-reference":
             from kflame.reference.backend import SpeciesBackend
             # Exact multicomponent/Soret face closure used only to verify the
-            # KFLAME discretisation. It intentionally remains separate from the
+            # FlamPy discretisation. It intentionally remains separate from the
             # native performance route.
             problem.backend_factory = lambda prob: SpeciesBackend(prob)
         else:
@@ -740,7 +740,7 @@ def solve_flame_native(
     dt = float(time.perf_counter() - t_total0)
     assert problem is not None and x_sol is not None
 
-    # Extraer variables de solucion KFLAME (organizadas como [U, T, Y0...Yk])
+    # Extraer variables de solucion FlamPy (organizadas como [U, T, Y0...Yk])
     nv = 2 + problem.n_species
     x_reshaped = x_sol.reshape(-1, nv)
     u = np.asarray(x_reshaped[:, 0], dtype=float)
@@ -954,7 +954,7 @@ def build_tables(
 
 def build_argparser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Genera tablas FGM en espacio (Z, c) con KFLAME nativo CPU."
+        description="Genera tablas FGM en espacio (Z, c) con FlamPy nativo CPU."
     )
     p.add_argument("--mech",             type=str,   default="gri30.yaml")
     p.add_argument("--fuel",             type=str,   default="CH4")
@@ -965,7 +965,7 @@ def build_argparser() -> argparse.ArgumentParser:
         choices=("native", "cantera-reference"),
         default="native",
         help=(
-            "native usa los kernels KFLAME (incluido multicomponente/Soret nativo); "
+            "native usa los kernels FlamPy (incluido multicomponente/Soret nativo); "
             "cantera-reference conserva una ruta independiente de verificacion."
         ),
     )
@@ -1070,7 +1070,7 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--residual-guard-inf", type=float, default=1.0e4,
                    help="Guardia de ||F||inf bruto usada con criterio cantera.")
     p.add_argument("--max-flame-time-s", type=float, default=300.0,
-                   help="Tiempo maximo por flamelet en el solver KFLAME.")
+                   help="Tiempo maximo por flamelet en el solver FlamPy.")
     p.add_argument("--max-jac-age", type=int, default=20,
                    help="Numero maximo de pasos Newton reutilizando el Jacobiano.")
     p.add_argument("--damp-factor", type=float, default=float(np.sqrt(2.0)),
@@ -1081,7 +1081,7 @@ def build_argparser() -> argparse.ArgumentParser:
                    help="Umbral para descartar entradas pequenas del Jacobiano.")
     p.add_argument("--jacobian-mode", type=str, default="block_tridiag",
                    choices=("numba_local", "banded_lapack", "block_tridiag", "cantera_local"),
-                   help="Backend del Jacobiano usado por el solver KFLAME.")
+                   help="Backend del Jacobiano usado por el solver FlamPy.")
     p.add_argument("--precompute-jacobian-thermo", action=argparse.BooleanOptionalAction,
                    default=True,
                    help="Precalcula termoquimica perturbada de todo el Jacobiano block_tridiag.")
@@ -1292,7 +1292,7 @@ def main(argv=None) -> Path:
 
     # Previsualizar mapa phi → Z
     print("=" * 70)
-    print("FGM TABLE GENERATOR (KFLAME native CPU) - Z-C space")
+    print("FGM TABLE GENERATOR (FlamPy native CPU) - Z-C space")
     print("=" * 70)
     print(f"Backend         : {args.transport_backend}")
     print(f"Reference flow  : {KFLAME_REFERENCE_WORKFLOW}")
@@ -1334,7 +1334,7 @@ def main(argv=None) -> Path:
     species_names: list[str] | None = None
     used_progress_species: list[str] = []
 
-    # === KFLAME NATIVE BACKEND SETUP ===
+    # === FlamPy NATIVE BACKEND SETUP ===
     print("Inicializando backend nativo para el barrido...")
     opts = make_solve_options(args)
     prev_solution: dict[str, np.ndarray] | None = None
@@ -1617,7 +1617,7 @@ def main(argv=None) -> Path:
         "external_flamelet_table_tool": EXTERNAL_FLAMELET_TABLE_TOOL,
         "table_builder": TABLE_BUILDER,
         "timing_scope": (
-            "KFLAME native solve plus configured continuation/cache/parallel policy; "
+            "FlamPy native solve plus configured continuation/cache/parallel policy; "
             "excludes any external Streamline Flamelet Table Tool execution"
         ),
         "cantera_version": cantera_version,

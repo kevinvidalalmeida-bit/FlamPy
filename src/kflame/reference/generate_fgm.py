@@ -267,7 +267,7 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument(
         "--phi-schedule-json", type=str, default="",
         help=(
-            "Ruta a continuation_schedule.json producido por KFLAME. Reproduce "
+            "Ruta a continuation_schedule.json producido por FlamPy. Reproduce "
             "exactamente sus phi solicitados y puentes para una comparación justa."
         ),
     )

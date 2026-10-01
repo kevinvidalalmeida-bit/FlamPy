@@ -1,7 +1,7 @@
 """
 plot_fgm_figures.py  (kflame – Z-C space)
 
-Post-procesa tablas FGM generadas por KFLAME o su referencia opcional
+Post-procesa tablas FGM generadas por FlamPy o su referencia opcional
 y genera figuras estilo Fig. 8 en espacio (Z, c):
 
   (a) Y_sp1 vs c por flamelet (líneas coloreadas, rojo = no-monótono)
