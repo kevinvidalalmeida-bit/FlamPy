@@ -1,0 +1,57 @@
+{
+  "software": "FlamPy",
+  "fields": "only the arrays used to draw the gallery",
+  "snapshots": [
+    {
+      "snapshot": "flame-ch4.npz",
+      "source_run": "20260929_153857_676604",
+      "mechanism": "gri30.yaml",
+      "fuel": "CH4",
+      "phi": 1.0,
+      "temperature_K": 300.0,
+      "pressure_Pa": 101325.0,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "accepted": true,
+      "nodes": 261,
+      "Su_m_s": 0.3788310083698853,
+      "sha256": "e6f1e50a8bd480a7c60dd2e3fa32a8b3a5867f94210c878dc038ed960738c9e2"
+    },
+    {
+      "snapshot": "fgm-ch4.npz",
+      "source_run": "CH4_T300_p1_P_kflame",
+      "mechanism": "gri30.yaml",
+      "temperature_K": 300.0,
+      "pressure_Pa": 101325.0,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "phi_range": [
+        0.7,
+        1.4
+      ],
+      "flamelets": 40,
+      "progress_points": 241,
+      "all_final_accepted": true,
+      "final_defect": 0.00903058886758865,
+      "sha256": "2c596deba6fff7ab9f78bcd515eb5caaaeb48f41a3d50cd8b0b98b5d64b1df54"
+    },
+    {
+      "snapshot": "fgm-h2.npz",
+      "source_run": "H2_T300_p1_P_kflame",
+      "mechanism": "h2o2.yaml",
+      "temperature_K": 300.0,
+      "pressure_Pa": 101325.0,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "phi_range": [
+        0.7,
+        1.4
+      ],
+      "flamelets": 25,
+      "progress_points": 241,
+      "all_final_accepted": true,
+      "final_defect": 0.005002963512949178,
+      "sha256": "438121bd3d304a533b5bb068be941cc3fd3c0f5f7d5930c1205ea8b431f519bb"
+    }
+  ]
+}

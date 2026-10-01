@@ -17,7 +17,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+plots = ["matplotlib>=3.8,<4"]
 reference = ["cantera==3.2.0", "matplotlib>=3.8,<4"]
+
+[project.urls]
+Repository = "https://github.com/kevinvidalalmeida-bit/FlamPy"
+Documentation = "https://github.com/kevinvidalalmeida-bit/FlamPy/tree/main/docs"
+Issues = "https://github.com/kevinvidalalmeida-bit/FlamPy/issues"
 
 [project.scripts]
 flampy = "kflame.cli:main"

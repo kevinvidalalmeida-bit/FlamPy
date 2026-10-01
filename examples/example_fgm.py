@@ -1,8 +1,8 @@
 """Build, save, and plot a small methane/air FGM table.
 
-Run from the repository root after installing the optional plotting extras:
+Run from the repository root after installing plotting support:
 
-    python -m pip install -e . matplotlib
+    python -m pip install -e ".[plots]"
     python examples/example_fgm.py
 """
 
@@ -29,7 +29,7 @@ FGM_CASE = {
     "pressure": 101325.0,  # Pressure [Pa].
     "width": 0.03,  # Initial domain width [m].
     "transport": "mixture-averaged",  # Or "multicomponent".
-    "soret": False,  # Thermal diffusion; requires multicomponent transport.
+    "soret": False,  # Thermal diffusion; supported with both transport models.
     # C4: the validated CH4 progress variable used in the thesis workflow.
     "progress_species": "CO2:1.0,H2O:1.0,CO:1.0,H2:0.5",
     "progress_points": 241,  # Number of adaptive c points.
@@ -102,8 +102,8 @@ print("[3/3] Creating plots...", flush=True)
 profile_fields = (
     ("Temperature", temperature, "T [K]"),
     ("Local velocity", velocity, "u [m s$^{-1}$]"),
-    ("Carbon dioxide", mass_fractions[:, 0, :], r"$Y_{CO_2}$ [kg kg$^{-1}$]"),
-    ("Carbon monoxide", mass_fractions[:, 1, :], r"$Y_{CO}$ [kg kg$^{-1}$]"),
+    (PLOT_SPECIES[0], mass_fractions[:, 0, :], f"Y({PLOT_SPECIES[0]}) [kg/kg]"),
+    (PLOT_SPECIES[1], mass_fractions[:, 1, :], f"Y({PLOT_SPECIES[1]}) [kg/kg]"),
 )
 map_fields = (
     ("Density", density, r"$\rho$ [kg m$^{-3}$]", "viridis"),

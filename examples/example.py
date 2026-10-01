@@ -1,8 +1,8 @@
 """Solve, save, and plot one neutral methane/air flame.
 
-Run from the repository root after installing the optional plotting extras:
+Run from the repository root after installing plotting support:
 
-    python -m pip install -e . matplotlib
+    python -m pip install -e ".[plots]"
     python examples/example.py
 """
 
@@ -28,7 +28,7 @@ CASE = {
     "width": 0.03,  # Initial domain width [m].
     "initial_points": 8,
     "transport": "mixture-averaged",  # Or "multicomponent".
-    "soret": False,  # Thermal diffusion; requires multicomponent transport.
+    "soret": False,  # Thermal diffusion; supported with both transport models.
     "ratio": 2.5,
     "slope": 0.04,
     "curve": 0.08,

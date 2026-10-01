@@ -1,52 +1,89 @@
-# Examples
+# Ejemplos de FlamPy
 
-Install the package with plotting support from the repository root:
+[Inicio](../README.md) · [API](../docs/api.md) · [Archivos y consulta](../docs/outputs.md)
 
-```powershell
-python -m pip install -e . matplotlib
-```
+Desde la raíz del repositorio:
 
-The examples use the same transparent workflow as a typical Cantera script:
+~~~sh
+python -m pip install -e ".[plots]"
+~~~
 
-1. edit one case dictionary;
-2. solve and save the numerical output;
-3. reload named NumPy arrays from the saved `.npz` file;
-4. assemble a conventional row-wise CSV matrix; and
-5. create explicit Matplotlib figures that you can modify.
+| Script | Qué hace |
+|---|---|
+| [`example.py`](example.py) | Resuelve CH₄–aire, guarda una matriz de perfiles y crea figuras modificables |
+| [`example_fgm.py`](example_fgm.py) | Construye una familia adaptativa y dibuja perfiles y mapas FGM |
+| [`query_fgm.py`](query_fgm.py) | Carga una tabla y consulta temperatura y composición por lotes |
 
-Nothing chooses figures implicitly. Edit the plotting functions to add fields,
-change limits, or replace the supplied layout.
+## Llama individual
 
-## One-dimensional flame
-
-```powershell
+~~~sh
 python examples/example.py
-```
+~~~
 
-`example.py` defines `CASE`, runs a neutral CH4/air flame, and writes these
-additional files into the generated run directory:
+Edita `CASE` para cambiar las condiciones. `PLOT_SPECIES` selecciona las
+especies del CSV y de las figuras; no reduce el mecanismo químico.
+Además de las salidas de la API, el ejemplo escribe:
 
-- `solution_matrix.csv`: one row per grid point, with position, temperature,
-  velocity, heat release, and the selected species mass fractions;
-- `custom_flame_plots.pdf`: temperature, velocity, heat-release, and species
-  plots made directly from `flame.npz`.
+- `solution_matrix.csv`: una fila por nodo con posición, temperatura,
+  velocidad, liberación de calor y fracciones másicas seleccionadas.
+- `custom_flame_plots.pdf`: figuras creadas desde los arrays de `flame.npz`.
 
-Use `mechanism="h2o2.yaml"` and `fuel="H2"` to adapt the same script to a
-hydrogen flame. Valid transport choices are `"mixture-averaged"` and
-`"multicomponent"`. Soret diffusion requires multicomponent transport.
+Para H₂–aire, utiliza `mechanism="h2o2.yaml"`, `fuel="H2"` y
+`PLOT_SPECIES = ("H2", "O2", "H2O", "OH")`.
+`soret=True` se admite con `"mixture-averaged"` y `"multicomponent"`.
 
-## FGM table
+## Tabla adaptativa
 
-```powershell
+~~~sh
 python examples/example_fgm.py
-```
+~~~
 
-`example_fgm.py` defines `FGM_CASE`, constructs a deliberately small FGM table,
-and writes:
+Los cinco valores de `FGM_CASE["phis"]` son la familia inicial, no el
+número final de llamas. Se añaden nuevas composiciones hasta alcanzar el
+objetivo de defecto o un límite de ejecución.
 
-- `fgm_matrix.csv`: one row for every `(Z, c)` table state, with selected
-  thermo-chemical fields;
-- `custom_fgm_plots.pdf`: maps of temperature, heat release, a selected species,
-  and the burning velocity of the flamelets.
+El ejemplo escribe:
 
-Increase `phis` in `FGM_CASE` before using the workflow for a production table.
+- `fgm_matrix.csv`: una fila por estado `(Z, Z_star, c)`, con temperatura,
+  densidad, liberación de calor y las especies seleccionadas.
+- `custom_fgm_plots.pdf`: perfiles y mapas construidos explícitamente
+  con Matplotlib.
+
+Para H₂ cambia el mecanismo, combustible, pesos de progreso y especies
+de las figuras:
+
+~~~python
+FGM_CASE.update(
+    mechanism="h2o2.yaml",
+    fuel="H2",
+    progress_species="H2O:1.0,HO2:10.0",
+)
+PLOT_SPECIES = ("H2", "O2")
+~~~
+
+Los títulos y etiquetas de los paneles de especie se actualizan a partir
+de `PLOT_SPECIES`.
+
+## Consultar una tabla
+
+~~~sh
+python examples/query_fgm.py runs/fgm/MI_EJECUCION/fgm_table.npz
+~~~
+
+El script acepta también `--Z`, `--c` y `--species`:
+
+~~~sh
+python examples/query_fgm.py runs/fgm/MI_EJECUCION/fgm_table.npz --c 0.25 0.5 0.75 --species H2O
+~~~
+
+Si no proporcionas `--Z`, utiliza el punto medio del intervalo almacenado.
+Las consultas fuera de la tabla se rechazan.
+
+## Salidas y repetición
+
+Sin una ruta explícita, cada llamada crea una carpeta fechada en `runs/`,
+ignorada por Git. Las rutas proporcionadas a `output` deben ser nuevas.
+La primera ejecución incluye compilación JIT y puede tardar más.
+
+Las funciones de dibujo de los ejemplos utilizan arrays guardados: puedes
+modificar colores, campos y límites sin cambiar el solver.

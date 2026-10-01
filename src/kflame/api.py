@@ -53,15 +53,25 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
                 species=('CH4', 'O2', 'CO2', 'H2O', 'OH')):
-    """Solve an adiabatic premixed free flame and save NPZ, CSV and metadata.
+    """Solve an adiabatic premixed free flame on the native CPU backend.
 
-    Use one of phi with fuel/oxidizer, X (mole amounts), or Y (mass amounts).
+    All arguments are keyword-only. Temperature, pressure and width use SI
+    units (K, Pa and m). Specify at most one of phi with fuel/oxidizer, X
+    (mole amounts), or Y (mass amounts); the default mixture has phi=1.
     Compositions accept strings or dictionaries and are normalized. Dilution
-    is the final mole fraction of the diluent in the fresh mixture. Grid is
-    optional, in metres, strictly increasing from zero to width. The outlet
-    has zero species gradients; pressure and fresh inlet state are prescribed.
-    Returned arrays use Y[species, node]. Internal Jacobian/PTC settings are
-    the production defaults. A rejected solve raises after saving diagnostics.
+    is the final mole fraction of the diluent in the fresh mixture.
+
+    Grid optionally supplies increasing nodes from zero to width; spatial
+    adaptation remains active. Both transport models support soret=True.
+    Internal Jacobian and pseudotransient settings use production defaults.
+
+    Return a dictionary with the profiles, Su in m/s, accepted, report,
+    runtime_s and output (a Path). Y has shape (species, nodes). The complete
+    mechanism is retained in flame.npz; species selects CSV and plot curves.
+    Always save NPZ, CSV and metadata; plots=True adds PNG and PDF figures
+    and requires Matplotlib. Output must not already exist; None creates a
+    dated directory in runs/flame. A rejected solve saves diagnostics before
+    raising RuntimeError. See docs/api.md for all parameters and defaults.
     """
     from kflame.chemistry.backend import NativeSpeciesBackend
     from kflame.fgm.generate import build_argparser, make_solve_options, tabulated_properties
@@ -177,14 +187,27 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  progress_points=241, adaptive_phi=True, target_defect=0.01,
                  max_bridges_per_round=10, max_adaptive_rounds=64,
                  max_flamelets=256):
-    """Generate a native FGM with adaptive c coordinates and certified flames.
+    """Build an accepted native FGM table on inlet composition Z and progress c.
 
-    Output contains the full NPZ table, raw profiles, metadata, optional
-    FlameMaster/CSV tables and the established FGM figures. Composition is
-    parameterized by phis and mole-basis fuel/oxidizer streams. With
-    By default, phis are the initial certified flamelets and logarithmic bridge
-    flamelets are solved until the leave-one-out defect reaches target_defect.
-    Set adaptive_phi=False only to build a fixed composition grid. Returns Path.
+    All arguments are keyword-only; physical inputs use SI units. Fuel and
+    oxidizer specify mole-basis streams. Phis must be positive and strictly
+    increasing. With adaptive_phi=True, at least three initial phis are
+    required and new flames are solved at logarithmic midpoints until the
+    leave-one-out defect reaches target_defect (0.01 means 1%). Execution
+    limits raise an error if that target is not reached. A fixed family
+    (adaptive_phi=False) needs at least two phis. Both modes adapt each flame
+    spatially and redistribute the progress grid.
+
+    Return the output Path after checking flame acceptance and table structure.
+    Save the full NPZ table, raw profiles, metadata and continuation traces.
+    Export=True adds all-species .fla and CSV files. Plots=True requires
+    Matplotlib and exactly two valid species. For H2 with h2o2.yaml, change
+    fuel, progress_species and plot species together; see docs/api.md.
+
+    Output must not already exist; None creates a dated directory in runs/fgm.
+    This API uses one process and disables persistent seed caching. The
+    progress weights and refinement defect require physical review for each
+    new family; interpolation consistency is not experimental validation.
     """
     from kflame.fgm.generate import main
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
