@@ -15,7 +15,7 @@ COMMANDS = {
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='KFLAME native flame solver and FGM tools')
+    parser = argparse.ArgumentParser(description='FlamPy native flame solver and FGM tools')
     parser.add_argument('command', choices=COMMANDS)
     parser.add_argument('arguments', nargs=argparse.REMAINDER, help='Use COMMAND --help for its options')
     args = parser.parse_args(argv)

@@ -1,6 +1,6 @@
 # Compatibility matrix
 
-KFLAME supports Python 3.11 and newer. The project constrains its CPU
+FlamPy supports Python 3.11 and newer. The project constrains its CPU
 dependencies to versions that work together; it does not upgrade the user's
 global Python installation. Use a virtual environment per matrix below.
 
@@ -19,5 +19,5 @@ The NumPy 2.4 and SciPy 1.17 lines work with both supported Numba lines.
 `pip install .` resolves the CPU stack; `pip install ".[reference]"` adds the
 reference-comparison tools.
 
-KFLAME is CPU/Numba by design. GPU and historical optimization experiments are
+FlamPy is CPU/Numba by design. GPU and historical optimization experiments are
 not part of the maintained numerical workflow.

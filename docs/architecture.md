@@ -1,6 +1,6 @@
-# Pipeline productivo de KFLAME
+# Pipeline productivo de FlamPy
 
-El núcleo KFLAME se distribuye ahora como `kflame.flame` y `kflame.chemistry`; la
+El núcleo FlamPy se distribuye ahora como `kflame.flame` y `kflame.chemistry`; la
 generación FGM reside en `kflame.fgm`. Entrada: `python -m kflame fgm`.
 Las equivalencias de rutas anteriores están en [migration.md](migration.md).
 

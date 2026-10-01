@@ -8,7 +8,7 @@ transport coefficients during each linearization.
 
 The organization follows Cantera's separation of
 [mixture state, transport and free-flame refinement](https://cantera.org/3.2/examples/python/onedim/adiabatic_flame.html).
-KFLAME uses two keyword-only functions and dictionaries/paths for results.
+FlamPy uses two keyword-only functions and dictionaries/paths for results.
 
 | Input | Meaning and supported scope |
 |---|---|

@@ -467,7 +467,7 @@ class NativeSpeciesBackend:
 
         Cantera is not invoked from this method. The immutable
         collision-integral tables were read once while the backend was built;
-        all face-system assembly and linear algebra below this API are KFLAME's.
+        all face-system assembly and linear algebra below this API are FlamPy's.
         """
         if not self.uses_multicomponent_flux or self.multicomponent_transport is None:
             return None

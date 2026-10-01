@@ -133,7 +133,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                delimiter=',', header=','.join(['z_m', 'T_K', 'u_m_s', 'rho_kg_m3', 'cp_J_kg_K',
                                              'conductivity_W_m_K', 'qdot_W_m3', *['Y_' + name for name in species]]), comments='')
     accepted = bool(ok and report.get('final_accepted') and report.get('grid_converged'))
-    metadata = dict(software='KFLAME', backend='native_cpu', mechanism=args.mech,
+    metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech,
                     species_names=problem.species_names, temperature=temperature,
                     pressure=pressure, transport=transport, soret=soret, inlet_Y=problem.Y_in,
                     initial_grid=case.initial_grid, initial_points=initial_points,

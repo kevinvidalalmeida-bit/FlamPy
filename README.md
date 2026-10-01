@@ -1,6 +1,6 @@
-# KFLAME
+# FlamPy
 
-KFLAME resuelve llamas libres premezcladas unidimensionales y construye tablas
+FlamPy resuelve llamas libres premezcladas unidimensionales y construye tablas
 FGM en coordenadas de fracción de mezcla y progreso. El solver de producción es
 nativo de CPU: Cantera solo se emplea en comparaciones de referencia explícitas.
 
@@ -8,7 +8,7 @@ nativo de CPU: Cantera solo se emplea en comparaciones de referencia explícitas
 
 ```sh
 python -m pip install .
-python -m kflame --help
+flampy --help
 ```
 
 Los ejemplos mínimos son [examples/example.py](examples/example.py) y
@@ -38,3 +38,5 @@ la linealización, LU con pivoteo, Newton amortiguado, PTC y rescate Euler
 implícito. Los mecanismos GRI-Mech 3.0 y `h2o2.yaml` están incluidos.
 
 La API pública se documenta en [docs/api.md](docs/api.md).
+
+El paquete conserva el módulo `kflame` por compatibilidad; el nombre público y el comando principal son `FlamPy` y `flampy`.
