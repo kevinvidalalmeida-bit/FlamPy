@@ -1,0 +1,188 @@
+{
+  "reference": "Cantera BurnerFlame",
+  "reference_version": "3.2.0",
+  "native_source_sha256": {
+    "src/kflame/api.py": "81825c0697ef4e1c0b30f82f3945e4bb762a57f1241952ead08390e556ecb8f1",
+    "src/kflame/flame/config.py": "8a9cf194a26ce3bdf6bcb0539b4643366f72d4ba426a49923a5bfa7fb55cf258",
+    "src/kflame/flame/problem.py": "24d8508a95bdf648382b2986ca02876b6fbb57dc920f79ebf496d4595921dd5b",
+    "src/kflame/flame/equations.py": "8852cc4ea62687dad5596c41adc8795d70a0eba1a9f163e2f587e20727729b5f",
+    "src/kflame/flame/analytic_jacobian.py": "0279363f25ef3cb041464b02efdb69cbc7c13a1f8c5d4a7d9b755e5dc45d3a45",
+    "src/kflame/flame/solver.py": "7361f65d729aaaba765cc4c0149d41aa265dc83e66995258fb8da836cf17537e",
+    "src/kflame/flame/enthalpy.py": "2c69d19c0fe3e7a05cbc16be38d3760a4f545c7e0e7c89fcb4ffa61318df6ac3",
+    "src/kflame/chemistry/thermo.py": "d461c3630a77ad861574f8d435bee1e92a043b18ca5357d1e7dd750765c5c187",
+    "src/kflame/fgm/nonadiabatic.py": "3d73f22ba2c818f829a3dd0660ec69df5821304e74e2f332a2ed04d6ccf3d70c"
+  },
+  "cases": [
+    {
+      "mass_flux_kg_m2_s": 0.12,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "native_nodes": 216,
+      "reference_nodes": 209,
+      "native_Tmax_K": 1919.905173387845,
+      "reference_Tmax_K": 1919.2030524342372,
+      "native_burned_deficit_J_kg": 572736.8820923656,
+      "reference_burned_deficit_J_kg": 572636.1588316842,
+      "native_burner_heat_loss_W_m2": 68477.08314582876,
+      "errors": {
+        "temperature_Linf_K": 0.7021209536078459,
+        "major_Y_Linf": 0.00011811258758456789,
+        "burned_deficit_relative_error": 0.00017589399329409074,
+        "relative_energy_closure_error": 0.0036570414997305263,
+        "mass_flux_relative_spread": 3.184134668895074e-10
+      },
+      "limits": {
+        "temperature_Linf_K": 5.0,
+        "major_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "relative_energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "passed": true,
+      "fuel_case": "fixed_inlet_family"
+    },
+    {
+      "mass_flux_kg_m2_s": 0.08,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "native_nodes": 221,
+      "reference_nodes": 212,
+      "native_Tmax_K": 1834.2939267672116,
+      "reference_Tmax_K": 1833.3159974627804,
+      "native_burned_deficit_J_kg": 711258.2816110166,
+      "reference_burned_deficit_J_kg": 711283.9165243253,
+      "native_burner_heat_loss_W_m2": 56725.23817969705,
+      "errors": {
+        "temperature_Linf_K": 0.9779293044311999,
+        "major_Y_Linf": 0.00014107789325482067,
+        "burned_deficit_relative_error": 3.6040338763635844e-05,
+        "relative_energy_closure_error": 0.0030829930827822494,
+        "mass_flux_relative_spread": 1.3129844433912297e-10
+      },
+      "limits": {
+        "temperature_Linf_K": 5.0,
+        "major_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "relative_energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "passed": true,
+      "fuel_case": "fixed_inlet_family"
+    },
+    {
+      "mass_flux_kg_m2_s": 0.04,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "native_nodes": 199,
+      "reference_nodes": 215,
+      "native_Tmax_K": 1706.67648890681,
+      "reference_Tmax_K": 1706.273385867294,
+      "native_burned_deficit_J_kg": 909871.1204005814,
+      "reference_burned_deficit_J_kg": 909312.9328890049,
+      "native_burner_heat_loss_W_m2": 36287.17909262912,
+      "errors": {
+        "temperature_Linf_K": 2.0042965129102868,
+        "major_Y_Linf": 0.00022172809199423604,
+        "burned_deficit_relative_error": 0.0006138563429456809,
+        "relative_energy_closure_error": 0.0029582685113276365,
+        "mass_flux_relative_spread": 9.152401059253634e-13
+      },
+      "limits": {
+        "temperature_Linf_K": 5.0,
+        "major_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "relative_energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "passed": true,
+      "fuel_case": "fixed_inlet_family"
+    },
+    {
+      "mass_flux_kg_m2_s": 0.08,
+      "transport": "multicomponent",
+      "soret": true,
+      "native_nodes": 159,
+      "reference_nodes": 161,
+      "native_Tmax_K": 1453.118723300839,
+      "reference_Tmax_K": 1453.1947870646927,
+      "native_burned_deficit_J_kg": 882330.8197051466,
+      "reference_burned_deficit_J_kg": 882769.1791678241,
+      "native_burner_heat_loss_W_m2": 70366.25131969657,
+      "errors": {
+        "temperature_Linf_K": 0.16582918926701495,
+        "major_Y_Linf": 4.858800736470825e-05,
+        "burned_deficit_relative_error": 0.0004965731394142434,
+        "relative_energy_closure_error": 0.0031197880119071607,
+        "mass_flux_relative_spread": 2.0864420087474137e-08
+      },
+      "limits": {
+        "temperature_Linf_K": 5.0,
+        "major_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "relative_energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "passed": true,
+      "fuel_case": "H2_air_phi_0.7"
+    },
+    {
+      "mass_flux_kg_m2_s": 0.1,
+      "transport": "mixture-averaged",
+      "soret": false,
+      "native_nodes": 225,
+      "reference_nodes": 209,
+      "native_Tmax_K": 1880.525837165829,
+      "reference_Tmax_K": 1879.3531592792244,
+      "native_burned_deficit_J_kg": 637204.1408941344,
+      "reference_burned_deficit_J_kg": 637258.4828403825,
+      "native_burner_heat_loss_W_m2": 63526.41319287247,
+      "errors": {
+        "temperature_Linf_K": 1.1726778866045606,
+        "major_Y_Linf": 0.0001551317381559003,
+        "burned_deficit_relative_error": 8.527457493522738e-05,
+        "relative_energy_closure_error": 0.0030445642698634524,
+        "mass_flux_relative_spread": 3.099617784663166e-11
+      },
+      "limits": {
+        "temperature_Linf_K": 5.0,
+        "major_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "relative_energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "passed": true,
+      "fuel_case": "withheld_fixed_inlet_family"
+    }
+  ],
+  "held_out_lookup": {
+    "mass_flux_kg_m2_s": 0.1,
+    "resolved_states": 213,
+    "native_states": 225,
+    "metrics": {
+      "coverage_fraction": 0.9466666666666667,
+      "temperature_Linf_K": 0.3543255020069864,
+      "all_Y_Linf": 0.0001714656618069521,
+      "qdot_Linf_over_native_peak": 0.044418232214789334
+    },
+    "limits": {
+      "coverage_fraction_min": 0.8,
+      "temperature_Linf_K_max": 5.0,
+      "all_Y_Linf_max": 0.002,
+      "qdot_Linf_over_native_peak_max": 0.08
+    },
+    "passed": true,
+    "note": "Errors apply only inside the resolved manifold; unsupported inlet states are counted as uncovered."
+  },
+  "mesh_refinement_check": {
+    "mass_flux_kg_m2_s": 0.08,
+    "coarse_nodes": 221,
+    "fine_nodes": 416,
+    "coarse_energy_closure": 0.0030829930827822494,
+    "fine_energy_closure": 0.0013908807104946346,
+    "Tmax_change_K": 0.9150897399342739,
+    "relative_heat_flux_change": 0.0009506224451833783,
+    "passed": true
+  },
+  "passed": true,
+  "scope": "Independent numerical comparison using the same chemistry and transport; no experimental validation."
+}

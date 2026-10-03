@@ -52,7 +52,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 transport='mixture-averaged', soret=False, ratio=2.5, slope=0.04,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
-                species=('CH4', 'O2', 'CO2', 'H2O', 'OH')):
+                species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None):
     """Solve an adiabatic premixed free flame on the native CPU backend.
 
     All arguments are keyword-only. Temperature, pressure and width use SI
@@ -72,6 +72,9 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     and requires Matplotlib. Output must not already exist; None creates a
     dated directory in runs/flame. A rejected solve saves diagnostics before
     raising RuntimeError. See docs/api.md for all parameters and defaults.
+
+    A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
+    solve_burner_flame provides the explicit entry point for that mode.
     """
     from kflame.chemistry.backend import NativeSpeciesBackend
     from kflame.fgm.generate import build_argparser, make_solve_options, tabulated_properties
@@ -80,6 +83,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     from kflame.flame.state import unpack_state
     from kflame.serialization import json_safe
 
+    if mass_flux is not None and (not np.isfinite(mass_flux) or mass_flux <= 0):
+        raise ValueError('mass_flux must be finite and positive [kg/(m^2 s)]')
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
                      initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
     args = build_argparser().parse_args(argv)
@@ -122,9 +127,10 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         phi=1.0 if phi is None else phi, fuel=_stream(fuel), oxidizer=_stream(oxidizer),
         inlet_mass_fractions=None if inlet is None else tuple(inlet),
         initial_grid=None if grid is None else tuple(grid), steady_rtol=rtol, steady_atol=atol,
+        inlet_mass_flux=mass_flux, cantera_seed_grid=mass_flux is None,
         transport_model=transport, soret_enabled=soret, ratio=ratio, slope=slope, curve=curve, prune=prune,
     )
-    folder = _output(output, 'flame')
+    folder = _output(output, 'burner' if mass_flux is not None else 'flame')
     started = time.perf_counter()
     problem = FreeFlameProblem(case, n_points=initial_points, mech_data=mech)
     problem.assume_finite_y = True
@@ -137,12 +143,26 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     rho, cp, conductivity, qdot, _ = tabulated_properties(problem, T, y, {})
     fields = dict(z=problem.z, T=T, u=u, Y=y, rho=rho, cp_mass=cp,
                   conductivity=conductivity, qdot=qdot, species_names=np.asarray(problem.species_names))
+    heat_loss = None
+    if problem.is_burner:
+        from kflame.flame.enthalpy import enthalpy_diagnostics
+        enthalpy_fields, heat_loss = enthalpy_diagnostics(problem, state)
+        fields.update(enthalpy_fields)
     np.savez_compressed(folder / 'flame.npz', **fields)
     indices = [problem.species_names.index(name) for name in species]
-    np.savetxt(folder / 'profiles.csv', np.column_stack([problem.z, T, u, rho, cp, conductivity, qdot, *y[indices]]),
+    extra_columns = [fields['h_mass'], fields['enthalpy_departure_from_feed']] if problem.is_burner else []
+    extra_headers = ['h_total_J_kg', 'h_feed_minus_h_J_kg'] if problem.is_burner else []
+    np.savetxt(folder / 'profiles.csv', np.column_stack([problem.z, T, u, rho, cp, conductivity, qdot, *extra_columns, *y[indices]]),
                delimiter=',', header=','.join(['z_m', 'T_K', 'u_m_s', 'rho_kg_m3', 'cp_J_kg_K',
-                                             'conductivity_W_m_K', 'qdot_W_m3', *['Y_' + name for name in species]]), comments='')
+                                             'conductivity_W_m_K', 'qdot_W_m3', *extra_headers, *['Y_' + name for name in species]]), comments='')
     accepted = bool(ok and report.get('final_accepted') and report.get('grid_converged'))
+    if problem.is_burner:
+        # The cold, nonreacting branch also solves the steady equations.
+        # This is a branch diagnostic, not a physical extinction threshold.
+        reacting = bool(np.max(T) - temperature > 50.0 and np.max(qdot) > 1.0)
+        accepted = accepted and reacting
+        report['reacting_branch'] = reacting
+    velocity = {'inlet_velocity': float(u[0]), 'mass_flux': float(mass_flux)} if problem.is_burner else {'Su': float(u[0])}
     metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech,
                     species_names=problem.species_names, temperature=temperature,
                     pressure=pressure, transport=transport, soret=soret, inlet_Y=problem.Y_in,
@@ -150,7 +170,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                     refinement=dict(ratio=ratio, slope=slope, curve=curve, prune=prune, max_points=max_points),
                     tolerances=dict(rtol=rtol, atol=atol),
                     initial_width=width, final_width=problem.width, nodes=problem.n_points,
-                    Su=float(u[0]), runtime_s=elapsed, accepted=accepted, report=report)
+                    **velocity, flow_type='isothermal_burner' if problem.is_burner else 'free_flame',
+                    heat_loss=heat_loss, runtime_s=elapsed, accepted=accepted, report=report)
     (folder / 'metadata.json').write_text(json.dumps(json_safe(metadata), indent=2), encoding='utf-8')
     if not accepted:
         raise RuntimeError(f'Flame failed acceptance or mesh convergence; diagnostics: {folder}')
@@ -175,7 +196,25 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
             for extension in ('png', 'pdf'):
                 fig.savefig(folder / f'profiles.{extension}', dpi=200)
             plt.close(fig)
-    return dict(**fields, Su=float(u[0]), accepted=accepted, output=folder, report=report, runtime_s=elapsed)
+    return dict(**fields, **velocity, heat_loss=heat_loss, accepted=accepted, output=folder, report=report, runtime_s=elapsed)
+
+
+def solve_burner_flame(*, mass_flux, **kwargs):
+    """Solve a premixed flame conducting heat towards an isothermal burner.
+
+    mass_flux is the imposed feed flux in kg/(m^2 s). Other keyword arguments
+    match solve_flame; temperature is the burner surface and feed temperature.
+    The model has T(0)=temperature, a prescribed inlet mass flux, diffusive
+    species inlet conditions, and zero temperature/species outlet gradients.
+    No free-flame phase condition or artificial chemical heat scaling is used.
+
+    Return inlet_velocity (not Su), total enthalpy profiles and heat_loss
+    diagnostics, in addition to the usual fields. This planar gas model does
+    not solve conduction inside the solid or multidimensional wall quenching.
+    """
+    if mass_flux is None:
+        raise ValueError('mass_flux is required for a burner flame')
+    return solve_flame(mass_flux=mass_flux, **kwargs)
 
 
 def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
@@ -265,4 +304,83 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     if plots:
         plot_args = ['--run-dir', str(folder), '--sp1', species[0], '--sp2', species[1]]
         plot(plot_args)
+    return folder
+
+
+def generate_burner_fgm(*, mass_fluxes=(.12, .08, .04),
+                        progress_species='CO2:1,H2O:1,CO:1,H2:0.5',
+                        progress_points=241, max_energy_error=.02, output=None,
+                        **flame_settings):
+    """Build a nonadiabatic (c,h) FGM for one fixed inlet composition.
+
+    Solve an adiabatic reference and burner flames with imposed mass fluxes
+    [kg/(m^2 s)]. flame_settings uses solve_flame keywords. All flamelets must
+    pass solver/mesh/branch checks and the specified boundary energy closure.
+    c uses one adiabatic normalization throughout the family; h includes
+    formation enthalpies. delta_h=h_adiabatic(c)-h is stored as a diagnostic.
+
+    Preserve unreachable progress ranges with a validity mask; no endpoint
+    stretching, extrapolation, or free-flame Su labels for burner results.
+    Return the output Path. Load it with kflame.fgm.nonadiabatic.BurnerFGM.
+    This table has fixed feed composition; it is not a three-control (Z,c,h)
+    manifold or a solver for conjugate heat transfer inside the burner.
+    """
+    from kflame.fgm.common import parse_progress_weights
+    from kflame.fgm.nonadiabatic import tabulate_burner_family
+    from kflame.serialization import json_safe
+
+    fluxes = np.asarray(mass_fluxes, dtype=float)
+    if (fluxes.ndim != 1 or fluxes.size < 1 or not np.isfinite(fluxes).all()
+            or np.any(fluxes <= 0) or np.unique(fluxes).size != fluxes.size):
+        raise ValueError('mass_fluxes must contain distinct finite positive fluxes')
+    if not isinstance(progress_points, int) or progress_points < 3:
+        raise ValueError('progress_points must be an integer >= 3')
+    if not np.isfinite(max_energy_error) or not 0 < max_energy_error < 1:
+        raise ValueError('max_energy_error must lie between zero and one')
+    if 'mass_flux' in flame_settings:
+        raise ValueError('Use mass_fluxes to specify the burner family')
+    mech_name = str(flame_settings.get('mechanism', 'gri30.yaml'))
+    mech = load_mechanism(resolve_mechanism(mech_name))
+    parsed = parse_progress_weights(progress_species)
+    if not parsed or set(parsed) - set(mech.species_names) or not np.isfinite(list(parsed.values())).all():
+        raise ValueError('Progress weights must be finite and refer to mechanism species')
+    weights = np.array([parsed.get(name, 0.) for name in mech.species_names])
+    if not np.any(weights):
+        raise ValueError('Progress weights cannot all be zero')
+    folder = _output(output, 'burner_fgm')
+    pressure = float(flame_settings.get('pressure', 101325.))
+    reference = solve_flame(output=folder / 'adiabatic', **flame_settings)
+    reference['pressure'] = pressure
+    reference_meta = json.loads((reference['output'] / 'metadata.json').read_text(encoding='utf-8'))
+    inlet_Y = np.array(reference_meta['inlet_Y'])
+    burners = []
+    for index, flux in enumerate(np.sort(fluxes)[::-1]):
+        result = solve_burner_flame(mass_flux=float(flux), output=folder / f'burner_{index:03d}', **flame_settings)
+        if result['heat_loss']['relative_energy_closure_error'] > max_energy_error:
+            raise RuntimeError(f'Burner energy closure exceeds {max_energy_error:g}; refine the mesh: {result["output"]}')
+        result['pressure'] = pressure
+        burners.append(result)
+    # Order by actual enthalpy; input mass flux alone is not an enthalpy coordinate.
+    burners.sort(key=lambda result: result['heat_loss']['burned_enthalpy_deficit_J_kg'])
+    results = [reference, *burners]
+    table = tabulate_burner_family(results, mech, inlet_Y, weights, progress_points)
+    table['mass_flux'] = np.array([np.nan, *[r['mass_flux'] for r in burners]])
+    np.savez_compressed(folder / 'burner_fgm.npz', **table)
+    metadata = dict(
+        format='FlamPy_burner_fgm_v1', backend='native_cpu', controls=['c', 'h'],
+        fixed_inlet_composition=True, inlet_Y=inlet_Y, mechanism=mech_name,
+        pressure_Pa=pressure, progress_species=parsed,
+        c_definition='(weighted_species-beta_unburned)/adiabatic_beta_span',
+        h_definition='total_sensible_plus_formation_J_kg',
+        delta_h_definition='h_adiabatic_at_same_c_minus_h',
+        interpolation='adjacent_flamelets_only_with_thermodynamic_temperature_recovery',
+        progress_points=progress_points, max_energy_error=max_energy_error,
+        all_final_accepted=True,
+        rows=[dict(kind='adiabatic_reference', output='adiabatic', Su=reference['Su']),
+              *[dict(kind='isothermal_burner', output=r['output'].name,
+                     mass_flux_kg_m2_s=r['mass_flux'], inlet_velocity_m_s=r['inlet_velocity'],
+                     heat_loss=r['heat_loss']) for r in burners]],
+        limitations='Fixed-composition planar gas flamelets; no solid conduction, radiation, multidimensional wall quenching, or independent Z control.',
+    )
+    (folder / 'metadata.json').write_text(json.dumps(json_safe(metadata), indent=2), encoding='utf-8')
     return folder

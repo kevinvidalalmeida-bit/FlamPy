@@ -153,7 +153,7 @@ if _NUMBA_AVAILABLE:
     def _assemble_residual_numba_core(
         F, u, T, Y, z, rho, cp_n, omega, hk_n, lam_face, flux,
         invW, Y_in, T_prof, has_T_prof, solve_energy, j_fixed,
-        T_fixed, T_in, outlet_species_flux,
+        T_fixed, T_in, outlet_species_flux, inlet_mass_flux,
     ):
         n_pts = z.shape[0]
         n_sp = Y.shape[0]
@@ -163,7 +163,8 @@ if _NUMBA_AVAILABLE:
             F[i] = 0.0
 
         dz0 = z[1] - z[0]
-        F[C_U] = -(rho[1] * u[1] - rho[0] * u[0]) / dz0
+        F[C_U] = (rho[0] * u[0] - inlet_mass_flux if inlet_mass_flux > 0.0
+                  else -(rho[1] * u[1] - rho[0] * u[0]) / dz0)
         if solve_energy:
             F[C_T] = T[0] - T_in
         else:
@@ -193,7 +194,7 @@ if _NUMBA_AVAILABLE:
                     F[b + C_U] = T[j] - T_fixed
                 else:
                     F[b + C_U] = rho[j] * u[j] - rho[0] * 0.3
-            elif j_fixed >= 0 and j > j_fixed:
+            elif inlet_mass_flux > 0.0 or (j_fixed >= 0 and j > j_fixed):
                 F[b + C_U] = -(rho[j] * u[j] - rho[j - 1] * u[j - 1]) / dzm
             else:
                 F[b + C_U] = -(rho[j + 1] * u[j + 1] - rho[j] * u[j]) / dzp
@@ -473,6 +474,7 @@ def residual(
                 T_prof_arr, bool(has_T_prof), bool(problem.solve_energy),
                 j_fixed, T_fixed, float(problem.T_in),
                 bool(_outlet_species_flux_bc(problem)),
+                float(getattr(problem, "inlet_mass_flux", -1.0)),
             )
             _profile_record(problem, "residual_assembly_numba", t_assembly)
             _apply_transient_terms(F_numba, x, problem, rdt, x_old)
@@ -509,7 +511,7 @@ def residual(
                 F[b + C_U] = T[j] - float(problem.T_fixed_point)
             else:
                 F[b + C_U] = rho[j] * u[j] - rho[0] * 0.3
-        elif j_fixed is not None and j > j_fixed:
+        elif getattr(problem, "inlet_mass_flux", -1.0) > 0.0 or (j_fixed is not None and j > j_fixed):
             F[b + C_U] = -(rho[j] * u[j] - rho[j - 1] * u[j - 1]) / dzm
         else:
             F[b + C_U] = -(rho[j + 1] * u[j + 1] - rho[j] * u[j]) / dzp
@@ -559,8 +561,10 @@ def _left_bc(F: np.ndarray, u, T, Y, rho, flux0, problem, nv, n_sp):
     b = 0
     dz0 = problem.z[1] - problem.z[0]
 
-    # Continuity (forward difference, algebraic)
-    F[b + C_U] = -(rho[1] * u[1] - rho[0] * u[0]) / dz0
+    # Burner: prescribed mass flux; free flame: forward continuity difference.
+    mass_flux = float(getattr(problem, "inlet_mass_flux", -1.0))
+    F[b + C_U] = (rho[0] * u[0] - mass_flux if mass_flux > 0.0
+                  else -(rho[1] * u[1] - rho[0] * u[0]) / dz0)
 
     # Temperature
     if bool(problem.solve_energy):
@@ -979,7 +983,9 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
             dz0 = z[1] - z[0]
             rho0 = rho_local[0 + off]
             rho1 = rho_local[1 + off]
-            block[C_U] = -(rho1 * u[1] - rho0 * u[0]) / dz0
+            mass_flux = float(getattr(problem, "inlet_mass_flux", -1.0))
+            block[C_U] = (rho0 * u[0] - mass_flux if mass_flux > 0.0
+                          else -(rho1 * u[1] - rho0 * u[0]) / dz0)
 
             if solve_energy:
                 block[C_T] = T[0] - T_in
@@ -1024,7 +1030,7 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
                     block[C_U] = T[j] - float(problem.T_fixed_point)
                 else:
                     block[C_U] = rho_local[jo] * u[j] - cache["rho"][0] * 0.3
-            elif j_fixed is not None and j > j_fixed:
+            elif getattr(problem, "inlet_mass_flux", -1.0) > 0.0 or (j_fixed is not None and j > j_fixed):
                 block[C_U] = -(rho_local[jo] * u[j] - rho_local[jo - 1] * u[j - 1]) / dzm
             else:
                 block[C_U] = -(rho_local[jo + 1] * u[j + 1] - rho_local[jo] * u[j]) / dzp
@@ -1176,7 +1182,7 @@ if _NUMBA_AVAILABLE:
         multi_product_left, multi_product_right, mole_denom, base_Y, local_vars, j_center,
         multicomponent_flux, dz_face, W, invW, Y_in, T_prof,
         has_T_prof, solve_energy, j_fixed, T_fixed, T_in, p0, p1, n0,
-        f0, n_faces, basis_molar, rho0_base, outlet_species_flux,
+        f0, n_faces, basis_molar, rho0_base, outlet_species_flux, inlet_mass_flux,
     ):
         n_batch = u.shape[0]
         n_sp = Y.shape[1]
@@ -1243,7 +1249,8 @@ if _NUMBA_AVAILABLE:
                     dz0 = z[1] - z[0]
                     rho0 = rho_local[ib, 0 - n0]
                     rho1 = rho_local[ib, 1 - n0]
-                    vals_out[ib, base + C_U] = -(rho1 * u[ib, 1 - n0] - rho0 * u[ib, 0 - n0]) / dz0
+                    vals_out[ib, base + C_U] = (rho0 * u[ib, 0 - n0] - inlet_mass_flux
+                        if inlet_mass_flux > 0.0 else -(rho1 * u[ib, 1 - n0] - rho0 * u[ib, 0 - n0]) / dz0)
 
                     if solve_energy:
                         vals_out[ib, base + C_T] = T[ib, 0 - n0] - T_in
@@ -1303,7 +1310,7 @@ if _NUMBA_AVAILABLE:
                             vals_out[ib, base + C_U] = T[ib, jo] - T_fixed
                         else:
                             vals_out[ib, base + C_U] = rho_local[ib, jo] * u[ib, jo] - rho0_base * 0.3
-                    elif j_fixed >= 0 and j > j_fixed:
+                    elif inlet_mass_flux > 0.0 or (j_fixed >= 0 and j > j_fixed):
                         vals_out[ib, base + C_U] = -(
                             rho_local[ib, jo] * u[ib, jo]
                             - rho_local[ib, jo - 1] * u[ib, jo - 1]
@@ -1543,6 +1550,7 @@ def residual_local_rows_batch_perturbed(
             bool(cache["basis_molar"]),
             float(cache["rho0"]),
             bool(_outlet_species_flux_bc(problem)),
+            float(getattr(problem, "inlet_mass_flux", -1.0)),
         )
     except Exception as exc:
         problem.last_residual_error = f"Numba local fallback: {exc}"
@@ -1691,7 +1699,9 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
             dz0 = z[1] - z[0]
             rho0 = rho_local[:, 0 + off]
             rho1 = rho_local[:, 1 + off]
-            block[:, C_U] = -(rho1 * u[:, 1] - rho0 * u[:, 0]) / dz0
+            mass_flux = float(getattr(problem, "inlet_mass_flux", -1.0))
+            block[:, C_U] = (rho0 * u[:, 0] - mass_flux if mass_flux > 0.0
+                             else -(rho1 * u[:, 1] - rho0 * u[:, 0]) / dz0)
 
             if solve_energy:
                 block[:, C_T] = T[:, 0] - T_in
@@ -1737,7 +1747,7 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
                     block[:, C_U] = T[:, j] - float(problem.T_fixed_point)
                 else:
                     block[:, C_U] = rho_local[:, jo] * u[:, j] - cache["rho"][0] * 0.3
-            elif j_fixed is not None and j > j_fixed:
+            elif getattr(problem, "inlet_mass_flux", -1.0) > 0.0 or (j_fixed is not None and j > j_fixed):
                 block[:, C_U] = -(rho_local[:, jo] * u[:, j] - rho_local[:, jo - 1] * u[:, j - 1]) / dzm
             else:
                 block[:, C_U] = -(rho_local[:, jo + 1] * u[:, j + 1] - rho_local[:, jo] * u[:, j]) / dzp

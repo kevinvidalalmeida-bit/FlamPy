@@ -13,6 +13,10 @@ python -m pip install -e ".[plots]"
 | [`example.py`](example.py) | Resuelve CH₄–aire, guarda una matriz de perfiles y crea figuras modificables |
 | [`example_fgm.py`](example_fgm.py) | Construye una familia o lee una tabla guardada y dibuja los mapas FGM de la tesis |
 | [`query_fgm.py`](query_fgm.py) | Carga una tabla y consulta temperatura y composición por lotes |
+| [`example_heat_loss.py`](example_heat_loss.py) | Resuelve una familia con pérdidas hacia un quemador y construye un FGM `(c,h)` |
+| [`validate_burner.py`](validate_burner.py) | Compara llamas de quemador con Cantera y comprueba una llama retenida |
+
+Para la nueva familia no adiabática, consulta [el modelo y sus referencias](../docs/heat-loss.md).
 
 ## Llama individual
 

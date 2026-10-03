@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "FlamPy"
 version = "0.1.0"
-description = "Native CPU free-flame solver and flamelet-generated manifold tables"
+description = "Native CPU premixed flame solver and flamelet-generated manifold tables"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
@@ -20,6 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 plots = ["matplotlib>=3.8,<4"]
 reference = ["cantera==3.2.0", "matplotlib>=3.8,<4"]
+test = ["pytest>=8,<10"]
 
 [project.urls]
 Repository = "https://github.com/kevinvidalalmeida-bit/FlamPy"

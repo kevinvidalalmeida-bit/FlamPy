@@ -7,6 +7,10 @@ unidimensionales. Calcula la velocidad de propagación y los perfiles
 termoquímicos, adapta la malla y el dominio, y reúne familias de llamas en
 tablas *Flamelet-Generated Manifold* (FGM).
 
+La rama de pérdidas de calor añade llamas sobre un quemador isotérmico y tablas
+FGM de progreso y entalpía para una composición fija.
+[Modelo, referencias y ejemplo reproducible](docs/heat-loss.md).
+
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.
 
@@ -22,6 +26,8 @@ térmico. [Datos y reproducción de las figuras](docs/results.md).*
 | Función | Resultado |
 |---|---|
 | Resolver una llama libre | Velocidad laminar, temperatura, velocidad local, composición, densidad y liberación de calor |
+| Resolver una llama en quemador | Caudal impuesto, conducción hacia la superficie, entalpía total y balance de calor |
+| Tabular pérdidas de entalpía | FGM `(c,h)` de composición fija, con máscara de estados alcanzables |
 | Elegir la composición | Relación de equivalencia con combustible/oxidante, o cantidades molares `X` y másicas `Y` |
 | Comparar transporte | Transporte promediado por mezcla o multicomponente; Soret disponible en ambos |
 | Adaptar la resolución espacial | Refinamiento, eliminación de nodos y ampliación automática del dominio |

@@ -15,6 +15,8 @@ class FlameCase:
     width: float = 0.03
     inlet_mass_fractions: tuple[float, ...] | None = None
     initial_grid: tuple[float, ...] | None = None
+    # None: freely propagating flame; positive SI flux: isothermal burner.
+    inlet_mass_flux: float | None = None  # kg/(m^2 s)
     steady_rtol: float = 1e-4
     steady_atol: float = 1e-9
 

@@ -1,5 +1,5 @@
 """
-problem.py – Configuración del problema de llama libre premezclada 1-D.
+problem.py – Configuración de llamas libres y estabilizadas en quemador 1-D.
 
 FreeFlameProblem almacena:
   * Parámetros del caso (termocinética, transporte, malla, tolerancias).
@@ -33,8 +33,15 @@ def _transition_profile(z, width, left, right, locs=(0.0, 0.3, 0.5, 1.0)):
 
 
 class FreeFlameProblem:
-    def __init__(self, case, n_points: int = 8, locs=(0.0, 0.3, 0.5, 1.0), *, mech_data=None):
+    def __init__(self, case, n_points: int = 8, locs=None, *, mech_data=None):
         self.case = case
+        mass_flux = getattr(case, 'inlet_mass_flux', None)
+        if mass_flux is not None and (not np.isfinite(mass_flux) or mass_flux <= 0):
+            raise ValueError('inlet_mass_flux must be finite and positive [kg/(m^2 s)]')
+        self.inlet_mass_flux = -1.0 if mass_flux is None else float(mass_flux)
+        self.is_burner = mass_flux is not None
+        if locs is None:
+            locs = (0.0, 0.02, 0.10, 1.0) if self.is_burner else (0.0, 0.3, 0.5, 1.0)
         self.locs = tuple(locs)
 
         # ---- Termodinámica de referencia ----
@@ -183,6 +190,11 @@ class FreeFlameProblem:
         Determina j_fixed y T_fixed_point para el anchor de temperatura.
         Reproduce el mecanismo de m_tfixed / m_zfixed en Flow1D.
         """
+        if self.is_burner:
+            # Imposed mass flux replaces the free-flame phase condition.
+            self.j_fixed = None
+            self.T_fixed_point = None
+            return
         T_eff = float(T_fixed) if T_fixed is not None else self.anchor_T
 
         if z_fixed is None:
@@ -207,7 +219,9 @@ class FreeFlameProblem:
     #  Conjetura inicial
     # ------------------------------------------------------------------
     def make_initial_guess(self, u_left_guess: float = 0.30) -> np.ndarray:
-        mdot = self.rho_in * u_left_guess
+        mdot = self.inlet_mass_flux if self.is_burner else self.rho_in * u_left_guess
+        if self.is_burner:
+            u_left_guess = mdot / self.rho_in
         u_right = mdot / self.rho_eq
 
         u0 = _transition_profile(self.z, self.width, u_left_guess, u_right, self.locs)
@@ -216,6 +230,10 @@ class FreeFlameProblem:
             _transition_profile(self.z, self.width, self.Y_in[k], self.Y_eq[k], self.locs)
             for k in range(self.n_species)
         ])
+        if self.is_burner:
+            T0[0] = self.T_in
+            Y0[:, 0] = self.Y_in
+            u0 = mdot / self._thermo.density(T0, self.P, Y0)
         return pack_state(u0, T0, Y0)
 
     # ------------------------------------------------------------------
@@ -223,6 +241,7 @@ class FreeFlameProblem:
     # ------------------------------------------------------------------
     def summary(self) -> str:
         lines = [
+            f"flow_type    = {'isothermal_burner' if self.is_burner else 'free_flame'}",
             f"n_points     = {self.n_points}",
             f"n_species    = {self.n_species}",
             f"width [m]    = {self.width:.6f}",
@@ -237,4 +256,6 @@ class FreeFlameProblem:
                 f"T_fixed_pt   = {self.T_fixed_point:.3f}",
                 f"z_fixed [m]  = {self.z[self.j_fixed]:.4e}",
             ]
+        if self.is_burner:
+            lines.append(f"mass_flux    = {self.inlet_mass_flux:.6g} kg/(m^2 s)")
         return "\n".join(lines)

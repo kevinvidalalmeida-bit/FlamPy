@@ -149,6 +149,21 @@ class NativeThermo:
         h = self.h_RT(T_arr) * R_UNIV * T_arr[None, :]  # (n_sp, N)
         return h[:, 0] if is_scalar else h
 
+    def enthalpy_mass(self, T, Y: np.ndarray):
+        """Total mixture enthalpy [J/kg], including formation enthalpies.
+
+        Y has shape (species,) for one state or (species, nodes) for profiles.
+        Species enthalpies use the mechanism's NASA reference convention.
+        """
+        h = self.partial_molar_enthalpies(T)
+        y = self.xp.asarray(Y)
+        if h.ndim == 1 and y.ndim == 2:
+            h = h[:, None]
+        if h.ndim == 2 and y.ndim == 1:
+            y = y[:, None]
+        invW = self.invW if h.ndim == 1 else self.invW[:, None]
+        return self.xp.sum(y * h * invW, axis=0)
+
     def partial_molar_entropies(self, T) -> np.ndarray:
         """s_k  [J/(kmol·K)]."""
         return self.s_R(T) * R_UNIV

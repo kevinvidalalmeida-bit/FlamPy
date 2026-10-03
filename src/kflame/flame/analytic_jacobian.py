@@ -72,7 +72,7 @@ def _dflux(df, face, col, k, v):
 @njit(cache=True, parallel=True)
 def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     flux, df, lam, invW, yin, energy, has_profile, fixed,
-                    outlet_flux, threshold, active_columns):
+                    outlet_flux, threshold, active_columns, inlet_mass_flux):
     nodes, nv = x.shape
     ns = nv-2
     blocks = np.zeros((nodes, 3, nv, nv))
@@ -94,7 +94,10 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     other = 1 if j == 0 else j-1
                     dmo = (rho[other]*_delta(other, col, v, 0)
                            + x[other, 0]*(drho[other, v] if col == other else 0.0))
-                    blocks[j, side, 0, v] = (dm-dmo)/(z[1]-z[0]) if j == 0 else dm-dmo
+                    if j == 0 and inlet_mass_flux > 0.0:
+                        blocks[j, side, 0, v] = dm
+                    else:
+                        blocks[j, side, 0, v] = (dm-dmo)/(z[1]-z[0]) if j == 0 else dm-dmo
                     blocks[j, side, 1, v] = dt
                     if j == nodes-1 and (energy or not has_profile):
                         blocks[j, side, 1, v] -= _delta(other, col, v, 1)
@@ -119,7 +122,7 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                 if fixed >= 0 and j == fixed:
                     blocks[j, side, 0, v] = dt if energy else dm
                 else:
-                    other = j-1 if fixed >= 0 and j > fixed else j+1
+                    other = j-1 if inlet_mass_flux > 0.0 or (fixed >= 0 and j > fixed) else j+1
                     dmo = (rho[other]*_delta(other, col, v, 0)
                            + x[other, 0]*(drho[other, v] if col == other else 0.0))
                     blocks[j, side, 0, v] = -(dm-dmo)/dzm if other == j-1 else -(dmo-dm)/dzp
@@ -199,7 +202,8 @@ def build_analytic_blocks(x, problem, column_nodes=None):
     blocks = assemble_blocks(state, cache['z'], cache['rho'], cache['cp_n'], cache['omega'],
         cache['hk_n'], drho, dcp, domega, cp_molar, flux, df, cache['lam_face'], b.invW,
         cache['Y_in'], cache['solve_energy'], cache['has_T_prof'], cache['j_fixed'],
-        _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active)
+        _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active,
+        float(getattr(problem, 'inlet_mass_flux', -1.0)))
     result = BlockTridiagJacobian(np.ascontiguousarray(blocks[1:, 0]),
         np.ascontiguousarray(blocks[:, 1]), np.ascontiguousarray(blocks[:-1, 2]))
     result.use_compiled_substitution = bool(getattr(problem, 'use_compiled_block_substitution', True))

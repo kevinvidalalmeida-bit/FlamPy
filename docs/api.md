@@ -2,16 +2,21 @@
 
 [Inicio](../README.md) · [Archivos y consulta](outputs.md) · [Ejemplos](../examples/README.md)
 
-La interfaz pública expone dos funciones, con argumentos exclusivamente
+La interfaz pública expone cuatro funciones, con argumentos exclusivamente
 por nombre:
 
 ~~~python
-from kflame import solve_flame, generate_fgm
+from kflame import solve_flame, solve_burner_flame, generate_fgm, generate_burner_fgm
 ~~~
 
-Ambas utilizan el núcleo nativo de CPU. La configuración interna del
+Todas utilizan el núcleo nativo de CPU. La configuración interna del
 Jacobiano, el amortiguamiento, PTC y el álgebra lineal permanece dentro del
 procedimiento de resolución.
+
+`solve_burner_flame(mass_flux=..., **opciones)` añade un quemador isotérmico,
+y `generate_burner_fgm(mass_fluxes=..., **opciones)` construye una tabla `(c,h)`
+de composición fija. Devuelven, respectivamente, perfiles con diagnóstico de
+calor y la ruta de la tabla. [Condiciones, unidades y alcance](heat-loss.md).
 
 ## `solve_flame`
 

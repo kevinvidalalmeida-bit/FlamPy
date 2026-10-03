@@ -1,4 +1,4 @@
-"""Solver, mesh adaptation, and nonlinear iteration for the 1-D free flame."""
+"""Solver and mesh adaptation for 1-D free and burner-stabilized flames."""
 
 from __future__ import annotations
 
@@ -2166,7 +2166,10 @@ def _domain_too_narrow(problem, x: np.ndarray, slope_tol: float = 0.02, strict_m
     metrics["m_left"] = m_left
     metrics["m_right"] = m_right
 
-    too_narrow = (m_left > slope_tol) or (m_right > slope_tol)
+    # A hot gradient at the burner is the physical heat loss, not truncation.
+    check_left = not bool(getattr(problem, 'is_burner', False))
+    metrics['left_gradient_checked'] = check_left
+    too_narrow = (check_left and m_left > slope_tol) or (m_right > slope_tol)
     return bool(too_narrow), metrics
 
 
@@ -2276,6 +2279,9 @@ def _apply_fixed_temperature_anchor(problem, x: np.ndarray,
     x = np.asarray(x, dtype=float).copy()
     n_pts = int(problem.n_points)
     n_sp = int(problem.n_species)
+    if bool(getattr(problem, 'is_burner', False)):
+        problem.setup_fixed_temperature()
+        return x
     if n_pts < 2:
         return x
 
