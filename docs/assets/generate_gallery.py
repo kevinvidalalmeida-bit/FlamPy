@@ -79,7 +79,7 @@ def fgm_figure():
 def main():
     with plt.rc_context(STYLE):
         flame_figure()
-        fgm_figure()
+    fgm_figure()
     print(f"Gallery regenerated in {ASSETS}")
 
 
