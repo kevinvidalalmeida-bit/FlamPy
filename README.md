@@ -103,13 +103,16 @@ una ruta, debe ser una carpeta que todavía no exista.
 
 ## De una llama a una tabla FGM
 
-![Tablas reales de temperatura FGM de metano–aire e hidrógeno–aire](docs/assets/fgm-temperature.png)
+![FGM de CH₄–aire: temperatura, CO₂, CO y fuente de progreso](docs/assets/fgm-ch4-map.png)
 
-*Familias aceptadas de CH₄–aire y H₂–aire entre φ = 0,7 y 1,4, a
-300 K y 101 325 Pa, con transporte promediado por mezcla sin Soret.
-Estas dos construcciones contienen 40 y 25 flamelets, respectivamente,
-y 241 puntos de progreso. Z⋆ normaliza la coordenada de entrada solo
-para dibujarla; la consulta utiliza Z.*
+*CH₄–aire: 40 flamelets, φ = 0,7–1,4 y 241 puntos de progreso.*
+
+![FGM de H₂–aire: temperatura, H₂O, OH y fuente de progreso](docs/assets/fgm-h2-map.png)
+
+*H₂–aire: 71 flamelets, φ = 0,5–5 y 1001 puntos de progreso.
+Ambas familias usan entrada a 300 K y 101 325 Pa, transporte promediado
+sin Soret, Zᵢₙ horizontal y progreso c vertical. Zᵢₙ conserva su intervalo
+físico. [Figuras, datos y código exacto de reproducción](docs/results.md).*
 
 ~~~python
 from kflame import generate_fgm
@@ -137,9 +140,11 @@ del eje de progreso `c` reorganiza los perfiles ya calculados y se distingue
 del refinamiento en composición.
 
 Para H₂, configura también `mechanism="h2o2.yaml"`, `fuel="H2"`,
-`progress_species="H2O:1.0,HO2:10.0"` y, si solicitas figuras,
+`progress_species="H2O:1.0,HO2:10.0,OH:-1.0"` y, si solicitas figuras,
 `species=("H2", "O2")`. Los pesos de progreso son elecciones verificadas
-para estas familias; deben revisarse al cambiar el dominio físico.
+para las familias ilustradas; deben revisarse al cambiar el dominio físico.
+Las figuras de la galería se regeneran con
+`python docs/assets/generate_fgm_figures.py` a partir de los datos incluidos.
 
 [API completa](docs/api.md) · [Lectura y consulta de archivos](docs/outputs.md)
 

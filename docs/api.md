@@ -119,18 +119,23 @@ Con `adaptive_phi=False` se permite una familia fija de al menos dos valores.
 Una familia fija sigue utilizando la adaptación espacial de cada llama y
 la redistribución del eje de progreso.
 
-Para el hidrógeno empleado en las figuras:
+Para iniciar una familia adaptativa de hidrógeno con el progreso usado
+en la galería:
 
 ~~~python
 folder = generate_fgm(
     mechanism="h2o2.yaml",
     fuel="H2",
     phis=(0.7, 0.9, 1.0, 1.1, 1.4),
-    progress_species="H2O:1.0,HO2:10.0",
-    species=("H2", "O2"),
+    progress_species="H2O:1.0,HO2:10.0,OH:-1.0",
+    species=("H2O", "OH"),
     plots=True,
 )
 ~~~
+
+Este ejemplo refina el intervalo φ = 0,7–1,4. Las figuras publicadas
+proceden de 71 composiciones fijas entre 0,5 y 5; para reproducirlas,
+utiliza los [datos y el generador incluidos](results.md#reproducir-las-imágenes).
 
 Los pesos se comprueban sobre las trayectorias calculadas. El defecto por
 exclusión dirige el refinamiento; no es una cota rigurosa del error en

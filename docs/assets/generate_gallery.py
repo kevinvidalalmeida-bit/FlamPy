@@ -1,13 +1,13 @@
-"""Reproduce the README figures from compact, saved numerical snapshots."""
+"""Reproduce the individual flame and six FGM figures from saved snapshots."""
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 import numpy as np
+from generate_fgm_figures import generate_all
 
 
 ASSETS = Path(__file__).resolve().parent
@@ -73,30 +73,7 @@ def flame_figure():
 
 
 def fgm_figure():
-    tables = []
-    for fuel in ("ch4", "h2"):
-        with np.load(DATA / f"fgm-{fuel}.npz", allow_pickle=False) as data:
-            tables.append({k: data[k] for k in data.files})
-    vmin = min(float(t["T"].min()) for t in tables)
-    vmax = np.ceil(max(float(t["T"].max()) for t in tables) / 100) * 100
-    norm = Normalize(vmin, vmax)
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.5), layout="constrained")
-    fig.suptitle("FlamPy · temperatura en tablas FGM\nEntrada a 300 K y 1 atm · φ entre 0,7 y 1,4", fontsize=16)
-    for axis, table, fuel in zip(axes, tables, ("CH₄", "H₂"), strict=True):
-        z = table["Z_grid"]
-        z_star = (z - z[0]) / np.ptp(z)
-        image = axis.pcolormesh(z_star, table["c_grid"], table["T"].T,
-                                shading="auto", cmap="magma", norm=norm, rasterized=True)
-        axis.set(title=f"{fuel}–aire · {len(z)} flamelets", xlabel="Composición normalizada, Z⋆",
-                 ylabel="Progreso, c", xlim=(0, 1), ylim=(0, 1))
-        axis.set_xticks((0, 0.5, 1))
-        axis.set_yticks((0, 0.5, 1))
-    colorbar = fig.colorbar(image, ax=list(axes), fraction=0.035, pad=0.025)
-    colorbar.set_label("Temperatura [K]")
-    colorbar.locator = MaxNLocator(4)
-    colorbar.update_ticks()
-    fig.savefig(ASSETS / "fgm-temperature.png", dpi=180)
-    plt.close(fig)
+    generate_all(ASSETS)
 
 
 def main():
