@@ -219,3 +219,12 @@ examples/               scripts de uso y consulta
 docs/                   documentación y galería reproducible
 runs/                   nuevas ejecuciones locales, ignoradas por Git
 ~~~
+
+## Licencia
+
+FlamPy se distribuye bajo la [licencia MIT](LICENSE).
+Copyright (c) 2026 Kevin Anthony Vidal Almeida.
+
+Los componentes y datos de terceros conservan sus licencias y atribuciones
+originales. Consulta [Mecanismos y atribuciones](src/kflame/chemistry/data/README.md)
+y la [licencia de Cantera](src/kflame/chemistry/data/CANTERA_TRANSPORT_LICENSE.txt).

@@ -7,6 +7,7 @@ name = "FlamPy"
 version = "0.1.0"
 description = "Native CPU free-flame solver and flamelet-generated manifold tables"
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.11"
 dependencies = [
   "numba>=0.61,<0.66; python_version < '3.12'",
