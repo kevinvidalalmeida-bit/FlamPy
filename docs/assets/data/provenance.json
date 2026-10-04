@@ -1,6 +1,6 @@
 {
   "software": "FlamPy",
-  "fields": "only the arrays used to draw the gallery",
+  "snapshot_scope": "Only the arrays and recorded times used in the six FGM figures, plus the individual CH4 gallery flame.",
   "snapshots": [
     {
       "snapshot": "flame-ch4.npz",
@@ -19,7 +19,8 @@
     },
     {
       "snapshot": "fgm-ch4.npz",
-      "source_run": "CH4_T300_p1_P_kflame",
+      "source_run": "attempt-001",
+      "source_sha256": "355cccf82c6775948b4aa0876c7b751d50962723e1de7ea50776824750456c18",
       "mechanism": "gri30.yaml",
       "temperature_K": 300.0,
       "pressure_Pa": 101325.0,
@@ -29,29 +30,194 @@
         0.7,
         1.4
       ],
+      "Z_in_range": [
+        0.03928100245624755,
+        0.07559264984813618
+      ],
       "flamelets": 40,
       "progress_points": 241,
       "all_final_accepted": true,
-      "final_defect": 0.00903058886758865,
-      "sha256": "2c596deba6fff7ab9f78bcd515eb5caaaeb48f41a3d50cd8b0b98b5d64b1df54"
+      "progress_weights": {
+        "CO2": 1.0,
+        "H2O": 1.0,
+        "CO": 1.0,
+        "H2": 0.5
+      },
+      "coordinate_reference_stream_basis": "mole",
+      "extra_Z_normalization": false,
+      "sha256": "2ad52b6087e3d180ab6ba627a6ebff3c26f780e30b8646cc0d606d9ccbb01699"
+    },
+    {
+      "snapshot": "fgm-ch4-fidelity.npz",
+      "source_sha256": "4a8a4f14e499df0add3d0fc2fac7f0701df2d2d8ae4971359db5ad83e0c00484",
+      "validation_table_source_sha256": "5fed56c7214a33360bf8a3eac2f7da5f9f0448b7c9130dfaaa00fe02646fc606",
+      "validation_table_flamelets": 44,
+      "held_out_flames": 12,
+      "queries_per_flame": 1001,
+      "fields": [
+        "T",
+        "CO2",
+        "CO",
+        "omega_c"
+      ],
+      "mean_percent": [
+        0.03561463944308976,
+        0.08723873574882593,
+        0.035398765077939556,
+        0.16551911859536914
+      ],
+      "p95_percent": [
+        0.10239874231976792,
+        0.21875614102392751,
+        0.12053198467099674,
+        0.6778055941930393
+      ],
+      "max_percent": [
+        0.4229077105980792,
+        1.0480023294387426,
+        0.8214285494450023,
+        1.2192250074454611
+      ],
+      "sha256": "e461f0547d8e7295d4f39d566811ae3c8b04555cc3e11c92e3f462e686d07822"
+    },
+    {
+      "snapshot": "fgm-ch4-family.json",
+      "source_trace_sha256": [
+        "3b2dbc021c139f87b16cc743f3aaf542450280f399f218b19f9823b229a29694",
+        "1a0cbd25cbef246d59e166ebab78b3d940bb57d6f294790642ecd111d7dcc9b5",
+        "ee97300a8a16b1ab029efc4ac6ff014b9b3f1de3e729539c1b582b158e684d7d",
+        "ee5f8fb645d0d64c67da272de75b6330add708adc31b7768e93b30c75a02cf08",
+        "f303e2642e0d926417a310d2b42ecde6cda1b3b7e23f7f815ebbb395e2346a62",
+        "c11576411a4f6d29badab7f89814b3ed1237a1efb037c3d1f20671b381a512dd",
+        "5e4a6b221f126187b655e70ff3c7cd103332299b4867ec42b6d53f9b087e50e3",
+        "0935fbe771592a7de78e8e8f7adf8eb955f12ff9be9d12f236c77166d2664280"
+      ],
+      "construction_count": 8,
+      "flamelets_per_panel": [
+        40,
+        41,
+        40,
+        39,
+        41,
+        41,
+        39,
+        37
+      ],
+      "time_includes_properties": true,
+      "warmup_excluded": true,
+      "repetitions_per_construction": 1,
+      "sha256": "f3b80464b8fb1ee30760f9012510d8ab95d1b37ad8a162178693e19cb976f312"
     },
     {
       "snapshot": "fgm-h2.npz",
       "source_run": "H2_T300_p1_P_kflame",
+      "source_sha256": "a55e78c4c48a2f36e7494ce1909c2bf7d81bd3644c83371ebf32965a41708ca7",
       "mechanism": "h2o2.yaml",
       "temperature_K": 300.0,
       "pressure_Pa": 101325.0,
       "transport": "mixture-averaged",
       "soret": false,
       "phi_range": [
-        0.7,
-        1.4
+        0.5,
+        5.0
       ],
-      "flamelets": 25,
-      "progress_points": 241,
+      "Z_in_range": [
+        0.014467517838966196,
+        0.12800760730923438
+      ],
+      "flamelets": 71,
+      "progress_points": 1001,
       "all_final_accepted": true,
-      "final_defect": 0.005002963512949178,
-      "sha256": "438121bd3d304a533b5bb068be941cc3fd3c0f5f7d5930c1205ea8b431f519bb"
+      "progress_weights": {
+        "H2O": 1.0,
+        "HO2": 10.0,
+        "OH": -1.0
+      },
+      "coordinate_reference_stream_basis": "mole",
+      "extra_Z_normalization": false,
+      "sha256": "a548488ddf3fe202646582a471a6a0b8aca2baeb1980c8119a52e79a8861a864"
+    },
+    {
+      "snapshot": "fgm-h2-fidelity.npz",
+      "source_sha256": "502f4fc64c89a1bb236bb8a23398d2abca4668767e20ae7b73a9400df5668657",
+      "validation_table_source_sha256": "a55e78c4c48a2f36e7494ce1909c2bf7d81bd3644c83371ebf32965a41708ca7",
+      "validation_table_flamelets": 71,
+      "held_out_flames": 12,
+      "queries_per_flame": 1001,
+      "fields": [
+        "T",
+        "H2O",
+        "OH",
+        "omega_c"
+      ],
+      "mean_percent": [
+        0.02568283027819207,
+        0.01981037870063554,
+        0.04773545622903778,
+        0.06566215251614706
+      ],
+      "p95_percent": [
+        0.10371420999692217,
+        0.10324914123985549,
+        0.2029835421288158,
+        0.19417105148469896
+      ],
+      "max_percent": [
+        1.6702518387088883,
+        0.15254602200297432,
+        0.7787056946622782,
+        0.765207985488576
+      ],
+      "sha256": "ec149c0de60fcd1b95173118f7ba59ec1a401b5490755a9dd9b1b636dece1f6f"
+    },
+    {
+      "snapshot": "fgm-h2-family.json",
+      "source_trace_sha256": [
+        "81cf8f644de838b5e0b3a79a082c8fcbd9a9a0e8c1d9856ee015554f0b6ce6ac",
+        "fcd64446d483250264ea5b003465ce72bc0dbf91db13c8f9bb467c2896413e92",
+        "6452c51a016629b08ba8b600e4495845d3407f894c66639addb213ee001dbba5",
+        "c1c0ab8a4dc0995eb5bc897e3219a8c02025cc9fe791cf3ce42a9d924149c0ae",
+        "9eca5564794aa492ada88578ab482c438e7f346108724fd948e572e7ffd33669",
+        "7e26075bc6c478a5f4ed0616aa504ad9ac36783fdc9f5ca3baf77c278641a127",
+        "797c0a4c44ac562f7024801ac13c77f9221556ab8c41abcc65f6ba4aa3ab65c2",
+        "c4b8b7f5e43540d138b123ef38c3242491bb3dbfa02b119bc14260b4bed1f3cb"
+      ],
+      "construction_count": 8,
+      "flamelets_per_panel": [
+        71,
+        71,
+        71,
+        71,
+        71,
+        71,
+        71,
+        71
+      ],
+      "time_includes_properties": true,
+      "warmup_excluded": true,
+      "repetitions_per_construction": 1,
+      "sha256": "f40255d8420185b208d5590ef114c02e8fdd0c551e39ed943d163751f4c415e2"
     }
-  ]
+  ],
+  "figures_generator": "../generate_fgm_figures.py",
+  "generator_sha256": "822a05be9b077393e8e5a748c69a8821bad506053310eab8dfa68cb6c0b7c3c8",
+  "H2_common_71_row_schedule": true,
+  "H2_adaptive_1_percent_target_enforced": false,
+  "H2_defect_percent_by_case": {
+    "H2_T300_p1_P_kflame": 1.097810120259542,
+    "H2_T300_p1_P_cantera": 1.1050291688427443,
+    "H2_T300_p1_PS_kflame": 1.0796047594716343,
+    "H2_T300_p1_PS_cantera": 1.0849114154410424,
+    "H2_T300_p1_M_kflame": 1.1023570691914881,
+    "H2_T300_p1_M_cantera": 1.1071172230350421,
+    "H2_T300_p1_MS_kflame": 1.0647836584244903,
+    "H2_T300_p1_MS_cantera": 1.0731283660697617
+  },
+  "H2_total_speedup": 13.8322147706409,
+  "versions": {
+    "numpy": "2.4.6",
+    "matplotlib": "3.11.1"
+  },
+  "saved_data_reproduction": "No new simulation; recorded wall times are not remeasured.",
+  "CH4_coordinate_note": "Archived mass-basis stream labels mapped affinely to mole-basis Bilger inlet labels. Thermochemical arrays and timing values unchanged."
 }

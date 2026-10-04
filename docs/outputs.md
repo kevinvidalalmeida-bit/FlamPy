@@ -71,8 +71,10 @@ y `K` el número de especies:
 
 `Z_grid` identifica la composición de **entrada** de cada llama. Con
 difusión diferencial, no equivale necesariamente al escalar de Bilger local
-a lo largo del perfil. La coordenada `Z_star` dibujada en las figuras
-normaliza el intervalo de entrada y no sustituye `Z_grid` en la consulta.
+a lo largo del perfil. Si un gráfico utiliza `Z_star`, se trata de una
+normalización para dibujar y no sustituye `Z_grid` en la consulta.
+La [galería FGM reproducible](results.md) presenta `Z_in` sin reescalar
+su intervalo, con la referencia de las corrientes en base molar.
 
 ## Consulta escalar y por lotes
 
