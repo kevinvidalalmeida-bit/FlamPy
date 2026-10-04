@@ -132,7 +132,7 @@ quemador añaden `h_mass`, `enthalpy_departure_from_feed` y flujos conductivos,
 difusivos y totales de entalpía en las caras, con `z_face` de longitud `N-1`.
 El CSV incluye la entalpía total en J/kg; los metadatos identifican el caudal y
 las unidades de cada diagnóstico de calor. La tabla `burner_fgm.npz` almacena
-los controles, propiedades, especies, fuente de progreso `omega_c` en s⁻¹ y
+los controles, propiedades, especies, fuente volumétrica de progreso `omega_c` en kg/(m³ s) y
 una máscara `valid`. Las entradas no alcanzables contienen `NaN`.
 
 ~~~sh

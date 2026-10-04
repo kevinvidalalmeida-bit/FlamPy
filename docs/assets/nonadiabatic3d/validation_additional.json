@@ -1,0 +1,187 @@
+{
+  "reference": "Independent Cantera BurnerFlame",
+  "reference_version": "3.2.0",
+  "training_phis": [
+    0.7,
+    0.85,
+    1.0,
+    1.05,
+    1.1,
+    1.15,
+    1.2,
+    1.25,
+    1.3
+  ],
+  "training_mass_flux_fractions": [
+    0.65,
+    0.45,
+    0.25,
+    0.2,
+    0.16,
+    0.12,
+    0.1,
+    0.08,
+    0.06
+  ],
+  "training_flames": 90,
+  "mesh": {
+    "vertices": 16290,
+    "tetrahedra": 77760,
+    "excluded_folded_cells": 0,
+    "excluded_degenerate_cells": 0
+  },
+  "source_sha256": {
+    "src/kflame/api.py": "fbe611af84487b4fc9306d282208cf78b285727d4e79a937fdccbd7150dd0761",
+    "src/kflame/flame/config.py": "8a9cf194a26ce3bdf6bcb0539b4643366f72d4ba426a49923a5bfa7fb55cf258",
+    "src/kflame/flame/problem.py": "24d8508a95bdf648382b2986ca02876b6fbb57dc920f79ebf496d4595921dd5b",
+    "src/kflame/flame/equations.py": "8852cc4ea62687dad5596c41adc8795d70a0eba1a9f163e2f587e20727729b5f",
+    "src/kflame/flame/analytic_jacobian.py": "0279363f25ef3cb041464b02efdb69cbc7c13a1f8c5d4a7d9b755e5dc45d3a45",
+    "src/kflame/flame/solver.py": "7361f65d729aaaba765cc4c0149d41aa265dc83e66995258fb8da836cf17537e",
+    "src/kflame/flame/enthalpy.py": "2c69d19c0fe3e7a05cbc16be38d3760a4f545c7e0e7c89fcb4ffa61318df6ac3",
+    "src/kflame/chemistry/thermo.py": "d461c3630a77ad861574f8d435bee1e92a043b18ca5357d1e7dd750765c5c187",
+    "src/kflame/fgm/nonadiabatic3d.py": "969d8b697891c71e667b195ed9fe7a2a80a5529f9139d898ec77c84cee70c13e",
+    "examples/validate_nonadiabatic_3d.py": "6bac95b42bb4896d36b72813aef10b7452c3d476882facd9a02697a76cdcce13"
+  },
+  "table_sha256": "425d87e6eef3126ce28b4a408ebb64cdeefb593ea6c24eaf606d572dbfe0e310",
+  "mechanism_sha256": "06650b1e0ee0012f6903d5328b1bb218cb6007d07f8ebe375d18f24811039345",
+  "cases": [
+    {
+      "phi": 1.025,
+      "fraction": 0.28,
+      "mass_flux_kg_m2_s": 0.12045356167621094,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 406,
+      "reference_nodes": 392,
+      "resolved_nodes": 394,
+      "interpolation": {
+        "coverage_fraction": 0.9704433497536946,
+        "temperature_Linf_K": 2.37431416954405,
+        "all_Y_Linf": 0.0004767399913888082,
+        "omega_C_Linf_over_native_peak": 0.05372671500416656,
+        "qdot_Linf_over_native_peak": 0.04621299095171465
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.15,
+        "qdot_Linf_over_native_peak_max": 0.15
+      },
+      "interpolation_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.44730422201769215,
+        "all_Y_Linf": 6.464322641128173e-05,
+        "burned_deficit_relative_error": 8.899459723621253e-05,
+        "energy_closure_error": 0.001533386105488693,
+        "mass_flux_relative_spread": 1.9446405322869008e-10
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 3.7470027081099033e-16,
+        "C_Linf": 1.8735013540549517e-16,
+        "h_Linf_J_kg": 5.603069439530373e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -260637.18915406027,
+        "burned_enthalpy_deficit_J_kg": 581568.0083352039,
+        "burner_heat_loss_W_m2": 69944.52128446895,
+        "outlet_enthalpy_loss_W_m2": 70051.93795278831,
+        "relative_energy_closure_error": 0.001533386105488693,
+        "mass_flux_relative_spread": 1.9446405322869008e-10,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.3316513275082716e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true
+    },
+    {
+      "phi": 1.275,
+      "fraction": 0.11,
+      "mass_flux_kg_m2_s": 0.03232606938052629,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 473,
+      "reference_nodes": 339,
+      "resolved_nodes": 466,
+      "interpolation": {
+        "coverage_fraction": 0.985200845665962,
+        "temperature_Linf_K": 0.14550437675279682,
+        "all_Y_Linf": 0.0002693422757805014,
+        "omega_C_Linf_over_native_peak": 0.07563615192693218,
+        "qdot_Linf_over_native_peak": 0.07626649678324336
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.15,
+        "qdot_Linf_over_native_peak_max": 0.15
+      },
+      "interpolation_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.8567020779391896,
+        "all_Y_Linf": 0.0001220767865906941,
+        "burned_deficit_relative_error": 0.0008481059193146968,
+        "energy_closure_error": 7.577520055534472e-05,
+        "mass_flux_relative_spread": 3.078448720487939e-11
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 1.1102230246251565e-16,
+        "h_Linf_J_kg": 9.62521880865097e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -320234.13959037565,
+        "burned_enthalpy_deficit_J_kg": 618254.6804517342,
+        "burner_heat_loss_W_m2": 19984.229271148204,
+        "outlet_enthalpy_loss_W_m2": 19985.74369488493,
+        "relative_energy_closure_error": 7.577520055534472e-05,
+        "mass_flux_relative_spread": 3.078448720487939e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.879040143839938e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true
+    }
+  ],
+  "spatial_refinement": null,
+  "passed": true,
+  "scope": "A priori interpolation against withheld native detailed profiles, with an independent numerical Cantera comparison of those profiles. No reduced transport, CFD or experimental validation.",
+  "coverage_definition": "Number of native spatial nodes inside adjacent valid tetrahedra divided by all native spatial nodes. This is not a volume coverage measure.",
+  "source_units": {
+    "omega_C": "kg/(m^3 s)",
+    "qdot": "W/m^3"
+  }
+}

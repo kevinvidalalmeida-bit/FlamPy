@@ -99,6 +99,23 @@ Las consultas fuera de la tabla se rechazan.
 
 ## Salidas y repetición
 
+Para generar y validar un FGM no adiabático `(Z,C,h)` de CH₄-aire:
+
+~~~sh
+python examples/example_nonadiabatic_3d.py --output runs/nonadiabatic
+python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/validation3d --fine-native --mesh-check
+python examples/plot_nonadiabatic_3d.py runs/nonadiabatic --validation runs/validation3d --output output/figures/nonadiabatic3d
+~~~
+
+Para dibujar los datos publicados sin simular:
+
+~~~sh
+python examples/plot_nonadiabatic_3d.py docs/assets/nonadiabatic3d --output output/figures/nonadiabatic3d
+~~~
+
+El [modelo y las métricas](../docs/nonadiabatic-fgm.md) distinguen validación
+de la tabulación, comparación numérica independiente y cobertura del dominio.
+
 Sin una ruta explícita, cada llamada crea una carpeta fechada en `runs/`,
 ignorada por Git. Las rutas proporcionadas a `output` deben ser nuevas.
 La primera ejecución incluye compilación JIT y puede tardar más.

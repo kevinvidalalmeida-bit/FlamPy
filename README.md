@@ -8,8 +8,9 @@ termoquímicos, adapta la malla y el dominio, y reúne familias de llamas en
 tablas *Flamelet-Generated Manifold* (FGM).
 
 La rama de pérdidas de calor añade llamas sobre un quemador isotérmico y tablas
-FGM de progreso y entalpía para una composición fija.
-[Modelo, referencias y ejemplo reproducible](docs/heat-loss.md).
+FGM de progreso y entalpía, tanto para composición fija como para controles
+físicos `(Z,C,h)` con composición variable.
+[Modelo de quemador](docs/heat-loss.md) · [FGM no adiabático, validación y gráficas](docs/nonadiabatic-fgm.md).
 
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.
@@ -28,6 +29,7 @@ térmico. [Datos y reproducción de las figuras](docs/results.md).*
 | Resolver una llama libre | Velocidad laminar, temperatura, velocidad local, composición, densidad y liberación de calor |
 | Resolver una llama en quemador | Caudal impuesto, conducción hacia la superficie, entalpía total y balance de calor |
 | Tabular pérdidas de entalpía | FGM `(c,h)` de composición fija, con máscara de estados alcanzables |
+| Variar composición y entalpía | FGM `(Z,C,h)` con Z local de Bilger, progreso común y celdas entre llamas contiguas |
 | Elegir la composición | Relación de equivalencia con combustible/oxidante, o cantidades molares `X` y másicas `Y` |
 | Comparar transporte | Transporte promediado por mezcla o multicomponente; Soret disponible en ambos |
 | Adaptar la resolución espacial | Refinamiento, eliminación de nodos y ampliación automática del dominio |

@@ -2,11 +2,12 @@
 
 [Inicio](../README.md) · [Archivos y consulta](outputs.md) · [Ejemplos](../examples/README.md)
 
-La interfaz pública expone cuatro funciones, con argumentos exclusivamente
+La interfaz pública expone cinco funciones, con argumentos exclusivamente
 por nombre:
 
 ~~~python
 from kflame import solve_flame, solve_burner_flame, generate_fgm, generate_burner_fgm
+from kflame import generate_nonadiabatic_fgm
 ~~~
 
 Todas utilizan el núcleo nativo de CPU. La configuración interna del
@@ -17,6 +18,18 @@ procedimiento de resolución.
 y `generate_burner_fgm(mass_fluxes=..., **opciones)` construye una tabla `(c,h)`
 de composición fija. Devuelven, respectivamente, perfiles con diagnóstico de
 calor y la ruta de la tabla. [Condiciones, unidades y alcance](heat-loss.md).
+
+`generate_nonadiabatic_fgm(phis=..., mass_flux_fractions=..., **opciones)`
+resuelve una familia con composición y entalpía variables y guarda la tabla
+`(Z,C,h)`. Los caudales son fracciones del flujo adiabático `rho_u*Su` de cada
+mezcla. `raw_only=True` permite guardar las llamas antes de tabular;
+`reuse_from` reutiliza únicamente perfiles nativos aceptados con química,
+alimentación, transporte, tolerancias y refinamiento coincidentes.
+[Definiciones, consulta y reproducción](nonadiabatic-fgm.md).
+
+En modo quemador, `initial_solution` acepta la carpeta de otra llama nativa
+aceptada con la misma química y alimentación. Sirve como estimación inicial
+de continuación; cada nuevo caudal se vuelve a resolver y certificar.
 
 ## `solve_flame`
 
