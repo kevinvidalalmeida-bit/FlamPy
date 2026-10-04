@@ -129,12 +129,22 @@ def run(table, profiles, output, settings, *, only_phi=None):
         if not ad_meta['accepted']:
             raise RuntimeError('Independent adiabatic mass-flux reference was not accepted')
         feed = np.asarray(ad_meta['inlet_Y'])
+        expected_feed = fresh_mixture(mech, phi, model.metadata['fuel'], model.metadata['oxidizer'])
+        if (not np.allclose(feed, expected_feed, rtol=0., atol=1e-14)
+                or abs(ad_meta['temperature']-model.metadata['temperature_K']) > 1e-10
+                or abs(ad_meta['pressure']-model.metadata['pressure_Pa']) > 1e-8
+                or ad_meta['transport'] != model.metadata['transport']
+                or ad_meta['soret'] != model.metadata['soret']):
+            raise ValueError('Cached adiabatic mass-flux reference has different physical inputs')
         ad_flux = float(model.thermo.density(model.metadata['temperature_K'], model.metadata['pressure_Pa'], feed))*ad_meta['Su']
         warm = phi_folder/'warm_065'
         if not warm.exists():
             solve_burner_flame(phi=phi, mass_flux=.65*ad_flux, output=warm, **native_settings)
         previous = warm
-        for fraction in settings['mass_flux_fractions']:
+        fractions = (settings['mass_flux_fractions'] if 'case_pairs' not in settings else
+                     [r for p, r in settings['case_pairs'] if abs(p-phi) < 1e-12])
+        fractions = sorted(fractions, reverse=True)
+        for fraction in fractions:
             label = f'case_{phi:.6f}_{fraction:.6f}'
             case_folder = output/label
             case_folder.mkdir(exist_ok=True)
@@ -160,8 +170,12 @@ def run(table, profiles, output, settings, *, only_phi=None):
             native.update(omega_C=model.table['progress_weights'] @ mass_sources, qdot=qdot)
             reference_path = case_folder/'reference.npz'
             reference = read_profile(reference_path) if reference_path.exists() else {}
-            if str(reference.get('input_digest', '')) != reference_input_hash(native_meta, mdot):
-                np.savez_compressed(reference_path, **cantera_reference(native_meta, mdot, model.table['progress_weights']))
+            weight_digest = hashlib.sha256(model.table['progress_weights'].tobytes()).hexdigest()
+            if (str(reference.get('input_digest', '')) != reference_input_hash(native_meta, mdot)
+                    or str(reference.get('progress_weights_sha256', '')) != weight_digest):
+                reference = cantera_reference(native_meta, mdot, model.table['progress_weights'])
+                reference['progress_weights_sha256'] = np.array(weight_digest)
+                np.savez_compressed(reference_path, **reference)
             reference = read_profile(reference_path)
             phis = np.asarray(model.metadata['phis'])
             i = int(np.argmin(abs(phis-phi)))

@@ -1,20 +1,20 @@
 {
   "metrics": {
-    "temperature_K": 2.104236448150232,
-    "species_absolute": 0.001703095795963977,
-    "wall_heat_flux_relative": 0.0012888951891483285,
-    "stand_off_distance_m": 1.6934047528441819e-06
+    "temperature_K": 1.0378718318831943,
+    "species_absolute": 0.00015455542799423794,
+    "wall_heat_flux_relative": 0.0011177717115244904,
+    "stand_off_distance_m": 2.896363904058858e-06
   },
   "sources": {
     "omega_C": {
-      "peak_relative": 0.007416697610752304,
-      "L1_relative": 0.0065587705867352405,
-      "integral_relative": 0.0018482102691185075
+      "peak_relative": 0.004318513950523286,
+      "L1_relative": 0.005778303755905761,
+      "integral_relative": 0.0018128160641821545
     },
     "qdot": {
-      "peak_relative": 0.012624301838512226,
-      "L1_relative": 0.00917102820549647,
-      "integral_relative": 0.0006942557094685349
+      "peak_relative": 0.004169415738659172,
+      "L1_relative": 0.005504342831261433,
+      "integral_relative": 0.0015458080467876925
     }
   },
   "checks": {
@@ -29,7 +29,7 @@
     "qdot_L1_relative": true,
     "qdot_integral_relative": true
   },
-  "passed": false,
+  "passed": true,
   "native_cantera": {
     "temperature_K": 2.870761576401719,
     "wall_heat_flux_relative": 0.0016860236436392017
@@ -40,15 +40,51 @@
   "fraction": 0.095,
   "mass_flux_kg_m2_s": 0.03206566848524725,
   "solver": {
-    "accepted": false,
-    "reason": "stagnated_reduced_residual",
+    "accepted": true,
+    "reason": "converged",
     "phi": 1.235,
     "mass_flux_kg_m2_s": 0.03206566848524725,
     "width_m": 0.03,
     "nodes": 607,
-    "elapsed_seconds": 6.6022342999931425,
-    "iterations": 26,
+    "elapsed_seconds": 1.225344300008146,
+    "total_elapsed_seconds": 2.365552100003697,
+    "setup_seconds": 1.140207399992505,
+    "iterations": 6,
+    "total_newton_iterations": 15,
+    "max_iterations": 180,
     "residual_tolerance": 1e-07,
+    "initialization_seconds": 1.1171523999946658,
+    "initialization_guide": {
+      "reason": "converged",
+      "iterations": 9,
+      "maximum_scaled_residual": 1.5703849570367288e-08,
+      "elapsed_seconds": 1.1062800000072457,
+      "backend": "reduced_FGM_low_order_initialization",
+      "detailed_source_evaluations": 0
+    },
+    "closure_continuation": [
+      {
+        "parameter": 0.25,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 2,
+        "maximum_scaled_residual": 1.153649261203204e-09
+      },
+      {
+        "parameter": 0.625,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 2,
+        "maximum_scaled_residual": 4.601169213621577e-09
+      },
+      {
+        "parameter": 1.0,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 2,
+        "maximum_scaled_residual": 8.887499383694004e-09
+      }
+    ],
     "max_energy_error": 0.02,
     "seed_row": "phi_020_loss_012",
     "seed_sha256": "46869d681d0c591899cbeaef101cd1948bff9bd0d0fdc0545ef07a5ab34a2697",
@@ -59,189 +95,99 @@
       "h"
     ],
     "source": "frozen_table",
-    "interpolation": "quadratic_progress",
+    "interpolation": "bounded_tensor",
+    "curvature_limit": 0.75,
     "detailed_source_evaluations": 0,
-    "residual_evaluations": 597,
+    "residual_evaluations": 70,
     "jacobian_colors": 9,
     "advection": "Peclet_fitted_finite_volume",
-    "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286",
-    "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+    "solver_source_sha256": "83190596177b3fdb959654547167eb3f46d0b92f89f2b1e55a03c0815c005f0c",
+    "parabolicity": {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.4269801668958512e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": true,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null
+    },
+    "table_sha256": "0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8",
     "diagnostics": {
-      "burner_heat_loss_W_m2": 21280.25634127168,
-      "outlet_enthalpy_loss_W_m2": 21272.063628703516,
-      "relative_energy_closure_error": 0.0003849912537132258,
-      "relative_total_enthalpy_flux_spread": 0.0033491679769863604,
-      "projected_progress_balance_error": 0.003706094805259545,
-      "inlet_species_flux_error_over_mdot": 0.0001066767449781436,
-      "inlet_enthalpy_flux_error_W_m2": 37.00376481584317,
+      "burner_heat_loss_W_m2": 21276.619477338263,
+      "outlet_enthalpy_loss_W_m2": 21276.619477336735,
+      "relative_energy_closure_error": 7.181362154857077e-14,
+      "relative_total_enthalpy_flux_spread": 6.399981905676114e-09,
+      "projected_progress_balance_error": 3.8737943813853193e-13,
+      "inlet_species_flux_error_over_mdot": 0.0001968730755602899,
+      "inlet_enthalpy_flux_error_W_m2": 71.25453027114418,
       "sum_Y_error": 6.661338147750939e-16,
       "burner_temperature_error_K": 0.0,
-      "maximum_scaled_residual": 0.0017983430333318587
+      "maximum_scaled_residual": 8.887499383694004e-09
     },
     "history": [
       {
         "iteration": 0,
-        "maximum_scaled_residual": 0.0015135896295156038,
-        "norm": 0.004865995628504282,
-        "step_length": 0.0009716599140264491
+        "maximum_scaled_residual": 0.009313491521740182,
+        "norm": 0.02193355176684346,
+        "step_length": 1.0,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 1,
-        "maximum_scaled_residual": 0.0015121142512002812,
-        "norm": 0.004696810394629579,
-        "step_length": 0.0009353364054692876
+        "maximum_scaled_residual": 6.004492600877769e-06,
+        "norm": 9.72674893391984e-06,
+        "step_length": 1.0,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 2,
-        "maximum_scaled_residual": 0.0015106953131361128,
-        "norm": 0.004694856260974543,
-        "step_length": 0.0026096941576169105
+        "maximum_scaled_residual": 1.153649261203204e-09,
+        "norm": 1.8472044026109412e-09,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 3,
-        "maximum_scaled_residual": 0.0015067133894729838,
-        "norm": 0.004689720115572642,
-        "step_length": 0.00390625
+        "maximum_scaled_residual": 0.013870657196566515,
+        "norm": 0.03271102764574769,
+        "step_length": 1.0,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 4,
-        "maximum_scaled_residual": 0.00150073200140299,
-        "norm": 0.004677690527894012,
-        "step_length": 0.0078125
+        "maximum_scaled_residual": 1.2221867870069059e-05,
+        "norm": 2.1457504133139153e-05,
+        "step_length": 1.0,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 5,
-        "maximum_scaled_residual": 0.0014886200242883107,
-        "norm": 0.004676264717072974,
-        "step_length": 0.015625
+        "maximum_scaled_residual": 4.601169213621577e-09,
+        "norm": 7.90168545215795e-09,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 6,
-        "maximum_scaled_residual": 0.0014638815039036321,
-        "norm": 0.0046536118249303265,
-        "step_length": 0.03125
+        "maximum_scaled_residual": 0.013726744982466812,
+        "norm": 0.03243955628073003,
+        "step_length": 1.0,
+        "closure_parameter": 1.0
       },
       {
         "iteration": 7,
-        "maximum_scaled_residual": 0.0014131192973806355,
-        "norm": 0.00457142915695299,
-        "step_length": 0.0625
+        "maximum_scaled_residual": 1.0843659144110905e-05,
+        "norm": 2.195742763012242e-05,
+        "step_length": 1.0,
+        "closure_parameter": 1.0
       },
       {
         "iteration": 8,
-        "maximum_scaled_residual": 0.001310864833154222,
-        "norm": 0.00439468363947331,
-        "step_length": 0.25
-      },
-      {
-        "iteration": 9,
-        "maximum_scaled_residual": 0.0018716454954381056,
-        "norm": 0.004288157473241042,
-        "step_length": 0.25
-      },
-      {
-        "iteration": 10,
-        "maximum_scaled_residual": 0.00178868725082595,
-        "norm": 0.003726865781662902,
-        "step_length": 0.015625
-      },
-      {
-        "iteration": 11,
-        "maximum_scaled_residual": 0.0017983765559098479,
-        "norm": 0.0037089413286827398,
-        "step_length": 0.0009440243997745554
-      },
-      {
-        "iteration": 12,
-        "maximum_scaled_residual": 0.0017983361517813024,
-        "norm": 0.0037072942332856593,
-        "step_length": 4.546592303960522e-09
-      },
-      {
-        "iteration": 13,
-        "maximum_scaled_residual": 0.001798336153322806,
-        "norm": 0.0037072942281920905,
-        "step_length": 1.3348451951414198e-08
-      },
-      {
-        "iteration": 14,
-        "maximum_scaled_residual": 0.0017983361580096284,
-        "norm": 0.00370729421241295,
-        "step_length": 3.16082557983429e-08
-      },
-      {
-        "iteration": 15,
-        "maximum_scaled_residual": 0.0017983361951402627,
-        "norm": 0.003707294203954424,
-        "step_length": 6.338759711148009e-07
-      },
-      {
-        "iteration": 16,
-        "maximum_scaled_residual": 0.0017983363160780582,
-        "norm": 0.003707293284134681,
-        "step_length": 2.927574482817879e-06
-      },
-      {
-        "iteration": 17,
-        "maximum_scaled_residual": 0.0017983374448660072,
-        "norm": 0.0037072895951901085,
-        "step_length": 1.6901198282302363e-06
-      },
-      {
-        "iteration": 18,
-        "maximum_scaled_residual": 0.0017983392819832637,
-        "norm": 0.003707288841271141,
-        "step_length": 1.4285321637563662e-07
-      },
-      {
-        "iteration": 19,
-        "maximum_scaled_residual": 0.001798339388688344,
-        "norm": 0.0037072887139464536,
-        "step_length": 5.829758503248992e-10
-      },
-      {
-        "iteration": 20,
-        "maximum_scaled_residual": 0.001798339389202311,
-        "norm": 0.0037072887137261303,
-        "step_length": 2.9917743484747034e-08
-      },
-      {
-        "iteration": 21,
-        "maximum_scaled_residual": 0.0017983394142013422,
-        "norm": 0.00370728868823028,
-        "step_length": 4.774750032305933e-08
-      },
-      {
-        "iteration": 22,
-        "maximum_scaled_residual": 0.0017983394224033804,
-        "norm": 0.0037072886198389844,
-        "step_length": 4.78913690963512e-07
-      },
-      {
-        "iteration": 23,
-        "maximum_scaled_residual": 0.001798339822438685,
-        "norm": 0.0037072882754985896,
-        "step_length": 2.2799705794953257e-06
-      },
-      {
-        "iteration": 24,
-        "maximum_scaled_residual": 0.001798342116567352,
-        "norm": 0.0037072869909436854,
-        "step_length": 2.3059239307943407e-06
-      },
-      {
-        "iteration": 25,
-        "maximum_scaled_residual": 0.0017983428477485396,
-        "norm": 0.0037072839537915783,
-        "step_length": 7.590315572267344e-07
-      },
-      {
-        "iteration": 26,
-        "maximum_scaled_residual": 0.0017983430333318587,
-        "norm": 0.003707282868766327
+        "maximum_scaled_residual": 8.887499383694004e-09,
+        "norm": 1.2588431967992682e-08,
+        "closure_parameter": 1.0
       }
     ]
   },
   "case_label": "case_1.235000_0.095000",
-  "accepted": false
+  "accepted": true
 }

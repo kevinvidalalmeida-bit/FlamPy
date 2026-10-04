@@ -1,0 +1,89 @@
+{
+  "phis": [
+    0.815,
+    0.875,
+    0.985,
+    1.165,
+    1.235
+  ],
+  "mass_flux_fractions": [
+    0.575,
+    0.285,
+    0.095
+  ],
+  "width_m": 0.03,
+  "max_spacing_m": 0.000125,
+  "residual_tolerance": 1e-07,
+  "max_iterations": 180,
+  "native_slope": 0.02,
+  "native_curve": 0.04,
+  "limits": {
+    "temperature_K": 20.0,
+    "species_absolute": 0.005,
+    "source_peak_relative": 0.05,
+    "source_L1_relative": 0.05,
+    "source_integral_relative": 0.03,
+    "wall_heat_flux_relative": 0.02,
+    "stand_off_distance_m": 2e-05,
+    "energy_closure_relative": 0.02,
+    "grid_temperature_change_K": 5.0,
+    "grid_wall_heat_flux_change_relative": 0.01,
+    "domain_temperature_change_K": 5.0,
+    "domain_wall_heat_flux_change_relative": 0.01
+  },
+  "case_pairs": [
+    [
+      0.815,
+      0.095
+    ],
+    [
+      0.815,
+      0.285
+    ],
+    [
+      0.815,
+      0.575
+    ],
+    [
+      0.875,
+      0.135
+    ],
+    [
+      0.875,
+      0.41
+    ],
+    [
+      0.985,
+      0.095
+    ],
+    [
+      0.985,
+      0.285
+    ],
+    [
+      0.985,
+      0.575
+    ],
+    [
+      1.165,
+      0.135
+    ],
+    [
+      1.165,
+      0.41
+    ],
+    [
+      1.235,
+      0.095
+    ],
+    [
+      1.235,
+      0.285
+    ],
+    [
+      1.235,
+      0.575
+    ]
+  ],
+  "role": "development_including_previous_reserved"
+}

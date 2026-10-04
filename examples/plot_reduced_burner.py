@@ -51,21 +51,32 @@ def figures(data, *, output, pdf=None, table=None):
         fig.text(.08,.87,'FGM con pérdidas hacia un quemador',fontsize=23,weight='bold')
         fig.text(.08,.81,'CH₄-aire · 432 llamas · controles físicos (Z, C, h)',fontsize=15,color='#335566')
         passed=sum(v['passed'] for v,p in records);converged=sum(v['accepted'] for v,p in records)
+        worst_T=max(v['metrics']['temperature_K'] for v,p in records)
+        worst_q=max(v['metrics']['wall_heat_flux_relative'] for v,p in records)*100
+        worst_source=max(max(s.values()) for v,p in records for s in v['sources'].values())*100
+        audit=json.loads((data/'parabolicity_audit.json').read_text(encoding='utf-8'))
+        a=next(v for v,p in records if v['phi']==.815 and v['fraction']==.575)
+        b=next(v for v,p in records if v['phi']==1.235 and v['fraction']==.575)
         rows=[('Comprobaciones independientes',f'{converged}/{len(records)} casos convergen; {passed}/{len(records)} cumplen todas las tolerancias.\n'
-               'Los cuatro casos reservados después de fijar el algoritmo cumplen los límites.'),
-              ('Qué queda pendiente','φ = 0.815, r = 0.575: error del flujo térmico 2.27 % y error L1 de ΩC 5.94 %.\n'
-               'φ = 1.235, r = 0.575: error L1 de la liberación química de calor 5.47 %.\n'
-               'φ = 1.235, r = 0.095: el residuo se estanca; ese caso se marca sin converger.'),
+               f'Máximos: temperatura {worst_T:.2f} K; flujo térmico {worst_q:.2f} %; fuentes {worst_source:.2f} %.\n'
+               '13 casos de desarrollo y 4 condiciones nuevas de confirmación después de fijar el método.'),
+              ('Los tres casos pendientes se resuelven',
+               f"φ = 0.815, r = 0.575: flujo térmico 2.27 % → {a['metrics']['wall_heat_flux_relative']*100:.2f} %; "
+               f"L1 de q̇ 5.22 % → {a['sources']['qdot']['L1_relative']*100:.2f} %.\n"
+               f"φ = 1.235, r = 0.575: L1 de q̇ 5.47 % → {b['sources']['qdot']['L1_relative']*100:.2f} %.\n"
+               'φ = 1.235, r = 0.095: ahora converge y cumple todas las comprobaciones.'),
               ('Tolerancias de comparación','Temperatura: 20 K; fracciones másicas: 0.005; flujo hacia el quemador: 2 %; δ: 20 µm.\n'
                'Fuentes: error máximo / pico ≤ 5 %, error L1 ≤ 5 % y error integral ≤ 3 %.'),
-              ('Algoritmo y alcance','Matriz dispersa con nueve colores, caché de temperatura y aproximación convexa suave en progreso.\n'
-               'Se conservan los 181 estados originales y se añaden 16 estados de relajación química por llama.\n'
-               'Quemador plano isotérmico: estas pruebas no validan apagado transitorio ni una pared multidimensional.')]
-        for (heading,paragraph),y in zip(rows,[.71,.55,.37,.23]):
+              ('Algoritmo y límites de validez',
+               'C = YCO₂ + YCO + YH₂O + 5 YH₂; cierre C1 acotado y continuación adaptativa entre cierres.\n'
+               f"La auditoría global detecta {audit['negative_samples']} de {audit['samples']} consultas no admisibles.\n"
+               'Se rechazan soluciones con difusión negativa interior; no se certifica todo el espacio de la tabla.')]
+        for (heading,paragraph),y in zip(rows,[.71,.54,.37,.23]):
             fig.text(.08,y,heading,fontsize=13,weight='bold')
             fig.text(.08,y-.035,paragraph,fontsize=11,va='top',linespacing=1.65)
-        fig.text(.08,.06,'Referencias: van Oijen y de Goey (2000), doi:10.1080/00102200008935814; Gövert et al. (2018),\n'
-                 'doi:10.1007/s10494-017-9848-4. Comparaciones numéricas; no se emplearon medidas experimentales.',fontsize=9)
+        fig.text(.08,.055,'Referencias: van Oijen y de Goey (2000), doi:10.1080/00102200008935814; Gövert et al. (2018),\n'
+                 'doi:10.1007/s10494-017-9848-4; Gupta et al. (2021), doi:10.1080/13647830.2021.1926544.\n'
+                 'Comparación numérica de un quemador plano isotérmico; sin validación experimental ni apagado transitorio.',fontsize=9)
         book.savefig(fig);plt.close(fig)
     def save(fig, name, title, note):
         fig.suptitle(title, fontsize=15, y=.98)

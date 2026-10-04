@@ -17,7 +17,7 @@ def export(validation, reserved, table, destination):
     destination,table=Path(destination),Path(table)
     destination.mkdir(parents=True,exist_ok=True)
     source=Path(validation);extra=Path(reserved)
-    for name in ['plan.json','convergence.json','benchmark.json']:
+    for name in ['plan.json','convergence.json','benchmark.json','parabolicity_audit.json','before_after.json']:
         shutil.copyfile(source/name,destination/name)
     shutil.copyfile(extra/'plan.json',destination/'reserved_plan.json')
     rows=[]
@@ -49,6 +49,7 @@ def export(validation, reserved, table, destination):
                  development_case_count=len(json.loads((source/'summary.json').read_text(encoding='utf-8'))['cases']),
                  reserved_case_count=len(json.loads((extra/'summary.json').read_text(encoding='utf-8'))['cases']),
                  table_flames=len(meta['rows']),table_progress_points=meta['progress_points'],
+                 progress_species=meta['progress_species'],
                  table_sha256=hashlib.sha256((table/'nonadiabatic_fgm.npz').read_bytes()).hexdigest())
     write_json(destination/'summary.json',summary)
     manifest=dict(species_names=meta['species_names'] if 'species_names' in meta else list(np.load(table/'nonadiabatic_fgm.npz')['species_names']),
@@ -56,6 +57,20 @@ def export(validation, reserved, table, destination):
     for path in sorted(destination.rglob('*')):
         if path.is_file() and path.name!='manifest.json':
             manifest['files'][path.relative_to(destination).as_posix()]=hashlib.sha256(path.read_bytes()).hexdigest()
+    repository = Path(__file__).resolve().parents[1]
+    code_paths = [
+        'src/kflame/fgm/reduced_burner.py', 'src/kflame/fgm/nonadiabatic3d.py',
+        'src/kflame/chemistry/thermo.py', 'src/kflame/chemistry/transport.py',
+        'src/kflame/flame/equations.py', 'examples/extend_reduced_fgm_tail.py',
+        'examples/retabulate_reduced_progress.py', 'examples/reduced_progress_weights.json',
+        'examples/validate_reduced_burner.py', 'examples/audit_reduced_diffusion.py',
+        'examples/benchmark_reduced_burner.py', 'examples/check_reduced_burner_convergence.py',
+        'examples/plot_reduced_burner.py', 'examples/export_reduced_burner.py',
+        'examples/reduced_burner_development_settings.json',
+        'examples/reduced_burner_confirmation_settings.json',
+    ]
+    manifest['code_sha256'] = {name: hashlib.sha256((repository/name).read_bytes()).hexdigest()
+                               for name in code_paths}
     write_json(destination/'manifest.json',manifest)
     print({k:v for k,v in summary.items() if k!='cases'})
 

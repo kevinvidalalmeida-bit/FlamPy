@@ -6,12 +6,14 @@ entalpía total h**. Las especies y las fuentes se recuperan de una tabla congel
 el solver reducido no evalúa química detallada. Se compara, sin desplazar los
 perfiles, con el solver nativo de todas las especies y con `Cantera BurnerFlame`.
 
-**Estado de la validación:** de 13 casos independientes, 12 convergen y 10 cumplen
-todas las tolerancias de comparación. Los cuatro casos reservados después de
-fijar el algoritmo cumplen los límites. Quedan dos casos con errores físicos
-excesivos y uno cuyo residuo se estanca; por tanto, el modelo todavía requiere
-mejoras para certificar todo el intervalo ensayado. El balance energético por sí
-solo no demuestra que las fuentes ni la posición de la llama sean correctas.
+**Estado de la validación:** los tres casos pendientes se han corregido. Los
+**17 casos independientes convergen y cumplen todas las tolerancias**, sin
+relajar los límites: 13 casos de desarrollo y cuatro condiciones nuevas
+reservadas después de seleccionar el método. El mayor error de fuente es
+3.81 %, el de temperatura 10.18 K y el del calor hacia el quemador 1.43 %.
+Esto certifica las comparaciones realizadas, **no todo el espacio de la tabla**:
+una auditoría más amplia encuentra regiones de cierre no admisible, y el
+solver rechaza las soluciones que presentan difusión negativa interior.
 
 Se conservan las **432 llamas** de la selección publicada. Ese número corresponde
 a las condiciones de CH₄-aire a 300 K y 101 325 Pa, con transporte promediado por
@@ -63,98 +65,135 @@ de sus figuras.
 
 ## Algoritmo y datos tabulados
 
-Newton opera sobre tres coordenadas numéricas acotadas del mallado estructurado.
-Estas coordenadas sirven para buscar estados dentro de la familia; **no sustituyen
-los controles físicos ni normalizan Z o C**. La opción predeterminada usa una
-aproximación B-spline cuadrática local en progreso y pesos bilineales en las otras
-direcciones. Es continua en la primera derivada respecto al progreso. Los mismos
-pesos convexos se aplican a Y, h y las fuentes, y T se recupera invirtiendo h(T,Y).
+La suma anterior `C = YCO₂ + YCO + YH₂O + 0.5 YH₂` permitía una dirección
+difusiva negativa en la zona posterior a la llama rica con mayores pérdidas.
+Con ese cierre, añadir iteraciones no resolvía el problema. La biblioteca de
+transporte utiliza ahora
 
-Es una **aproximación**, que conserva los extremos pero no interpola exactamente
-cada nodo interior. Se ha evaluado por separado mediante las comparaciones a
-posteriori de este documento. La consulta física habitual de la tabla y la opción
-`interpolation='barycentric'` del solver conservan la interpolación original entre
-tetraedros; el mapa de C y h muestra esa consulta original.
-Las [propiedades y soporte local de B-splines](https://docs.scipy.org/doc/scipy/tutorial/interpolate/splines_and_polynomials.html)
-justifican el soporte compacto. La elección de este cierre suave y su aplicación
-al transporte son decisiones de esta implementación, no un algoritmo copiado
-de los artículos de FGM.
+\[
+C = Y_{CO_2}+Y_{CO}+Y_{H_2O}+5Y_{H_2}.
+\]
 
-El Jacobiano tiene tres bloques por fila y se calcula con **nueve colores**,
-reutilizando las temperaturas de los nodos que no cambian. Se resuelve como matriz
-dispersa; la búsqueda del paso mantiene las coordenadas dentro de la tabla. Una
-regularización dispersa actúa cuando falla el paso de Newton. El solver devuelve
-un fallo explícito ante estancamiento, falta de convergencia o controles fuera del
-dominio; no convierte un perfil visualmente plausible en una solución aceptada.
-Las tolerancias y el presupuesto de iteraciones se pueden modificar en la API.
+Los pesos son editables en [reduced_progress_weights.json](../examples/reduced_progress_weights.json).
+El valor 5 corresponde a esta biblioteca de CH₄: **no es una constante universal**
+ni una recomendación literal de un artículo. La elección y optimización del
+progreso, y su efecto en el transporte, se estudian en
+[Gupta, Teerling y van Oijen (2021)](https://doi.org/10.1080/13647830.2021.1926544).
+La comprobación de difusión y los limitadores utilizados aquí son decisiones
+de esta implementación. Cambiar C modifica el cierre reducido y requiere
+validación física; no basta con cambiar las etiquetas de una figura.
 
-Los perfiles de 30 mm todavía contienen química lenta cerca de su extremo
-quemado. Se conservan, sin cambiar un solo bit, sus 181 muestras originales y se
-añaden 16 muestras de un **reactor homogéneo adiabático de presión constante**,
-iniciado en cada extremo y evaluado con cinética nativa. Se muestrea la trayectoria
-química hacia el equilibrio HP, manteniendo elementos y entalpía; se obtienen
-197 muestras por llama, 85 104 vértices y ninguna celda plegada. Esta continuación
-es una propuesta de cierre posterior a la llama; no equivale a resolver nuevas
-llamas espaciales ni a simular apagado frente a una pared.
+La retabulación conserva exactamente Y, T, h, Z, q̇, densidad, cp y conductividad
+de las 432 llamas. Recalcula C y su fuente con cinética **nativa, fuera del solver
+reducido**, y reconstruye el mallado físico. Todas las filas aumentan
+estrictamente en C; no hay tetraedros plegados ni degenerados.
 
-El reactor utiliza BDF con `rtol=1e−9`, `atol_Y=1e−15` y `atol_T=1e−8 K`. Se
-registra la corrección de fracciones negativas exclusivamente de redondeo:
-su masa máxima es 1.25×10⁻¹⁷. La desviación máxima de conservación elemental es
-6.67×10⁻¹⁴. La detención por progreso no garantiza que todas las especies lentas
-estén igualmente próximas al equilibrio: la separación máxima antes del extremo
-HP es 0.00274 en fracción másica. Ese cierre y el comportamiento de especies
-lentas requieren validación específica; los datos y esta limitación se publican.
+Newton opera sobre tres coordenadas numéricas acotadas del mallado estructurado;
+**no sustituyen los controles físicos ni normalizan Z o C**. El cierre predeterminado
+usa B-splines cuadráticas en las tres direcciones y 27 coeficientes locales.
+En composición y pérdidas se construyen coeficientes de interpolación, limitados
+con un escalar común a especies, h y fuentes. Además de positividad, se impone
+monotonicidad de C en todos los polígonos de control. El parámetro
+`curvature_limit=0.75` limita la corrección; la coordenada de progreso conserva
+una aproximación convexa. El cierre es C1, conserva la suma de especies y
+recupera T invirtiendo la entalpía total. Los coeficientes se preparan una vez y
+se reutilizan al resolver otros caudales.
+
+Es una **aproximación limitada**, que no interpola exactamente todos los vértices.
+Las [propiedades de B-splines](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.BSpline.html)
+justifican el soporte compacto, no la validez física del cierre. Esta se evalúa
+a posteriori. `NonAdiabaticFGM.lookup_batch` y `interpolation='barycentric'`
+conservan la consulta original entre tetraedros; el mapa C-h representa esa
+consulta física, con Z local de Bilger fijo.
+
+La inicialización resuelve primero un cierre reducido de menor orden. Una
+**continuación adaptativa** aumenta la contribución del cierre final; reduce
+el incremento si Newton falla y solo avanza tras converger. La solución
+aceptada siempre satisface las ecuaciones del cierre final, con parámetro 1.
+El presupuesto de iteraciones incluye guía, pasos aceptados y pasos fallidos.
+No se usan campos de las referencias independientes para iniciar el FGM.
+
+El Jacobiano disperso tiene tres bloques por fila y **nueve colores**. La caché
+reutiliza las temperaturas de nodos que no cambian. Newton mantiene las
+coordenadas dentro del dominio; una regularización dispersa ayuda cuando falla
+la búsqueda del paso. Se notifican singularidad, estancamiento, agotamiento del
+presupuesto o fallo de continuación. Una comprobación adicional obtiene las
+derivadas analíticas de las B-splines y de h(T,Y), y rechaza difusión reducida
+con autovalores de parte real negativa en nodos interiores. Los extremos tienen
+condiciones algebraicas, por lo que no se les aplica ese criterio diferencial.
+
+Los 181 estados físicos originales y los 16 estados de continuación química
+por llama permanecen: **197 estados por llama y 85 104 vértices**. La continuación
+es un reactor homogéneo adiabático de presión constante hacia equilibrio HP,
+con BDF nativo (`rtol=1e-9`, `atol_Y=1e-15`, `atol_T=1e-8 K`). Su selección
+original utilizaba los pesos de C anteriores; esa procedencia se conserva en
+los metadatos. La masa de redondeo corregida es como máximo 1.25×10⁻¹⁷ y el
+error elemental 6.67×10⁻¹⁴. La máxima diferencia de especie antes del extremo HP
+es 0.00274. Este cierre posterior no equivale a nuevas llamas espaciales ni
+valida apagado transitorio frente a una pared.
 
 ## Resultados y criterios de aceptación
 
-Cada simulación reducida parte de un perfil de **entrenamiento con SHA-256
-verificada**. Las soluciones detalladas independientes suministran únicamente
-las comparaciones y la definición física del caudal; sus campos no inicializan
-los controles reducidos. La tabla, las condiciones y los límites se registran
-antes de ejecutar cada conjunto. Los nueve casos iniciales se consideran de
-desarrollo porque se utilizaron para mejorar el método. Los cuatro casos
-reservados se ejecutaron después de fijarlo.
+Las semillas son perfiles de entrenamiento con SHA-256 verificada. Se congelan
+tabla, código, condiciones y tolerancias antes de las comprobaciones. Los cuatro
+casos anteriormente reservados forman ahora parte de los 13 casos de desarrollo;
+los nuevos casos de confirmación son `φ = 0.835, 1.205` y `r = 0.535, 0.105`.
+Sus cuatro combinaciones se ejecutaron después de fijar el método y pasan.
 
-| Magnitud comparada | Límite |
-|---|---:|
-| Error máximo de temperatura | 20 K |
-| Error absoluto máximo entre todas las fracciones másicas | 0.005 |
-| Error de fuente dividido por el pico de la referencia | 5 % |
-| Error L1 de cada fuente | 5 % |
-| Error de integral de cada fuente | 3 % |
-| Error relativo del calor hacia el quemador | 2 % |
-| Error absoluto de separación δ | 20 µm |
+| Magnitud | Límite | Mayor error entre los 17 casos |
+|---|---:|---:|
+| Temperatura, máximo absoluto | 20 K | 10.18 K |
+| Fracción másica, máximo absoluto entre todas las especies | 0.005 | 0.00140 |
+| Fuente / pico de referencia | 5 % | ΩC: 3.00 %; q̇: 2.75 % |
+| Fuente, L1 | 5 % | ΩC: 3.81 %; q̇: 3.41 % |
+| Fuente, integral | 3 % | ΩC: 0.386 %; q̇: 0.665 % |
+| Calor hacia el quemador | 2 % | 1.43 % |
+| Separación δ | 20 µm | 4.83 µm |
 
-Las fuentes son `ΩC` y `q̇ química`. El error L1 se calcula como
-`∫|predicción−referencia| dx / ∫|referencia| dx`; el error integral usa el valor
-absoluto de la integral de la diferencia con el mismo denominador. El porcentaje
-respecto al pico no es un error relativo local en puntos de fuente casi nula.
-δ se define mediante el máximo de `|ΩC|`, con interpolación cuadrática de tres
-nodos; esta definición difiere del máximo de consumo de O₂ utilizado en otros
-trabajos y se mantiene idéntica entre nuestros tres modelos.
+El error L1 es `∫|predicción−referencia|dx / ∫|referencia|dx`; el error integral
+usa `|∫(predicción−referencia)dx|` con el mismo denominador. El error dividido por
+el pico no es un error relativo local en puntos de fuente casi nula. δ se define
+por el máximo de `|ΩC|`, con interpolación cuadrática de tres nodos, idénticamente
+en los tres modelos. Al cambiar los pesos de C también cambia la magnitud ΩC y
+esta definición de δ; **no se comparan sus valores absolutos entre versiones**.
 
-| Caso pendiente, φ / r | Resultado |
-|---|---|
-| 0.815 / 0.575 | Converge; calor 2.27 %, pico ΩC 5.21 %, L1 ΩC 5.94 %, pico q̇ 5.27 % y L1 q̇ 5.22 % |
-| 1.235 / 0.575 | Converge; L1 de q̇ = 5.47 % |
-| 1.235 / 0.095 | Se estanca el residuo; se conserva la iteración fallida y no se acepta |
+La comparación anterior y posterior utiliza q̇, calor y T, que conservan su
+significado físico:
 
-Los cuatro casos reservados (`φ = 0.875, 1.165`, `r = 0.410, 0.135`) cumplen
-todos los límites. La referencia detallada nativa y Cantera difieren como máximo
-3.65 K y 0.177 % en calor entre los 13 casos. La malla se duplicó dos veces en
-tres condiciones: el mayor cambio final de temperatura fue 0.184 K y el del
-calor, 0.00149 %. En la condición `φ=0.985, r=0.285`, ampliar de 60 a 90 mm cambia
-la temperatura de salida 0.468 K en el FGM, 0.094 K en el nativo y 0.255 K en
-Cantera; las tres pruebas cumplen los límites de dominio. Son comprobaciones
-de esas condiciones, no una garantía para toda la biblioteca.
+| Caso antes pendiente, φ / r | Antes | Ahora |
+|---|---|---|
+| 0.815 / 0.575 | Calor 2.27 %; L1 de q̇ 5.22 % | Calor 0.824 %; L1 de q̇ 2.75 %; aceptado |
+| 1.235 / 0.575 | L1 de q̇ 5.47 % | L1 de q̇ 1.67 %; aceptado |
+| 1.235 / 0.095 | Residuo estancado | Residuo ≤1e-7; T 1.04 K; calor 0.112 %; aceptado |
 
-En la máquina utilizada, los ocho casos iniciales que convergen tardan
-0.29–0.67 s, con mediana 0.47 s; cargar la tabla tarda aproximadamente 2.45 s.
-La caché reduce el tiempo mediano de nueve evaluaciones del Jacobiano de
-95.6 a 52.8 ms, **1.81×**, con diferencia numérica cero en los residuos medidos.
-Son tiempos de una máquina concreta, sin construcción de la tabla ni validación
-detallada. Las cuatro comprobaciones reservadas tardan 0.37–0.91 s. No se ha
-evaluado escalabilidad a geometrías multidimensionales.
+La referencia detallada nativa y Cantera difieren como máximo 3.64 K y 0.176 %
+en calor. Los seis refinamientos de malla pasan: el mayor cambio final de T
+es 0.799 K y el del calor 0.00128 %. Para `φ=0.985, r=0.285`, ampliar de 60 a
+90 mm cambia T de salida 0.457 K en FGM, 0.093 K en el nativo y 0.255 K en
+Cantera. Son comprobaciones de esas condiciones, no pruebas globales.
+
+La auditoría de todos los **76 636 centros de celda** detecta **486** estados
+con difusión reducida no admisible. Se publican en `parabolicity_audit.json`:
+la biblioteca completa **no queda certificada**. Los 17 perfiles aceptados no
+presentan esa anomalía en su interior. El control evita aceptar una solución
+inadecuada en una condición nueva, pero no garantiza que toda condición tenga
+un cierre válido. Certificar toda la biblioteca necesitaría revisar esas
+regiones, la definición de progreso o la dimensión del manifold. Incluso un
+muestreo sin fallos no demostraría positividad en todos los puntos de cada celda.
+
+Las **72 pruebas automáticas** comprueban, entre otras propiedades, conservación,
+consistencia termodinámica, derivadas continuas, monotonicidad de todos los
+polígonos de progreso y recuperación de difusión positiva cuando Le=1.
+
+Los 13 casos de desarrollo tardan **1.33–2.42 s**, con mediana **1.58 s**, incluida
+la preparación, la guía y la continuación. Cargar la tabla cuesta unos 2.52 s,
+una vez por modelo. La caché reduce el cálculo mediano de nueve perturbaciones
+del Jacobiano de 85.2 a 57.2 ms, **1.49×**, sin diferencias en los residuos.
+La mejora de robustez añade trabajo respecto al solver anterior; estos tiempos
+son de una máquina concreta y excluyen la construcción y las referencias
+detalladas. El FGM de producción sigue sin evaluar cinética detallada.
+
+
 
 ## Figuras y reproducción
 
@@ -183,27 +222,29 @@ Para redibujar las siete figuras y el PDF a partir de los arrays publicados:
 python -m examples.plot_reduced_burner --output output/figures/reduced-burner --pdf output/pdf/Validacion_FGM_perdidas.pdf
 ~~~
 
-Para reconstruir exactamente la tabla de 432 llamas con su continuación,
-sin repetir las simulaciones detalladas:
+Para reconstruir la selección, la continuación y la nueva definición de C:
 
 ~~~sh
 python -m examples.reconstruct_adaptive_table --output runs/fgm432
 python -m examples.extend_reduced_fgm_tail --source runs/fgm432 --output runs/fgm432_extended --reactor-cache docs/assets/reduced-burner/reactor_tail.npz
-python -m examples.example_reduced_burner --table runs/fgm432_extended --output runs/reduced_example
+python -m examples.retabulate_reduced_progress --source runs/fgm432_extended --output runs/fgm432_robust
+python -m examples.example_reduced_burner --table runs/fgm432_robust --output runs/reduced_example
 ~~~
 
-La reconstrucción reproduce exactamente la SHA-256 de la tabla usada:
-`52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700`.
-Al omitir `--reactor-cache` se vuelven a integrar los reactores nativos; eso no
-añade flamelets. Los datos incluyen semillas, casos fallidos, planes y huellas.
+La ruta reproduce la tabla empleada en el entorno probado, SHA-256
+`0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8`.
+No se vuelven a simular llamas; la fuente del nuevo C se calcula fuera del solver
+de transporte. Omitir `--reactor-cache` repite los reactores nativos, no añade
+flamelets. Se publican las semillas de entrenamiento y todos los planes.
 
-Para repetir las comparaciones detalladas y los controles espaciales:
+Para repetir desarrollo, confirmación y comprobaciones espaciales:
 
 ~~~sh
-python -m examples.validate_reduced_burner --table runs/fgm432_extended --profiles docs/assets/reduced-burner/seeds --output runs/reduced_validation
-python -m examples.validate_reduced_burner --table runs/fgm432_extended --profiles docs/assets/reduced-burner/seeds --output runs/reduced_reserved --settings examples/reduced_burner_reserved_settings.json
-python -m examples.check_reduced_burner_convergence --table runs/fgm432_extended --validation runs/reduced_validation --profiles docs/assets/reduced-burner/seeds
-python -m examples.benchmark_reduced_burner --table runs/fgm432_extended --case runs/reduced_validation/case_0.985000_0.285000 --output runs/reduced_benchmark.json
+python -m examples.validate_reduced_burner --table runs/fgm432_robust --profiles docs/assets/reduced-burner/seeds --output runs/reduced_validation --settings examples/reduced_burner_development_settings.json
+python -m examples.validate_reduced_burner --table runs/fgm432_robust --profiles docs/assets/reduced-burner/seeds --output runs/reduced_confirmation --settings examples/reduced_burner_confirmation_settings.json
+python -m examples.check_reduced_burner_convergence --table runs/fgm432_robust --validation runs/reduced_validation --profiles docs/assets/reduced-burner/seeds
+python -m examples.audit_reduced_diffusion --table runs/fgm432_robust --output runs/parabolicity_audit.json
+python -m examples.benchmark_reduced_burner --table runs/fgm432_robust --case runs/reduced_validation/case_0.985000_0.285000 --output runs/reduced_benchmark.json
 ~~~
 
 La validación detallada requiere el extra `[reference]`; el solver reducido y
@@ -211,11 +252,10 @@ la construcción nativa no requieren Cantera. Cambiar tolerancias o condiciones
 requiere una carpeta nueva: el ejemplo rechaza cachés con otro plan, tabla,
 mecanismo, parámetros físicos o código del solver reducido.
 
-Para cerrar el estudio quedan resolver el estancamiento de la condición rica
-con mayor déficit y reducir los errores de los dos casos restantes sin relajar
-sus límites. Si se cambia el método, se deben reservar nuevos casos de confirmación.
-La extensión a apagado de pared necesita además estudiar la historia térmica:
-[Efimov et al. (2020)](https://doi.org/10.1080/13647830.2019.1658901)
-muestran que una entalpía adicional por sí sola puede ser insuficiente para CO
-en interacción llama-pared. Sus controles de QFM y su geometría difieren de
-este quemador plano. Tampoco se incluyen radiación ni conducción dentro del sólido.
+La certificación fuera de los casos ensayados y el apagado de pared requieren
+trabajo adicional. [Efimov et al. (2020)](https://doi.org/10.1080/13647830.2019.1658901)
+estudian controles adicionales para representar la historia térmica y CO en
+interacción llama-pared; su QFM y geometría difieren de este quemador plano.
+No se validan radiación, conducción dentro del sólido, pared multidimensional,
+apagado transitorio ni un FGM no adiabático de H₂. La tesis conserva su alcance
+adiabático.

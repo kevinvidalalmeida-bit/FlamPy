@@ -1,20 +1,20 @@
 {
   "metrics": {
-    "temperature_K": 4.350577283255461,
-    "species_absolute": 0.0006486751723520229,
-    "wall_heat_flux_relative": 0.0006753169809614459,
-    "stand_off_distance_m": 2.748778709136461e-06
+    "temperature_K": 2.3236239828997896,
+    "species_absolute": 0.0002527142486590944,
+    "wall_heat_flux_relative": 0.003091434299753789,
+    "stand_off_distance_m": 1.258742884017723e-06
   },
   "sources": {
     "omega_C": {
-      "peak_relative": 0.01483940495932571,
-      "L1_relative": 0.018934909341833058,
-      "integral_relative": 0.0013788101384433504
+      "peak_relative": 0.0070418759272931316,
+      "L1_relative": 0.010019481548828492,
+      "integral_relative": 0.0012225390000916087
     },
     "qdot": {
-      "peak_relative": 0.014101350791270437,
-      "L1_relative": 0.027327322789061772,
-      "integral_relative": 0.009857973889821943
+      "peak_relative": 0.007163746449695167,
+      "L1_relative": 0.016990978412093783,
+      "integral_relative": 0.006650057466863061
     }
   },
   "checks": {
@@ -46,9 +46,45 @@
     "mass_flux_kg_m2_s": 0.16270115940060442,
     "width_m": 0.03,
     "nodes": 492,
-    "elapsed_seconds": 0.5369406999961939,
-    "iterations": 6,
+    "elapsed_seconds": 1.0451427999942098,
+    "total_elapsed_seconds": 1.5206827000074554,
+    "setup_seconds": 0.4755396000109613,
+    "iterations": 7,
+    "total_newton_iterations": 12,
+    "max_iterations": 180,
     "residual_tolerance": 1e-07,
+    "initialization_seconds": 0.4545251000090502,
+    "initialization_guide": {
+      "reason": "converged",
+      "iterations": 5,
+      "maximum_scaled_residual": 3.92503424550971e-09,
+      "elapsed_seconds": 0.4440433999989182,
+      "backend": "reduced_FGM_low_order_initialization",
+      "detailed_source_evaluations": 0
+    },
+    "closure_continuation": [
+      {
+        "parameter": 0.25,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 2,
+        "maximum_scaled_residual": 1.154336660998254e-09
+      },
+      {
+        "parameter": 0.625,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 2,
+        "maximum_scaled_residual": 4.0354948603975635e-08
+      },
+      {
+        "parameter": 1.0,
+        "accepted": true,
+        "reason": "converged",
+        "iterations": 3,
+        "maximum_scaled_residual": 2.508787945879428e-11
+      }
+    ],
     "max_energy_error": 0.02,
     "seed_row": "phi_016_loss_003",
     "seed_sha256": "a96c8fa7401f79fb0ae7589cb14c683370e8418c134d035a5413e12108c28643",
@@ -59,66 +95,103 @@
       "h"
     ],
     "source": "frozen_table",
-    "interpolation": "quadratic_progress",
+    "interpolation": "bounded_tensor",
+    "curvature_limit": 0.75,
     "detailed_source_evaluations": 0,
-    "residual_evaluations": 70,
+    "residual_evaluations": 81,
     "jacobian_colors": 9,
     "advection": "Peclet_fitted_finite_volume",
-    "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286",
-    "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+    "solver_source_sha256": "83190596177b3fdb959654547167eb3f46d0b92f89f2b1e55a03c0815c005f0c",
+    "parabolicity": {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.5230877806212454e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": true,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null
+    },
+    "table_sha256": "0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8",
     "diagnostics": {
-      "burner_heat_loss_W_m2": 62968.68878668719,
-      "outlet_enthalpy_loss_W_m2": 62968.68878693806,
-      "relative_energy_closure_error": 3.984007725304091e-12,
-      "relative_total_enthalpy_flux_spread": 2.412104703363438e-11,
-      "projected_progress_balance_error": 1.077785740032486e-12,
-      "inlet_species_flux_error_over_mdot": 0.0004972412233554043,
-      "inlet_enthalpy_flux_error_W_m2": 1053.957920676061,
-      "sum_Y_error": 3.3306690738754696e-16,
+      "burner_heat_loss_W_m2": 62731.6614661295,
+      "outlet_enthalpy_loss_W_m2": 62731.66145992647,
+      "relative_energy_closure_error": 9.888197136034555e-11,
+      "relative_total_enthalpy_flux_spread": 1.369096445221648e-10,
+      "projected_progress_balance_error": 4.2299717676831894e-13,
+      "inlet_species_flux_error_over_mdot": 0.00026179639988484416,
+      "inlet_enthalpy_flux_error_W_m2": 65.96190580918483,
+      "sum_Y_error": 7.771561172376096e-16,
       "burner_temperature_error_K": 0.0,
-      "maximum_scaled_residual": 5.594107561292833e-12
+      "maximum_scaled_residual": 2.508787945879428e-11
     },
     "history": [
       {
         "iteration": 0,
-        "maximum_scaled_residual": 0.003220420146936943,
-        "norm": 0.008594236841860989,
-        "step_length": 0.25
+        "maximum_scaled_residual": 0.021245731105953763,
+        "norm": 0.05445780018730608,
+        "step_length": 1.0,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 1,
-        "maximum_scaled_residual": 0.004968364911742305,
-        "norm": 0.008430641369844796,
-        "step_length": 1.0
+        "maximum_scaled_residual": 1.7736216556879838e-05,
+        "norm": 4.686628193353434e-05,
+        "step_length": 1.0,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 2,
-        "maximum_scaled_residual": 0.000708668926072196,
-        "norm": 0.0031596196698416346,
-        "step_length": 1.0
+        "maximum_scaled_residual": 1.154336660998254e-09,
+        "norm": 1.5781166122638425e-09,
+        "closure_parameter": 0.25
       },
       {
         "iteration": 3,
-        "maximum_scaled_residual": 3.7739042466608754e-05,
-        "norm": 7.52547799493512e-05,
-        "step_length": 1.0
+        "maximum_scaled_residual": 0.03346347264884753,
+        "norm": 0.0842591033936736,
+        "step_length": 1.0,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 4,
-        "maximum_scaled_residual": 2.4630856303412856e-06,
-        "norm": 3.4351078953012637e-06,
-        "step_length": 1.0
+        "maximum_scaled_residual": 0.00017303308433059262,
+        "norm": 0.00041382455033420076,
+        "step_length": 1.0,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 5,
-        "maximum_scaled_residual": 1.1392771180806207e-07,
-        "norm": 1.4258820337076083e-07,
-        "step_length": 1.0
+        "maximum_scaled_residual": 4.0354948603975635e-08,
+        "norm": 5.586980877184933e-08,
+        "closure_parameter": 0.625
       },
       {
         "iteration": 6,
-        "maximum_scaled_residual": 5.594107561292833e-12,
-        "norm": 8.360516526580657e-12
+        "maximum_scaled_residual": 0.03634045657214603,
+        "norm": 0.08909769060371059,
+        "step_length": 1.0,
+        "closure_parameter": 1.0
+      },
+      {
+        "iteration": 7,
+        "maximum_scaled_residual": 0.0004292464394059423,
+        "norm": 0.0010470175487510601,
+        "step_length": 1.0,
+        "closure_parameter": 1.0
+      },
+      {
+        "iteration": 8,
+        "maximum_scaled_residual": 9.344116674364675e-07,
+        "norm": 1.4639380177650935e-06,
+        "step_length": 1.0,
+        "closure_parameter": 1.0
+      },
+      {
+        "iteration": 9,
+        "maximum_scaled_residual": 2.508787945879428e-11,
+        "norm": 3.2942525365038515e-11,
+        "closure_parameter": 1.0
       }
     ]
   },

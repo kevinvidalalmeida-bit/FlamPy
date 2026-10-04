@@ -43,8 +43,10 @@ def benchmark(table, case, output):
         accepted_case_count=len(accepted),failed_case_count=len(reports)-len(accepted),
         solve_median_seconds=float(np.median([r['elapsed_seconds'] for r in accepted])),
         solve_range_seconds=[min(r['elapsed_seconds'] for r in accepted),max(r['elapsed_seconds'] for r in accepted)],
+        total_solve_median_seconds=float(np.median([r['total_elapsed_seconds'] for r in accepted])),
+        total_solve_range_seconds=[min(r['total_elapsed_seconds'] for r in accepted),max(r['total_elapsed_seconds'] for r in accepted)],
         detailed_kinetics_evaluations_in_reduced_production=0,
-        note='Single-machine timing; table load, construction and detailed validation excluded from solve times.')
+        note='Single-machine timing; total_solve includes guide and continuation; table loading and construction are separate.')
     write_json(output,result)
     return result
 

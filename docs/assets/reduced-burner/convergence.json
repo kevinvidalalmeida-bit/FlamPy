@@ -1,13 +1,13 @@
 {
-  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "table_sha256": "0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8",
   "grid": [
     {
       "label": "φ=0.815, r=0.575",
       "level": 1,
       "nodes": 893,
       "accepted": true,
-      "temperature_change_K": 0.7102830200608423,
-      "wall_heat_flux_change_relative": 7.648272529056187e-05,
+      "temperature_change_K": 2.2345886593477644,
+      "wall_heat_flux_change_relative": 6.942753712074835e-05,
       "passed": true
     },
     {
@@ -15,8 +15,8 @@
       "level": 2,
       "nodes": 1785,
       "accepted": true,
-      "temperature_change_K": 0.18403363882748636,
-      "wall_heat_flux_change_relative": 1.487596975971043e-05,
+      "temperature_change_K": 0.5583617218676409,
+      "wall_heat_flux_change_relative": 1.2788260716634722e-05,
       "passed": true
     },
     {
@@ -24,8 +24,8 @@
       "level": 1,
       "nodes": 963,
       "accepted": true,
-      "temperature_change_K": 0.18013321934540727,
-      "wall_heat_flux_change_relative": 2.5111069235958892e-05,
+      "temperature_change_K": 1.3566092281373585,
+      "wall_heat_flux_change_relative": 1.4516272462890362e-05,
       "passed": true
     },
     {
@@ -33,8 +33,8 @@
       "level": 2,
       "nodes": 1925,
       "accepted": true,
-      "temperature_change_K": 0.04035404290607403,
-      "wall_heat_flux_change_relative": 5.355665559322203e-06,
+      "temperature_change_K": 0.7989591131065481,
+      "wall_heat_flux_change_relative": 2.74186098130576e-06,
       "passed": true
     },
     {
@@ -42,8 +42,8 @@
       "level": 1,
       "nodes": 981,
       "accepted": true,
-      "temperature_change_K": 0.13293798078575492,
-      "wall_heat_flux_change_relative": 2.611014488082486e-05,
+      "temperature_change_K": 0.15847219220643183,
+      "wall_heat_flux_change_relative": 1.8391996666802065e-05,
       "passed": true
     },
     {
@@ -51,8 +51,8 @@
       "level": 2,
       "nodes": 1961,
       "accepted": true,
-      "temperature_change_K": 0.033440731292500914,
-      "wall_heat_flux_change_relative": 4.024327154980171e-06,
+      "temperature_change_K": 0.052255467616646456,
+      "wall_heat_flux_change_relative": 1.9874216072223834e-06,
       "passed": true
     }
   ],
@@ -65,22 +65,22 @@
         0.09
       ],
       "outlet_temperature_K": [
-        1907.6047799285227,
-        1910.2417721332092,
-        1909.7740583346235
+        1908.301896707422,
+        1910.752729748933,
+        1911.209739726427
       ],
       "wall_heat_flux_W_m2": [
-        67400.10532097777,
-        67400.10532097748,
-        67400.10532097689
+        67248.44928897823,
+        67248.44928897922,
+        67248.44928897951
       ],
       "accepted": [
         true,
         true,
         true
       ],
-      "last_temperature_change_K": 0.4677137985856916,
-      "last_wall_heat_flux_change_relative": 8.852041425183758e-15,
+      "last_temperature_change_K": 0.45700997749395356,
+      "last_wall_heat_flux_change_relative": 4.327806925579663e-15,
       "passed": true
     },
     {

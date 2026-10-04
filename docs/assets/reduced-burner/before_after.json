@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "phi": 0.815,
+      "fraction": 0.575,
+      "previous": {
+        "accepted": true,
+        "passed": false,
+        "temperature_K": 13.259782448810483,
+        "wall_heat_flux_relative": 0.022697015964450184,
+        "qdot": {
+          "peak_relative": 0.0527160895526464,
+          "L1_relative": 0.0522192631830599,
+          "integral_relative": 0.002114084898231868
+        }
+      },
+      "current": {
+        "accepted": true,
+        "passed": true,
+        "temperature_K": 6.882131438200759,
+        "wall_heat_flux_relative": 0.008235488961937655,
+        "qdot": {
+          "peak_relative": 0.023805179436732878,
+          "L1_relative": 0.027498512784764808,
+          "integral_relative": 0.0012235897806925405
+        }
+      }
+    },
+    {
+      "phi": 1.235,
+      "fraction": 0.575,
+      "previous": {
+        "accepted": true,
+        "passed": false,
+        "temperature_K": 11.452743508344838,
+        "wall_heat_flux_relative": 0.014360699985516466,
+        "qdot": {
+          "peak_relative": 0.03561031165925526,
+          "L1_relative": 0.054744050488262766,
+          "integral_relative": 0.00859927688147931
+        }
+      },
+      "current": {
+        "accepted": true,
+        "passed": true,
+        "temperature_K": 3.8946438515934005,
+        "wall_heat_flux_relative": 0.002139157533233294,
+        "qdot": {
+          "peak_relative": 0.008507900296551059,
+          "L1_relative": 0.0167246173486872,
+          "integral_relative": 0.004894432419301013
+        }
+      }
+    },
+    {
+      "phi": 1.235,
+      "fraction": 0.095,
+      "previous": {
+        "accepted": false,
+        "passed": false,
+        "temperature_K": 2.104236448150232,
+        "wall_heat_flux_relative": 0.0012888951891483285,
+        "qdot": {
+          "peak_relative": 0.012624301838512226,
+          "L1_relative": 0.00917102820549647,
+          "integral_relative": 0.0006942557094685349
+        }
+      },
+      "current": {
+        "accepted": true,
+        "passed": true,
+        "temperature_K": 1.0378718318831943,
+        "wall_heat_flux_relative": 0.0011177717115244904,
+        "qdot": {
+          "peak_relative": 0.004169415738659172,
+          "L1_relative": 0.005504342831261433,
+          "integral_relative": 0.0015458080467876925
+        }
+      }
+    }
+  ],
+  "previous_commit": "b2ce3c18309c022397d9642cea0c84b84420bd89",
+  "note": "C and Omega_C definitions differ; compare qdot, temperature and physical heat loss, not absolute Omega_C or delta between versions."
+}

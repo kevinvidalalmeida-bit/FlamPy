@@ -2,7 +2,9 @@
   "settings": {
     "phis": [
       0.815,
+      0.875,
       0.985,
+      1.165,
       1.235
     ],
     "mass_flux_fractions": [
@@ -29,12 +31,67 @@
       "grid_wall_heat_flux_change_relative": 0.01,
       "domain_temperature_change_K": 5.0,
       "domain_wall_heat_flux_change_relative": 0.01
-    }
+    },
+    "case_pairs": [
+      [
+        0.815,
+        0.095
+      ],
+      [
+        0.815,
+        0.285
+      ],
+      [
+        0.815,
+        0.575
+      ],
+      [
+        0.875,
+        0.135
+      ],
+      [
+        0.875,
+        0.41
+      ],
+      [
+        0.985,
+        0.095
+      ],
+      [
+        0.985,
+        0.285
+      ],
+      [
+        0.985,
+        0.575
+      ],
+      [
+        1.165,
+        0.135
+      ],
+      [
+        1.165,
+        0.41
+      ],
+      [
+        1.235,
+        0.095
+      ],
+      [
+        1.235,
+        0.285
+      ],
+      [
+        1.235,
+        0.575
+      ]
+    ],
+    "role": "development_including_previous_reserved"
   },
-  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "table_sha256": "0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8",
   "table_flames": 432,
-  "status": "development_cases",
+  "status": "development_including_previous_reserved",
   "comparison": "a_posteriori_unshifted_spatial_profiles",
   "seed": "fingerprinted_training_profiles_only",
-  "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286"
+  "solver_source_sha256": "83190596177b3fdb959654547167eb3f46d0b92f89f2b1e55a03c0815c005f0c"
 }

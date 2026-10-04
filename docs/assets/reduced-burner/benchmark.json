@@ -1,50 +1,55 @@
 {
-  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "table_sha256": "0d22d338d47f9a34dd5397f5a5f6e904002ccfa59f6661cdddf63e72759d63e8",
   "python": "3.11.0",
   "platform": "Windows",
   "nodes": 491,
   "colors": 9,
   "dense_finite_difference_columns": 1473,
-  "table_loading_seconds": 2.445231400022749,
+  "table_loading_seconds": 2.520627100020647,
   "cache_maximum_residual_difference": 0.0,
   "timings": {
     "full": {
-      "median_seconds": 0.09564519999548793,
+      "median_seconds": 0.08521039999322966,
       "samples_seconds": [
-        0.09346340000047348,
-        0.09564519999548793,
-        0.09676580000086688,
-        0.09751380002126098,
-        0.09426039998652413,
-        0.10233709999010898,
-        0.09540600000764243,
-        0.09691100000054576,
-        0.09192659999825992
+        0.08365119999507442,
+        0.08101229998283088,
+        0.08861150001757778,
+        0.08713829997577704,
+        0.08569430001080036,
+        0.0818550999974832,
+        0.08202750000054948,
+        0.08728379997774027,
+        0.08521039999322966
       ]
     },
     "cached": {
-      "median_seconds": 0.052815400005783886,
+      "median_seconds": 0.057150499982526526,
       "samples_seconds": [
-        0.052815400005783886,
-        0.05352919999859296,
-        0.05133190000196919,
-        0.05031530000269413,
-        0.052292400010628626,
-        0.05380610001157038,
-        0.05355519999284297,
-        0.05111810000380501,
-        0.05459970000083558
+        0.05726999999023974,
+        0.057150499982526526,
+        0.06134149999707006,
+        0.05791440000757575,
+        0.0598007999942638,
+        0.05689469998469576,
+        0.05589990000589751,
+        0.055003799992846325,
+        0.052065600000787526
       ]
     }
   },
-  "cache_speedup": 1.810933931864829,
-  "accepted_case_count": 8,
-  "failed_case_count": 1,
-  "solve_median_seconds": 0.4662205000058748,
+  "cache_speedup": 1.4909825814171758,
+  "accepted_case_count": 13,
+  "failed_case_count": 0,
+  "solve_median_seconds": 1.225344300008146,
   "solve_range_seconds": [
-    0.28982999999425374,
-    0.6652599000080954
+    0.9979368000058457,
+    1.4684569999808446
+  ],
+  "total_solve_median_seconds": 1.5809949000249617,
+  "total_solve_range_seconds": [
+    1.3346956000023056,
+    2.4176329000038095
   ],
   "detailed_kinetics_evaluations_in_reduced_production": 0,
-  "note": "Single-machine timing; table load, construction and detailed validation excluded from solve times."
+  "note": "Single-machine timing; total_solve includes guide and continuation; table loading and construction are separate."
 }

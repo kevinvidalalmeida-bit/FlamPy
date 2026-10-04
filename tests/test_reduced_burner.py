@@ -42,6 +42,27 @@ def test_smooth_approximation_preserves_mass_elements_and_enthalpy(problem):
     np.testing.assert_allclose(problem.model.table['bilger_weights']@state['Y']+float(problem.model.table['bilger_offset']), state['Z'], atol=1e-14)
 
 
+def test_compiled_progress_polygon_is_strictly_monotone_for_all_training_rows(problem):
+    controls = (problem.fields['Y']@problem.model.table['progress_weights']).reshape(tuple(problem.shape))
+    assert np.diff(controls, axis=2).min() > 0.
+
+
+def test_closure_continuation_preserves_mass_and_recovers_guide_end(problem):
+    guide = ReducedBurnerProblem(problem.model, problem.z, problem.mass_flux,
+                                 problem.inlet_Y, interpolation='quadratic_progress')
+    x = np.random.default_rng(1134).uniform(.2, .8, (13, 3))
+    exact = problem.state(x)
+    problem.initialization_problem = guide
+    problem.closure_blend = 0.
+    result = problem.state(x)
+    for name in ['Y', 'h', 'T', 'omega_C']:
+        np.testing.assert_allclose(result[name], guide.state(x)[name], rtol=1e-11, atol=1e-7)
+    problem.closure_blend = .35
+    np.testing.assert_allclose(problem.state(x)['Y'].sum(axis=0), 1., atol=1e-12)
+    problem.closure_blend = 1.
+    np.testing.assert_array_equal(problem.state(x)['Y'], exact['Y'])
+
+
 def test_progress_direction_has_continuous_first_derivative(problem):
     x = np.tile([.363, .273, 51./(problem.shape[2]-2)], (13, 1))
     eps = 1e-7
@@ -53,10 +74,43 @@ def test_progress_direction_has_continuous_first_derivative(problem):
         np.testing.assert_allclose((b[key]-a[key])/eps, (c[key]-b[key])/eps, rtol=2e-3, atol=2e-4)
 
 
+@pytest.mark.parametrize('axis', [0, 1])
+def test_tensor_derivatives_are_continuous_at_composition_and_loss_knots(problem, axis):
+    x = np.tile([.36, .27, .55], (13, 1))
+    x[:, axis] = problem.axis_knots[axis][6]
+    eps = 1e-8
+    left, right = x.copy(), x.copy()
+    left[:, axis] -= eps
+    right[:, axis] += eps
+    a, b, c = problem.state(left), problem.state(x), problem.state(right)
+    for key in ['Z', 'C', 'h', 'omega_C']:
+        np.testing.assert_allclose((b[key]-a[key])/eps, (c[key]-b[key])/eps, rtol=3e-4, atol=3e-3)
+
+
+def test_equal_species_and_thermal_diffusion_is_positive_for_any_manifold(problem, monkeypatch):
+    """For Le=1 the projected principal diffusion must be rho*D*I."""
+    diffusivity = 1e-5
+    def equal_diffusion(T, P, Y, invW):
+        rho = problem.model.thermo.density(T, P, Y)
+        cp = problem.model.thermo.cp_mass(T, Y)
+        W = 1./(invW@Y)
+        return rho, np.full_like(Y, diffusivity), rho*diffusivity*cp, W
+    monkeypatch.setattr(problem.transport, 'eval_faces_poly_fast', equal_diffusion)
+    x = np.random.default_rng(914).uniform(.2, .8, (13, 3))
+    state = problem.state(x)
+    expected = problem.model.thermo.density(state['T'], problem.pressure, state['Y'])[1:-1].min()*diffusivity
+    result = problem.diffusion_diagnostics(x)
+    assert result['passed']
+    assert result['minimum_real_eigenvalue_kg_m_s'] == pytest.approx(expected, rel=2e-4)
+
+
 def test_progress_initializer_recovers_requested_physical_C(problem):
     row = problem.model.table['C'].reshape(tuple(problem.shape))[7, 5]
-    target = np.linspace(row[0], row[-1], 13)
-    coordinate = problem.initial_progress(target, row)
+    endpoints = np.column_stack([np.full(13, 7./(problem.shape[0]-1)),
+                                 np.full(13, 5./(problem.shape[1]-1)), np.linspace(0., 1., 13)])
+    controls = problem.state(endpoints)['C']
+    target = np.linspace(controls[0], controls[-1], 13)
+    coordinate = problem.initial_progress(target, row, composition_index=7, loss_index=5)
     x = np.column_stack([np.full(13, 7./(problem.shape[0]-1)),
                           np.full(13, 5./(problem.shape[1]-1)), coordinate])
     np.testing.assert_allclose(problem.state(x)['C'], target, atol=1e-10)

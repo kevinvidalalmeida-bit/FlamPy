@@ -49,9 +49,9 @@
   ],
   "progress_species": {
     "CO2": 1.0,
-    "H2O": 1.0,
     "CO": 1.0,
-    "H2": 0.5
+    "H2O": 1.0,
+    "H2": 5.0
   },
   "temperature_K": 300.0,
   "pressure_Pa": 101325.0,
@@ -33897,5 +33897,22 @@
     "solver": "native_BDF_rtol_1e-9_atol_Y_1e-15",
     "builder_sha256": "ed3d9116dde1fa9d5401103bf7471908da4d2e5eedf14a8e976f5cac677bca3b",
     "limitation": "Homogeneous post-flame relaxation, not a solved spatial flamelet; validate a posteriori."
+  },
+  "progress_retabulation": {
+    "source_table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+    "minimum_progress_increment": 1.6856006562759873e-08,
+    "additional_flames": 0,
+    "preserved_fields": [
+      "Y",
+      "T",
+      "h",
+      "Z",
+      "qdot",
+      "rho",
+      "cp_mass",
+      "conductivity"
+    ],
+    "source_recomputed_offline": true,
+    "builder_sha256": "9663dc3c3651ce2b9f079a2f64ddbcdc72e0d2d39b89d744560c1bbad849e445"
   }
 }

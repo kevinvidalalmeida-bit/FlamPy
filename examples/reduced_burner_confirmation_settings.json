@@ -1,0 +1,25 @@
+{
+  "role": "reserved_after_robust_solver_freeze",
+  "phis": [0.835, 1.205],
+  "mass_flux_fractions": [0.535, 0.105],
+  "width_m": 0.03,
+  "max_spacing_m": 0.000125,
+  "residual_tolerance": 1e-7,
+  "max_iterations": 180,
+  "native_slope": 0.02,
+  "native_curve": 0.04,
+  "limits": {
+    "temperature_K": 20.0,
+    "species_absolute": 0.005,
+    "source_peak_relative": 0.05,
+    "source_L1_relative": 0.05,
+    "source_integral_relative": 0.03,
+    "wall_heat_flux_relative": 0.02,
+    "stand_off_distance_m": 0.00002,
+    "energy_closure_relative": 0.02,
+    "grid_temperature_change_K": 5.0,
+    "grid_wall_heat_flux_change_relative": 0.01,
+    "domain_temperature_change_K": 5.0,
+    "domain_wall_heat_flux_change_relative": 0.01
+  }
+}
