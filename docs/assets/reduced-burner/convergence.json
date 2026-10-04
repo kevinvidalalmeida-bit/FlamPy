@@ -1,0 +1,139 @@
+{
+  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "grid": [
+    {
+      "label": "φ=0.815, r=0.575",
+      "level": 1,
+      "nodes": 893,
+      "accepted": true,
+      "temperature_change_K": 0.7102830200608423,
+      "wall_heat_flux_change_relative": 7.648272529056187e-05,
+      "passed": true
+    },
+    {
+      "label": "φ=0.815, r=0.575",
+      "level": 2,
+      "nodes": 1785,
+      "accepted": true,
+      "temperature_change_K": 0.18403363882748636,
+      "wall_heat_flux_change_relative": 1.487596975971043e-05,
+      "passed": true
+    },
+    {
+      "label": "φ=1.235, r=0.575",
+      "level": 1,
+      "nodes": 963,
+      "accepted": true,
+      "temperature_change_K": 0.18013321934540727,
+      "wall_heat_flux_change_relative": 2.5111069235958892e-05,
+      "passed": true
+    },
+    {
+      "label": "φ=1.235, r=0.575",
+      "level": 2,
+      "nodes": 1925,
+      "accepted": true,
+      "temperature_change_K": 0.04035404290607403,
+      "wall_heat_flux_change_relative": 5.355665559322203e-06,
+      "passed": true
+    },
+    {
+      "label": "φ=0.985, r=0.285",
+      "level": 1,
+      "nodes": 981,
+      "accepted": true,
+      "temperature_change_K": 0.13293798078575492,
+      "wall_heat_flux_change_relative": 2.611014488082486e-05,
+      "passed": true
+    },
+    {
+      "label": "φ=0.985, r=0.285",
+      "level": 2,
+      "nodes": 1961,
+      "accepted": true,
+      "temperature_change_K": 0.033440731292500914,
+      "wall_heat_flux_change_relative": 4.024327154980171e-06,
+      "passed": true
+    }
+  ],
+  "domain": [
+    {
+      "label": "FGM reducido",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1907.6047799285227,
+        1910.2417721332092,
+        1909.7740583346235
+      ],
+      "wall_heat_flux_W_m2": [
+        67400.10532097777,
+        67400.10532097748,
+        67400.10532097689
+      ],
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "last_temperature_change_K": 0.4677137985856916,
+      "last_wall_heat_flux_change_relative": 8.852041425183758e-15,
+      "passed": true
+    },
+    {
+      "label": "Detallado nativo",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1912.9488432777932,
+        1914.8148892984586,
+        1914.9083520318393
+      ],
+      "wall_heat_flux_W_m2": [
+        67323.35046290452,
+        67325.73939221645,
+        67325.73939221635
+      ],
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "last_temperature_change_K": 0.09346273338064748,
+      "last_wall_heat_flux_change_relative": 1.5129935076560693e-15,
+      "passed": true
+    },
+    {
+      "label": "Cantera",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1912.8224358398447,
+        1914.8973815674192,
+        1915.1523597567366
+      ],
+      "wall_heat_flux_W_m2": [
+        67264.60419982875,
+        67264.59921350048,
+        67260.09770183206
+      ],
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "last_temperature_change_K": 0.2549781893173986,
+      "last_wall_heat_flux_change_relative": 6.692244837636858e-05,
+      "passed": true
+    }
+  ]
+}

@@ -14,6 +14,9 @@ físicos `(Z,C,h)` con composición variable.
 La biblioteca publicada de CH₄-aire incluye 450 llamas y comprobaciones
 separadas de las fuentes químicas, la convergencia espacial y la interpolación.
 [Tolerancias editables, refinamiento y consulta acelerada](docs/adaptive-fgm.md).
+[Transporte reducido, rendimiento y siete figuras de validación](docs/reduced-burner.md):
+se mantienen 432 llamas; 10 de 13 comparaciones cumplen todos los límites,
+incluidos los cuatro casos reservados. Los fallos restantes se publican.
 
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.

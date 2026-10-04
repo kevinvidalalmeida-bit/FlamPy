@@ -273,6 +273,7 @@ class NonAdiabaticFGM:
     """Query local Bilger Z, unscaled progress C, and total enthalpy h [J/kg]."""
     def __init__(self, folder):
         folder = Path(folder)
+        self.table_sha256 = hashlib.sha256((folder / 'nonadiabatic_fgm.npz').read_bytes()).hexdigest()
         self.metadata = json.loads((folder / 'metadata.json').read_text(encoding='utf-8'))
         with np.load(folder / 'nonadiabatic_fgm.npz', allow_pickle=False) as saved:
             self.table = {name: saved[name] for name in saved.files}

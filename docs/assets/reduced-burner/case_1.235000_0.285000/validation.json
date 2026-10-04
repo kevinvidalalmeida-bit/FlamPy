@@ -1,0 +1,133 @@
+{
+  "metrics": {
+    "temperature_K": 4.224656927870683,
+    "species_absolute": 0.0007982260349454623,
+    "wall_heat_flux_relative": 0.00402442206356185,
+    "stand_off_distance_m": 5.261169490995785e-06
+  },
+  "sources": {
+    "omega_C": {
+      "peak_relative": 0.017720710463869086,
+      "L1_relative": 0.022469659741610783,
+      "integral_relative": 0.0013374572969501626
+    },
+    "qdot": {
+      "peak_relative": 0.01742294941163358,
+      "L1_relative": 0.026705007948985497,
+      "integral_relative": 0.0034512946128319043
+    }
+  },
+  "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "wall_heat_flux_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+  },
+  "passed": true,
+  "native_cantera": {
+    "temperature_K": 3.643915945444178,
+    "wall_heat_flux_relative": 0.0017605538161077278
+  },
+  "q_native_W_m2": 39419.6869972002,
+  "q_reference_W_m2": 39350.408485375876,
+  "phi": 1.235,
+  "fraction": 0.285,
+  "mass_flux_kg_m2_s": 0.09619700545574174,
+  "solver": {
+    "accepted": true,
+    "reason": "converged",
+    "phi": 1.235,
+    "mass_flux_kg_m2_s": 0.09619700545574174,
+    "width_m": 0.03,
+    "nodes": 513,
+    "elapsed_seconds": 0.6652599000080954,
+    "iterations": 7,
+    "residual_tolerance": 1e-07,
+    "max_energy_error": 0.02,
+    "seed_row": "phi_020_loss_004",
+    "seed_sha256": "dcc7716fbf6068c4542e16df0633a42b61dc0dcd39c483d4ef241c4695b0146c",
+    "backend": "reduced_FGM_native_transport",
+    "controls": [
+      "Z",
+      "C",
+      "h"
+    ],
+    "source": "frozen_table",
+    "interpolation": "quadratic_progress",
+    "detailed_source_evaluations": 0,
+    "residual_evaluations": 79,
+    "jacobian_colors": 9,
+    "advection": "Peclet_fitted_finite_volume",
+    "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286",
+    "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+    "diagnostics": {
+      "burner_heat_loss_W_m2": 39578.32845529044,
+      "outlet_enthalpy_loss_W_m2": 39578.328461022575,
+      "relative_energy_closure_error": 1.448302107375121e-10,
+      "relative_total_enthalpy_flux_spread": 6.858366840533443e-10,
+      "projected_progress_balance_error": 1.445461656690562e-11,
+      "inlet_species_flux_error_over_mdot": 0.0003123295518478321,
+      "inlet_enthalpy_flux_error_W_m2": 391.2348137141562,
+      "sum_Y_error": 4.440892098500626e-16,
+      "burner_temperature_error_K": 0.0,
+      "maximum_scaled_residual": 3.985568936643097e-11
+    },
+    "history": [
+      {
+        "iteration": 0,
+        "maximum_scaled_residual": 0.01052123028949145,
+        "norm": 0.01774673739997787,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 1,
+        "maximum_scaled_residual": 0.007681400958759974,
+        "norm": 0.011638905884362928,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 2,
+        "maximum_scaled_residual": 0.0008838645132321731,
+        "norm": 0.0011907518560614985,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 3,
+        "maximum_scaled_residual": 0.00027614773701149396,
+        "norm": 0.00031427987963095005,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 4,
+        "maximum_scaled_residual": 7.799633796175293e-05,
+        "norm": 9.108011208195589e-05,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 5,
+        "maximum_scaled_residual": 9.836178111140173e-06,
+        "norm": 1.2499029601362308e-05,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 6,
+        "maximum_scaled_residual": 1.5915900127459512e-07,
+        "norm": 2.743124237015014e-07,
+        "step_length": 1.0
+      },
+      {
+        "iteration": 7,
+        "maximum_scaled_residual": 3.985568936643097e-11,
+        "norm": 1.0541528999701808e-10
+      }
+    ]
+  },
+  "case_label": "case_1.235000_0.285000",
+  "accepted": true
+}

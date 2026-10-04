@@ -1,0 +1,40 @@
+{
+  "settings": {
+    "phis": [
+      0.815,
+      0.985,
+      1.235
+    ],
+    "mass_flux_fractions": [
+      0.575,
+      0.285,
+      0.095
+    ],
+    "width_m": 0.03,
+    "max_spacing_m": 0.000125,
+    "residual_tolerance": 1e-07,
+    "max_iterations": 180,
+    "native_slope": 0.02,
+    "native_curve": 0.04,
+    "limits": {
+      "temperature_K": 20.0,
+      "species_absolute": 0.005,
+      "source_peak_relative": 0.05,
+      "source_L1_relative": 0.05,
+      "source_integral_relative": 0.03,
+      "wall_heat_flux_relative": 0.02,
+      "stand_off_distance_m": 2e-05,
+      "energy_closure_relative": 0.02,
+      "grid_temperature_change_K": 5.0,
+      "grid_wall_heat_flux_change_relative": 0.01,
+      "domain_temperature_change_K": 5.0,
+      "domain_wall_heat_flux_change_relative": 0.01
+    }
+  },
+  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "table_flames": 432,
+  "status": "development_cases",
+  "comparison": "a_posteriori_unshifted_spatial_profiles",
+  "seed": "fingerprinted_training_profiles_only",
+  "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286"
+}

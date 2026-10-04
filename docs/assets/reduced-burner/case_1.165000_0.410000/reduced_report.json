@@ -1,0 +1,83 @@
+{
+  "accepted": true,
+  "reason": "converged",
+  "phi": 1.165,
+  "mass_flux_kg_m2_s": 0.16270115940060442,
+  "width_m": 0.03,
+  "nodes": 492,
+  "elapsed_seconds": 0.5369406999961939,
+  "iterations": 6,
+  "residual_tolerance": 1e-07,
+  "max_energy_error": 0.02,
+  "seed_row": "phi_016_loss_003",
+  "seed_sha256": "a96c8fa7401f79fb0ae7589cb14c683370e8418c134d035a5413e12108c28643",
+  "backend": "reduced_FGM_native_transport",
+  "controls": [
+    "Z",
+    "C",
+    "h"
+  ],
+  "source": "frozen_table",
+  "interpolation": "quadratic_progress",
+  "detailed_source_evaluations": 0,
+  "residual_evaluations": 70,
+  "jacobian_colors": 9,
+  "advection": "Peclet_fitted_finite_volume",
+  "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286",
+  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "diagnostics": {
+    "burner_heat_loss_W_m2": 62968.68878668719,
+    "outlet_enthalpy_loss_W_m2": 62968.68878693806,
+    "relative_energy_closure_error": 3.984007725304091e-12,
+    "relative_total_enthalpy_flux_spread": 2.412104703363438e-11,
+    "projected_progress_balance_error": 1.077785740032486e-12,
+    "inlet_species_flux_error_over_mdot": 0.0004972412233554043,
+    "inlet_enthalpy_flux_error_W_m2": 1053.957920676061,
+    "sum_Y_error": 3.3306690738754696e-16,
+    "burner_temperature_error_K": 0.0,
+    "maximum_scaled_residual": 5.594107561292833e-12
+  },
+  "history": [
+    {
+      "iteration": 0,
+      "maximum_scaled_residual": 0.003220420146936943,
+      "norm": 0.008594236841860989,
+      "step_length": 0.25
+    },
+    {
+      "iteration": 1,
+      "maximum_scaled_residual": 0.004968364911742305,
+      "norm": 0.008430641369844796,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 2,
+      "maximum_scaled_residual": 0.000708668926072196,
+      "norm": 0.0031596196698416346,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 3,
+      "maximum_scaled_residual": 3.7739042466608754e-05,
+      "norm": 7.52547799493512e-05,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 4,
+      "maximum_scaled_residual": 2.4630856303412856e-06,
+      "norm": 3.4351078953012637e-06,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 5,
+      "maximum_scaled_residual": 1.1392771180806207e-07,
+      "norm": 1.4258820337076083e-07,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 6,
+      "maximum_scaled_residual": 5.594107561292833e-12,
+      "norm": 8.360516526580657e-12
+    }
+  ]
+}

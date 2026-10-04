@@ -42,15 +42,17 @@ def read_profile(path):
 
 
 def reference_input_hash(meta, flux):
+    from kflame.chemistry.mechanism import resolve_mechanism
     settings = {k: meta[k] for k in ('temperature', 'pressure', 'inlet_Y', 'final_width', 'transport', 'soret', 'refinement')}
     settings['mass_flux'] = flux
-    settings['mechanism_sha256'] = hashlib.sha256(Path(meta['mechanism']).read_bytes()).hexdigest()
+    settings['mechanism_sha256'] = hashlib.sha256(Path(resolve_mechanism(meta['mechanism'])).read_bytes()).hexdigest()
     return hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()
 
 
 def cantera_reference(meta, flux, weights):
     import cantera as ct
-    gas = ct.Solution(meta['mechanism'])
+    from kflame.chemistry.mechanism import resolve_mechanism
+    gas = ct.Solution(resolve_mechanism(meta['mechanism']))
     gas.TPY = meta['temperature'], meta['pressure'], meta['inlet_Y']
     h_feed = gas.enthalpy_mass
     flame = ct.BurnerFlame(gas, width=meta['final_width'])

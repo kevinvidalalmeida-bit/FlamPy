@@ -5,6 +5,7 @@
 *.yaml text working-tree-encoding=UTF-8 eol=lf
 *.yml text working-tree-encoding=UTF-8 eol=lf
 *.csv text working-tree-encoding=UTF-8 eol=lf
+*.svg text working-tree-encoding=UTF-8 eol=lf
 .editorconfig text working-tree-encoding=UTF-8 eol=lf
 .gitattributes text working-tree-encoding=UTF-8 eol=lf
 .gitignore text working-tree-encoding=UTF-8 eol=lf

@@ -12,10 +12,13 @@ def __getattr__(name):
     if name == 'generate_adaptive_nonadiabatic_fgm':
         from .fgm.adaptive_nonadiabatic import generate_adaptive_nonadiabatic_fgm
         return generate_adaptive_nonadiabatic_fgm
+    if name == 'solve_reduced_burner_fgm':
+        from .fgm.reduced_burner import solve_reduced_burner_fgm
+        return solve_reduced_burner_fgm
     if name in ('solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm'):
         from . import api
         return getattr(api, name)
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 
-__all__ = ['solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm']
+__all__ = ['solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm', 'solve_reduced_burner_fgm']

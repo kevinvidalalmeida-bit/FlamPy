@@ -1,0 +1,65 @@
+{
+  "accepted": true,
+  "reason": "converged",
+  "phi": 0.815,
+  "mass_flux_kg_m2_s": 0.090948657387342,
+  "width_m": 0.03,
+  "nodes": 481,
+  "elapsed_seconds": 0.28982999999425374,
+  "iterations": 3,
+  "residual_tolerance": 1e-07,
+  "max_energy_error": 0.02,
+  "seed_row": "phi_002_loss_004",
+  "seed_sha256": "f49da6fe4926584b10f1614a753b0c2014722ae37bd8a69ad5017a9c69c5aa1a",
+  "backend": "reduced_FGM_native_transport",
+  "controls": [
+    "Z",
+    "C",
+    "h"
+  ],
+  "source": "frozen_table",
+  "interpolation": "quadratic_progress",
+  "detailed_source_evaluations": 0,
+  "residual_evaluations": 35,
+  "jacobian_colors": 9,
+  "advection": "Peclet_fitted_finite_volume",
+  "solver_source_sha256": "74f35af0c5e0548e08b51a2da7fda00b84a2d3e3c21af3373744b5f9b6276286",
+  "table_sha256": "52db341e2c195debc80fb83c20eface93f8875e24f67bdfee451ad58a0f45700",
+  "diagnostics": {
+    "burner_heat_loss_W_m2": 42530.465407414136,
+    "outlet_enthalpy_loss_W_m2": 42530.46540739156,
+    "relative_energy_closure_error": 5.308499744955854e-13,
+    "relative_total_enthalpy_flux_spread": 3.0125520154246186e-07,
+    "projected_progress_balance_error": 7.572446346963922e-09,
+    "inlet_species_flux_error_over_mdot": 0.0007841686363882638,
+    "inlet_enthalpy_flux_error_W_m2": 908.2599244879311,
+    "sum_Y_error": 4.440892098500626e-16,
+    "burner_temperature_error_K": 0.0,
+    "maximum_scaled_residual": 7.471849591075259e-08
+  },
+  "history": [
+    {
+      "iteration": 0,
+      "maximum_scaled_residual": 0.013693194708186801,
+      "norm": 0.017121423771289803,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 1,
+      "maximum_scaled_residual": 0.00014834217845780939,
+      "norm": 0.0005711765402795066,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 2,
+      "maximum_scaled_residual": 2.766697204935734e-07,
+      "norm": 1.3672555017412073e-06,
+      "step_length": 1.0
+    },
+    {
+      "iteration": 3,
+      "maximum_scaled_residual": 7.471849591075259e-08,
+      "norm": 1.2244130319275647e-07
+    }
+  ]
+}
