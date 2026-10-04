@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "validated_cases": 17,
+  "table_flames": 432,
+  "evaluated_flames": 450,
+  "source_peak_max": 0.02671126233870189,
+  "source_L1_max": 0.02788511258979903,
+  "source_integral_max": 0.015661336390110477,
+  "source_coverage_min": 0.9979857888605451,
+  "temperature_max_K": 2.048647475591679,
+  "species_max_absolute": 0.00036629080964631355,
+  "checks": {
+    "rebuilt450_bitwise_equal": true,
+    "reconstruction432_bitwise_equal": true
+  },
+  "notes": "The 12 legacy cases and 3 development cases are regression evidence; 2 freshly simulated cases were reserved after selecting the final algorithm. All five new cases used native spatial refinement and independent Cantera burner solutions."
+}

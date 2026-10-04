@@ -13,6 +13,7 @@ físicos `(Z,C,h)` con composición variable.
 [Modelo de quemador](docs/heat-loss.md) · [FGM no adiabático, validación y gráficas](docs/nonadiabatic-fgm.md).
 La biblioteca publicada de CH₄-aire incluye 450 llamas y comprobaciones
 separadas de las fuentes químicas, la convergencia espacial y la interpolación.
+[Tolerancias editables, refinamiento y consulta acelerada](docs/adaptive-fgm.md).
 
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.
@@ -202,9 +203,10 @@ modelo lineal, Newton amortiguado y recuperación pseudotransitoria.
 
 ## Alcance y documentación
 
-El modelo actual es adiabático y de presión constante, con química
-detallada en fase gaseosa. Las tablas ilustradas tienen dos coordenadas,
-`(Z, c)`, a presión y temperatura de entrada fijas.
+La llama libre es adiabática y de presión constante, con química detallada
+en fase gaseosa. Esta rama añade pérdidas hacia un quemador isotérmico y
+tablas `(Z,C,h)`; la galería adiabática utiliza `(Z,c)`. Cada biblioteca
+mantiene fijas la presión y la temperatura de entrada.
 
 La convergencia y la concordancia con una implementación independiente
 constituyen comprobaciones numéricas. La validación física requiere datos

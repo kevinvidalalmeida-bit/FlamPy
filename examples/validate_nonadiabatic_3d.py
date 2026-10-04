@@ -16,6 +16,7 @@ from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.thermo import NativeThermo
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM, OutsideManifoldError
+from kflame.fgm.accuracy import FGMTolerances, assess_profile
 if __package__:
     from .audit_nonadiabatic_sources import detailed_sources, cantera_sources, source_metrics
 else:
@@ -29,6 +30,7 @@ SOURCE_FILES = [
     'src/kflame/chemistry/thermo.py', 'src/kflame/chemistry/kinetics.py',
     'src/kflame/chemistry/mechanism.py', 'src/kflame/fgm/nonadiabatic3d.py',
     'examples/validate_nonadiabatic_3d.py', 'examples/audit_nonadiabatic_sources.py',
+    'src/kflame/fgm/accuracy.py', 'src/kflame/fgm/adaptive_nonadiabatic.py', 'src/kflame/fgm/search.py',
 ]
 WITHHELD_PHIS = np.sqrt(np.array([.7, .85, 1., 1.15]) * np.array([.85, 1., 1.15, 1.3]))
 WITHHELD_FRACTIONS = [.55, .35, .18, .085]
@@ -65,7 +67,8 @@ def cantera_reference(meta, flux, weights):
                 burned_deficit_J_kg=np.array(h_feed - gas.enthalpy_mass))
 
 
-def evaluate_case(model, native, reference, meta, phi, fraction, flux):
+def evaluate_case(model, native, reference, meta, phi, fraction, flux, tolerances=None):
+    tolerances = tolerances or FGMTolerances()
     t = model.table
     Z = t['bilger_weights'] @ native['Y'] + float(t['bilger_offset'])
     C = t['progress_weights'] @ native['Y']
@@ -74,25 +77,17 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
     mass_sources, qdot = detailed_sources(mech, native['T'], native['Y'], meta['pressure'])
     omega = t['progress_weights'] @ mass_sources
     n = len(Z)
-    prediction = {k: np.full(n, np.nan) for k in ('T', 'omega_C', 'qdot')}
-    prediction['Y'] = np.full(native['Y'].shape, np.nan)
-    covered = np.zeros(n, dtype=bool)
-    control_errors = []
-    for j in range(n):
-        try:
-            result = model.lookup(Z=Z[j], C=C[j], h=h[j])
-        except OutsideManifoldError:
-            continue
-        # Ambiguous cells and all other errors are validation failures.
-        covered[j] = True
-        for k in prediction:
-            prediction[k][..., j] = result[k]
-        control_errors.append([
-            abs(t['bilger_weights'] @ result['Y'] + float(t['bilger_offset']) - Z[j]),
-            abs(t['progress_weights'] @ result['Y'] - C[j]),
-            abs(float(model.thermo.enthalpy_mass(result['T'], result['Y'])) - h[j]),
-            abs(result['Y'].sum() - 1.),
-        ])
+    batch = model.lookup_batch(Z=Z, C=C, h=h, outside='mask')
+    covered = batch['covered']
+    prediction = {k: batch[k] for k in ('T', 'omega_C', 'qdot')}
+    prediction['Y'] = batch['Y'].T
+    y, temperature = batch['Y'][covered].T, batch['T'][covered]
+    control_errors = np.column_stack([
+        abs(t['bilger_weights'] @ y + float(t['bilger_offset']) - Z[covered]),
+        abs(t['progress_weights'] @ y - C[covered]),
+        abs(model.thermo.enthalpy_mass(temperature, y) - h[covered]),
+        abs(y.sum(axis=0) - 1.),
+    ])
     if not covered.any():
         raise RuntimeError('No withheld states inside the resolved manifold')
     source_peak = float(np.max(abs(omega)))
@@ -106,16 +101,19 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
         omega_C_Linf_over_native_peak=float(np.max(abs(prediction['omega_C'][covered] - omega[covered])) / source_peak),
         qdot_Linf_over_native_peak=float(np.max(abs(prediction['qdot'][covered] - qdot[covered])) / qdot_peak),
     )
-    limits = dict(coverage_fraction_min=.85, temperature_Linf_K_max=20., all_Y_Linf_max=.005,
-                  omega_C_Linf_over_native_peak_max=.05, qdot_Linf_over_native_peak_max=.05)
-    source_limits = dict(Linf_over_truth_peak_max=.05, L1_relative_max=.05,
-                         integral_error_over_abs_integral_max=.03, absolute_source_coverage_min=.99)
-    source_pass = all(s['Linf_over_truth_peak'] < .05 and s['L1_relative'] < .05
-                      and s['integral_error_over_abs_integral'] < .03
-                      and s['absolute_source_coverage'] > .99 for s in sources.values())
-    interpolation_pass = (metrics['coverage_fraction'] >= limits['coverage_fraction_min']
-                          and all(metrics[k[:-4]] <= v for k, v in limits.items() if k.endswith('_max'))
-                          and source_pass)
+    limits = dict(coverage_fraction_min=tolerances.node_coverage_min,
+                  temperature_Linf_K_max=tolerances.temperature_K, all_Y_Linf_max=tolerances.species_absolute,
+                  omega_C_Linf_over_native_peak_max=tolerances.source_peak_relative['omega_C'],
+                  qdot_Linf_over_native_peak_max=tolerances.source_peak_relative['qdot'])
+    source_limits = {name: dict(Linf_over_truth_peak_max=tolerances.source_peak_relative[name],
+                               L1_relative_max=tolerances.source_L1_relative[name],
+                               integral_error_over_abs_integral_max=tolerances.source_integral_relative[name],
+                               absolute_source_coverage_min=tolerances.source_coverage_min[name])
+                     for name in sources}
+    source_pass = all(s[key[:-4]] <= value if key.endswith('_max') else s[key[:-4]] >= value
+                      for name, s in sources.items() for key, value in source_limits[name].items())
+    assessment = assess_profile(dict(native, omega_C=omega, qdot=qdot), batch, tolerances)
+    interpolation_pass = assessment['passed']
     reference_T = np.interp(native['z'], reference['z'], reference['T'])
     reference_Y = np.array([np.interp(native['z'], reference['z'], row) for row in reference['Y']])
     ref_metrics = dict(
@@ -153,6 +151,7 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
                   native_nodes=n, reference_nodes=len(reference['z']), resolved_nodes=int(covered.sum()),
                   interpolation=metrics, interpolation_limits=limits, interpolation_passed=interpolation_pass,
                   sources=sources, source_limits=source_limits, sources_passed=source_pass,
+                  interpolation_tolerances=tolerances.to_dict(), interpolation_error_ratios=assessment['ratios'],
                   chemistry=chemistry, chemistry_limits=chemistry_limits, chemistry_passed=chemistry_pass,
                   reference=ref_metrics, reference_limits=ref_limits, reference_passed=ref_pass,
                   conservation=conservation, conservation_passed=conservation_pass,
@@ -219,7 +218,7 @@ def spatial_refinement(output):
 
 
 def validate(folder, output, *, recheck=False, mesh_check=False, fine_native=False,
-             withheld_phis=WITHHELD_PHIS, withheld_fractions=WITHHELD_FRACTIONS):
+             withheld_phis=WITHHELD_PHIS, withheld_fractions=WITHHELD_FRACTIONS, tolerances=None):
     import cantera as ct
     folder, output = Path(folder), Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -295,7 +294,7 @@ def validate(folder, output, *, recheck=False, mesh_check=False, fine_native=Fal
             reference = cantera_reference(meta, meta['mass_flux'], model.table['progress_weights'])
             np.savez_compressed(ref_path, **reference)
         reference = read_profile(ref_path)
-        result, arrays = evaluate_case(model, native, reference, meta, phi, fraction, meta['mass_flux'])
+        result, arrays = evaluate_case(model, native, reference, meta, phi, fraction, meta['mass_flux'], tolerances)
         np.savez_compressed(output / f'case_{i:02d}_comparison.npz', **arrays)
         columns = ['z', 'T', 'fgm_T', 'Z', 'C', 'h', 'omega_C', 'fgm_omega_C', 'qdot', 'fgm_qdot', 'covered']
         with (output / f'case_{i:02d}_comparison.csv').open('w', encoding='utf-8', newline='\n') as stream:
@@ -330,11 +329,13 @@ def main():
     parser.add_argument('--recheck', action='store_true')
     parser.add_argument('--mesh-check', action='store_true')
     parser.add_argument('--fine-native', action='store_true')
+    parser.add_argument('--tolerances', type=Path, help='JSON with interpolation tolerances per quantity')
     parser.add_argument('--phis', type=float, nargs='+', default=WITHHELD_PHIS.tolist())
     parser.add_argument('--fractions', type=float, nargs='+', default=WITHHELD_FRACTIONS)
     args = parser.parse_args()
     report = validate(args.folder, args.output, recheck=args.recheck, mesh_check=args.mesh_check,
-                      fine_native=args.fine_native, withheld_phis=args.phis, withheld_fractions=args.fractions)
+                      fine_native=args.fine_native, withheld_phis=args.phis, withheld_fractions=args.fractions,
+                      tolerances=FGMTolerances.from_file(args.tolerances) if args.tolerances else None)
     print('Passed:', report['passed'])
     if not report['passed']:
         raise SystemExit('Nonadiabatic 3D validation failed; inspect validation.json')

@@ -1,0 +1,2011 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "phi": 0.7713624310270756,
+      "fraction": 0.55,
+      "mass_flux_kg_m2_s": 0.15655384798114208,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 395,
+      "reference_nodes": 416,
+      "resolved_nodes": 385,
+      "interpolation": {
+        "coverage_fraction": 0.9746835443037974,
+        "temperature_Linf_K": 0.2198395686928052,
+        "all_Y_Linf": 0.00015676276396961366,
+        "omega_C_Linf_over_native_peak": 0.005190647934171901,
+        "qdot_Linf_over_native_peak": 0.005180724429951075
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.005190647934171901,
+          "L2_relative": 0.00507047074090863,
+          "L1_relative": 0.005853943086121459,
+          "integral_error_over_abs_integral": 0.0036232902721914317,
+          "integral_truth": 0.033622606051992895,
+          "absolute_source_coverage": 0.9998813516978233,
+          "worst_index": 170,
+          "worst_z_mm": 0.5969315890326765,
+          "truth_at_worst": 83.47076127642862,
+          "prediction_at_worst": 84.06759345180473,
+          "truth_peak": 114.98221088102446,
+          "peak_amplitude_error": 0.004948197998348609
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.005180724429951075,
+          "L2_relative": 0.0050365944389532845,
+          "L1_relative": 0.005205126871639254,
+          "integral_error_over_abs_integral": 0.0031628560997725343,
+          "integral_truth": 337876.4598575046,
+          "absolute_source_coverage": 0.9997762189046805,
+          "worst_index": 170,
+          "worst_z_mm": 0.5969315890326765,
+          "truth_at_worst": 778668946.9223146,
+          "prediction_at_worst": 783780440.5870484,
+          "truth_peak": 986636856.2633698,
+          "peak_amplitude_error": 0.004744127220805525
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.010991978434640259,
+        "species": 0.03135255279392273,
+        "node_coverage": 0.8720779220779221,
+        "omega_C_peak": 0.10381295868343801,
+        "omega_C_L1": 0.11707886172242918,
+        "omega_C_integral": 0.12077634240638106,
+        "omega_C_coverage": 0.990117475757454,
+        "qdot_peak": 0.10361448859902149,
+        "qdot_L1": 0.10410253743278507,
+        "qdot_integral": 0.10542853665908448,
+        "qdot_coverage": 0.9902215928726621
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 1.2861268342899501e-14,
+        "qdot_same_state_relative_error": 7.50618331996042e-15,
+        "mass_source_sum_over_peak": 1.1500121306115e-15,
+        "Z_source_over_mass_peak": 2.6576263951530934e-16,
+        "integrated_progress_balance_relative_error": 0.00020851497675107957
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.4583668637653773,
+        "all_Y_Linf": 5.578405536416087e-05,
+        "burned_deficit_relative_error": 0.0003044262167083311,
+        "energy_closure_error": 0.0035875499781003466,
+        "mass_flux_relative_spread": 5.961761740530198e-11,
+        "omega_C_Linf_over_reference_peak": 0.0014896942696192416,
+        "qdot_Linf_over_reference_peak": 0.0013875623174890662
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 1.6653345369377348e-16,
+        "h_Linf_J_kg": 9.214854799211025e-07,
+        "sum_Y_error": 5.551115123125783e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -198471.06699728355,
+        "burned_enthalpy_deficit_J_kg": 223808.24142371892,
+        "burner_heat_loss_W_m2": 34912.340679759625,
+        "outlet_enthalpy_loss_W_m2": 35038.04140443278,
+        "relative_energy_closure_error": 0.0035875499781003466,
+        "mass_flux_relative_spread": 5.961761740530198e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.4423012935107167e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "case",
+      "case_index": 0
+    },
+    {
+      "phi": 0.9219544457292888,
+      "fraction": 0.35,
+      "mass_flux_kg_m2_s": 0.13793555452484393,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 391,
+      "reference_nodes": 401,
+      "resolved_nodes": 382,
+      "interpolation": {
+        "coverage_fraction": 0.9769820971867008,
+        "temperature_Linf_K": 0.534923513302374,
+        "all_Y_Linf": 8.382345659924129e-05,
+        "omega_C_Linf_over_native_peak": 0.004782958795665824,
+        "qdot_Linf_over_native_peak": 0.0041863860147094405
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.004782958795665824,
+          "L2_relative": 0.0052963465208897016,
+          "L1_relative": 0.010321180147595333,
+          "integral_error_over_abs_integral": 0.00987838560908899,
+          "integral_truth": 0.03514639563944037,
+          "absolute_source_coverage": 0.9994804882092532,
+          "worst_index": 234,
+          "worst_z_mm": 0.6536535952303517,
+          "truth_at_worst": 98.58927186330868,
+          "prediction_at_worst": 98.03791528403042,
+          "truth_peak": 115.27520993446271,
+          "peak_amplitude_error": 0.004425839961829915
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.0041863860147094405,
+          "L2_relative": 0.004772793153905338,
+          "L1_relative": 0.008965348510885806,
+          "integral_error_over_abs_integral": 0.008737002061145423,
+          "integral_truth": 353122.3105854365,
+          "absolute_source_coverage": 0.9990776158399755,
+          "worst_index": 216,
+          "worst_z_mm": 0.6050347327752016,
+          "truth_at_worst": 970676662.8177947,
+          "prediction_at_worst": 966540962.4185095,
+          "truth_peak": 987892751.5890431,
+          "peak_amplitude_error": 0.0038218391630321234
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.0267461756651187,
+        "species": 0.016764691319848257,
+        "node_coverage": 0.8700261780104711,
+        "omega_C_peak": 0.09565917591331648,
+        "omega_C_L1": 0.20642360295190665,
+        "omega_C_integral": 0.3292795203029663,
+        "omega_C_coverage": 0.9905145840052975,
+        "qdot_peak": 0.0837277202941888,
+        "qdot_L1": 0.1793069702177161,
+        "qdot_integral": 0.29123340203818077,
+        "qdot_coverage": 0.9909140033806648
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 2.2374889902829528e-14,
+        "qdot_same_state_relative_error": 1.0468146316384972e-14,
+        "mass_source_sum_over_peak": 1.0286176655155559e-15,
+        "Z_source_over_mass_peak": 3.303506210162853e-16,
+        "integrated_progress_balance_relative_error": 0.002319158559814094
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.31463016877069094,
+        "all_Y_Linf": 3.443823120795331e-05,
+        "burned_deficit_relative_error": 9.603090133436828e-05,
+        "energy_closure_error": 0.001862498304157797,
+        "mass_flux_relative_spread": 1.9117314083757416e-10,
+        "omega_C_Linf_over_reference_peak": 0.001122171702992138,
+        "qdot_Linf_over_reference_peak": 0.001046652790186738
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 1.1102230246251565e-16,
+        "h_Linf_J_kg": 9.319046512246132e-07,
+        "sum_Y_error": 3.3306690738754696e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -235591.70962333353,
+        "burned_enthalpy_deficit_J_kg": 458364.69641102664,
+        "burner_heat_loss_W_m2": 63107.032511477046,
+        "outlet_enthalpy_loss_W_m2": 63224.78857297495,
+        "relative_energy_closure_error": 0.001862498304157797,
+        "mass_flux_relative_spread": 1.9117314083757416e-10,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -3.0298232436422285e-16,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "case",
+      "case_index": 1
+    },
+    {
+      "phi": 1.0723805294763609,
+      "fraction": 0.18,
+      "mass_flux_kg_m2_s": 0.07772598794427264,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 480,
+      "reference_nodes": 420,
+      "resolved_nodes": 475,
+      "interpolation": {
+        "coverage_fraction": 0.9895833333333334,
+        "temperature_Linf_K": 0.8516816644616938,
+        "all_Y_Linf": 0.00015197912245876188,
+        "omega_C_Linf_over_native_peak": 0.01789615933892815,
+        "qdot_Linf_over_native_peak": 0.015856725328895167
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.01789615933892815,
+          "L2_relative": 0.014726792424114378,
+          "L1_relative": 0.018787084340386048,
+          "integral_error_over_abs_integral": 0.0013975578654901533,
+          "integral_truth": 0.021613277101556562,
+          "absolute_source_coverage": 0.9998675704299325,
+          "worst_index": 338,
+          "worst_z_mm": 1.024058841090541,
+          "truth_at_worst": 30.725547000659738,
+          "prediction_at_worst": 29.78882994030336,
+          "truth_peak": 52.34179259450435,
+          "peak_amplitude_error": 0.002917161042922545
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.015856725328895167,
+          "L2_relative": 0.01252987397268191,
+          "L1_relative": 0.015564657479906551,
+          "integral_error_over_abs_integral": 0.0029963083248834774,
+          "integral_truth": 209448.10958180192,
+          "absolute_source_coverage": 0.9995824610900772,
+          "worst_index": 323,
+          "worst_z_mm": 0.9802969233192597,
+          "truth_at_worst": 312716079.9369642,
+          "prediction_at_worst": 305239304.31814617,
+          "truth_peak": 471520787.7879661,
+          "peak_amplitude_error": 0.0011255090774613184
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.04258408322308469,
+        "species": 0.030395824491752377,
+        "node_coverage": 0.8589473684210526,
+        "omega_C_peak": 0.357923186778563,
+        "omega_C_L1": 0.37574168680772096,
+        "omega_C_integral": 0.04658526218300511,
+        "omega_C_coverage": 0.9901311226388816,
+        "qdot_peak": 0.3171345065779033,
+        "qdot_L1": 0.311293149598131,
+        "qdot_integral": 0.09987694416278259,
+        "qdot_coverage": 0.9904135361882729
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 5.243365159720442e-14,
+        "qdot_same_state_relative_error": 2.3685955325920954e-14,
+        "mass_source_sum_over_peak": 1.0297624195085374e-15,
+        "Z_source_over_mass_peak": 2.3387855521423424e-16,
+        "integrated_progress_balance_relative_error": 0.0012237131879396347
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.24976399099523405,
+        "all_Y_Linf": 3.026479037057661e-05,
+        "burned_deficit_relative_error": 0.00025034227726346866,
+        "energy_closure_error": 0.0012127614761823188,
+        "mass_flux_relative_spread": 6.027766629711129e-11,
+        "omega_C_Linf_over_reference_peak": 0.0009451367479925086,
+        "qdot_Linf_over_reference_peak": 0.0008842186003324506
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.0816681711721685e-17,
+        "C_Linf": 5.551115123125783e-17,
+        "h_Linf_J_kg": 9.980285540223122e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -272057.9257495367,
+        "burned_enthalpy_deficit_J_kg": 723111.688666832,
+        "burner_heat_loss_W_m2": 56136.40765844806,
+        "outlet_enthalpy_loss_W_m2": 56204.57039620996,
+        "relative_energy_closure_error": 0.0012127614761823188,
+        "mass_flux_relative_spread": 6.027766629711129e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -5.5101222778014054e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "case",
+      "case_index": 2
+    },
+    {
+      "phi": 1.2227019260637484,
+      "fraction": 0.085,
+      "mass_flux_kg_m2_s": 0.029937435550530005,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 522,
+      "reference_nodes": 350,
+      "resolved_nodes": 519,
+      "interpolation": {
+        "coverage_fraction": 0.9942528735632183,
+        "temperature_Linf_K": 0.14828200272177128,
+        "all_Y_Linf": 0.00011654920372831945,
+        "omega_C_Linf_over_native_peak": 0.009518906411660847,
+        "qdot_Linf_over_native_peak": 0.009740841866714015
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.009518906411660847,
+          "L2_relative": 0.010590151495615175,
+          "L1_relative": 0.013011984063816652,
+          "integral_error_over_abs_integral": 0.012984603598995581,
+          "integral_truth": 0.008457922642461193,
+          "absolute_source_coverage": 0.9997562972075291,
+          "worst_index": 391,
+          "worst_z_mm": 2.5244831287742873,
+          "truth_at_worst": 6.250086424306472,
+          "prediction_at_worst": 6.322722123625885,
+          "truth_peak": 7.630676905325269,
+          "peak_amplitude_error": 0.008698408812527736
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.009740841866714015,
+          "L2_relative": 0.010816381998504633,
+          "L1_relative": 0.014233856960902652,
+          "integral_error_over_abs_integral": 0.01421132994837212,
+          "integral_truth": 76265.2336762719,
+          "absolute_source_coverage": 0.9998496530181958,
+          "worst_index": 373,
+          "worst_z_mm": 2.3530694771615166,
+          "truth_at_worst": 62541835.86651726,
+          "prediction_at_worst": 63163880.259405375,
+          "truth_peak": 63859407.780115716,
+          "peak_amplitude_error": 0.009067128352457056
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.007414100136088564,
+        "species": 0.02330984074566389,
+        "node_coverage": 0.8549132947976879,
+        "omega_C_peak": 0.19037812823321693,
+        "omega_C_L1": 0.260239681276333,
+        "omega_C_integral": 0.43282011996651937,
+        "omega_C_coverage": 0.9902413245760192,
+        "qdot_peak": 0.1948168373342803,
+        "qdot_L1": 0.28467713921805304,
+        "qdot_integral": 0.4737109982790707,
+        "qdot_coverage": 0.9901488658935239
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 4.3881200630217617e-14,
+        "qdot_same_state_relative_error": 1.790909376369002e-14,
+        "mass_source_sum_over_peak": 8.904938075769714e-16,
+        "Z_source_over_mass_peak": 2.0278683131738101e-16,
+        "integrated_progress_balance_relative_error": 0.0013127830720524752
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 1.8893664639983854,
+        "all_Y_Linf": 0.00023428076835869255,
+        "burned_deficit_relative_error": 0.00030029683772670406,
+        "energy_closure_error": 1.3043888677920347e-05,
+        "mass_flux_relative_spread": 3.8961379211971e-11,
+        "omega_C_Linf_over_reference_peak": 0.007006857396117159,
+        "qdot_Linf_over_reference_peak": 0.006804806784390647
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 5.551115123125783e-17,
+        "h_Linf_J_kg": 9.958166629076004e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -307901.28901172953,
+        "burned_enthalpy_deficit_J_kg": 694839.1995370821,
+        "burner_heat_loss_W_m2": 20801.432418899054,
+        "outlet_enthalpy_loss_W_m2": 20801.703754007132,
+        "relative_energy_closure_error": 1.3043888677920347e-05,
+        "mass_flux_relative_spread": 3.8961379211971e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -7.112240287461581e-15,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "case",
+      "case_index": 3
+    },
+    {
+      "phi": 1.025,
+      "fraction": 0.28,
+      "mass_flux_kg_m2_s": 0.12045356167621094,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 406,
+      "reference_nodes": 392,
+      "resolved_nodes": 400,
+      "interpolation": {
+        "coverage_fraction": 0.9852216748768473,
+        "temperature_Linf_K": 0.7939582098040319,
+        "all_Y_Linf": 0.00013130917692907862,
+        "omega_C_Linf_over_native_peak": 0.01439819704882468,
+        "qdot_Linf_over_native_peak": 0.012346930537275763
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.01439819704882468,
+          "L2_relative": 0.01321406524116692,
+          "L1_relative": 0.022262900834209676,
+          "integral_error_over_abs_integral": 0.004410930599148098,
+          "integral_truth": 0.03327943898662138,
+          "absolute_source_coverage": 0.9989614253663583,
+          "worst_index": 265,
+          "worst_z_mm": 0.7381476449848353,
+          "truth_at_worst": 66.9384489045285,
+          "prediction_at_worst": 65.50037359045884,
+          "truth_peak": 99.87884658010384,
+          "peak_amplitude_error": 0.005572380625306604
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.012346930537275763,
+          "L2_relative": 0.011891554614437956,
+          "L1_relative": 0.018745491038770032,
+          "integral_error_over_abs_integral": 0.004081146439704585,
+          "integral_truth": 330287.4753466054,
+          "absolute_source_coverage": 0.9980968403139339,
+          "worst_index": 265,
+          "worst_z_mm": 0.7381476449848353,
+          "truth_at_worst": 501390693.09355444,
+          "prediction_at_worst": 490636264.3252415,
+          "truth_peak": 871020431.8267589,
+          "peak_amplitude_error": 0.005856164398249598
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.03969791049020159,
+        "species": 0.026261835385815724,
+        "node_coverage": 0.86275,
+        "omega_C_peak": 0.2879639409764936,
+        "omega_C_L1": 0.4452580166841935,
+        "omega_C_integral": 0.14703101997160326,
+        "omega_C_coverage": 0.991029257848398,
+        "qdot_peak": 0.24693861074551524,
+        "qdot_L1": 0.37490982077540064,
+        "qdot_integral": 0.1360382146568195,
+        "qdot_coverage": 0.9918877207231844
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 3.1586365429687523e-14,
+        "qdot_same_state_relative_error": 1.3959887839460172e-14,
+        "mass_source_sum_over_peak": 7.759381442642471e-16,
+        "Z_source_over_mass_peak": 2.689970899070249e-16,
+        "integrated_progress_balance_relative_error": 0.0024017440880316743
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.44730422201769215,
+        "all_Y_Linf": 6.464322641128173e-05,
+        "burned_deficit_relative_error": 8.899459723621253e-05,
+        "energy_closure_error": 0.001533386105488693,
+        "mass_flux_relative_spread": 1.9446405322869008e-10,
+        "omega_C_Linf_over_reference_peak": 0.0010242827690813234,
+        "qdot_Linf_over_reference_peak": 0.0009611649231153576
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.0816681711721685e-17,
+        "C_Linf": 5.551115123125783e-17,
+        "h_Linf_J_kg": 9.986106306314468e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -260637.18915406027,
+        "burned_enthalpy_deficit_J_kg": 581568.0083352039,
+        "burner_heat_loss_W_m2": 69944.52128446895,
+        "outlet_enthalpy_loss_W_m2": 70051.93795278831,
+        "relative_energy_closure_error": 0.001533386105488693,
+        "mass_flux_relative_spread": 1.9446405322869008e-10,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.3316513275082716e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "additional",
+      "case_index": 0
+    },
+    {
+      "phi": 1.275,
+      "fraction": 0.11,
+      "mass_flux_kg_m2_s": 0.03232606938052629,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 473,
+      "reference_nodes": 339,
+      "resolved_nodes": 470,
+      "interpolation": {
+        "coverage_fraction": 0.9936575052854123,
+        "temperature_Linf_K": 0.1404251462213324,
+        "all_Y_Linf": 6.829326039718697e-05,
+        "omega_C_Linf_over_native_peak": 0.010842736876259702,
+        "qdot_Linf_over_native_peak": 0.010660838504691671
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.010842736876259702,
+          "L2_relative": 0.011977630686788782,
+          "L1_relative": 0.014649505440800042,
+          "integral_error_over_abs_integral": 0.014606048395781517,
+          "integral_truth": 0.00916262653558898,
+          "absolute_source_coverage": 0.9995867253417828,
+          "worst_index": 342,
+          "worst_z_mm": 2.5425266710493157,
+          "truth_at_worst": 6.51880384486334,
+          "prediction_at_worst": 6.606948685304584,
+          "truth_peak": 8.129390341864482,
+          "peak_amplitude_error": 0.009996168541798623
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.010660838504691671,
+          "L2_relative": 0.012127955624073932,
+          "L1_relative": 0.01566817271666461,
+          "integral_error_over_abs_integral": 0.015661336390110477,
+          "integral_truth": 80800.49054861443,
+          "absolute_source_coverage": 0.99968705383345,
+          "worst_index": 342,
+          "worst_z_mm": 2.5425266710493157,
+          "truth_at_worst": 54295246.80203893,
+          "prediction_at_worst": 55006528.01835099,
+          "truth_peak": 66719068.67354143,
+          "peak_amplitude_error": 0.010218722488595138
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.00702125731106662,
+        "species": 0.013658652079437394,
+        "node_coverage": 0.8554255319148936,
+        "omega_C_peak": 0.21685473752519405,
+        "omega_C_L1": 0.29299010881600085,
+        "omega_C_integral": 0.4868682798593839,
+        "omega_C_coverage": 0.9904093110695273,
+        "qdot_peak": 0.2132167700938334,
+        "qdot_L1": 0.3133634543332922,
+        "qdot_integral": 0.5220445463370159,
+        "qdot_coverage": 0.990309913691186
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 4.2828050552508715e-14,
+        "qdot_same_state_relative_error": 1.903989394683027e-14,
+        "mass_source_sum_over_peak": 8.885610989460627e-16,
+        "Z_source_over_mass_peak": 2.5147056061388867e-16,
+        "integrated_progress_balance_relative_error": 0.0007191389117428827
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.8567020779391896,
+        "all_Y_Linf": 0.0001220767865906941,
+        "burned_deficit_relative_error": 0.0008481059193146968,
+        "energy_closure_error": 7.577520055534472e-05,
+        "mass_flux_relative_spread": 3.078448720487939e-11,
+        "omega_C_Linf_over_reference_peak": 0.00291586918684906,
+        "qdot_Linf_over_reference_peak": 0.0028488963887042325
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 1.1102230246251565e-16,
+        "h_Linf_J_kg": 9.778887033462524e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -320234.13959037565,
+        "burned_enthalpy_deficit_J_kg": 618254.6804517342,
+        "burner_heat_loss_W_m2": 19984.229271148204,
+        "outlet_enthalpy_loss_W_m2": 19985.74369488493,
+        "relative_energy_closure_error": 7.577520055534472e-05,
+        "mass_flux_relative_spread": 3.078448720487939e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.879040143839938e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "additional",
+      "case_index": 1
+    },
+    {
+      "phi": 0.825,
+      "fraction": 0.52,
+      "mass_flux_kg_m2_s": 0.1710666983649966,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 402,
+      "reference_nodes": 450,
+      "resolved_nodes": 392,
+      "interpolation": {
+        "coverage_fraction": 0.9751243781094527,
+        "temperature_Linf_K": 0.23985781299234077,
+        "all_Y_Linf": 0.00016600190334544428,
+        "omega_C_Linf_over_native_peak": 0.009318918124586472,
+        "qdot_Linf_over_native_peak": 0.009121061408125
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.009318918124586472,
+          "L2_relative": 0.008215334725385541,
+          "L1_relative": 0.009179069617043711,
+          "integral_error_over_abs_integral": 0.004148621847549825,
+          "integral_truth": 0.03921295087290144,
+          "absolute_source_coverage": 0.9997883229896485,
+          "worst_index": 184,
+          "worst_z_mm": 0.5321064390924765,
+          "truth_at_worst": 109.63481523311823,
+          "prediction_at_worst": 110.93720066762617,
+          "truth_peak": 139.7571496064339,
+          "peak_amplitude_error": 0.0071807522056187255
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.009121061408125,
+          "L2_relative": 0.008178146305292365,
+          "L1_relative": 0.008631977392669297,
+          "integral_error_over_abs_integral": 0.0033905566276778974,
+          "integral_truth": 393991.0867199096,
+          "absolute_source_coverage": 0.9996084520075507,
+          "worst_index": 182,
+          "worst_z_mm": 0.5267043432641263,
+          "truth_at_worst": 983069908.5033578,
+          "prediction_at_worst": 993970680.940911,
+          "truth_peak": 1195121044.557701,
+          "peak_amplitude_error": 0.006793723786454362
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.011992890649617038,
+        "species": 0.033200380669088855,
+        "node_coverage": 0.8716836734693877,
+        "omega_C_peak": 0.18637836249172943,
+        "omega_C_L1": 0.1835813923408742,
+        "omega_C_integral": 0.1382873949183275,
+        "omega_C_coverage": 0.990209604608725,
+        "qdot_peak": 0.1824212281625,
+        "qdot_L1": 0.17263954785338592,
+        "qdot_integral": 0.11301855425592992,
+        "qdot_coverage": 0.9903877843487081
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 1.548115882788368e-14,
+        "qdot_same_state_relative_error": 8.75276626222611e-15,
+        "mass_source_sum_over_peak": 8.036578246185766e-16,
+        "Z_source_over_mass_peak": 2.5400980188350895e-16,
+        "integrated_progress_balance_relative_error": 0.0017533040187831712
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.14084428843125352,
+        "all_Y_Linf": 1.1529550541178324e-05,
+        "burned_deficit_relative_error": 0.0002667707460434329,
+        "energy_closure_error": 0.002389187226840093,
+        "mass_flux_relative_spread": 3.694741281631402e-11,
+        "omega_C_Linf_over_reference_peak": 0.0004936286889413599,
+        "qdot_Linf_over_reference_peak": 0.0004787322752692909
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 4.163336342344337e-17,
+        "C_Linf": 2.220446049250313e-16,
+        "h_Linf_J_kg": 9.009381756186485e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -211764.05786046584,
+        "burned_enthalpy_deficit_J_kg": 265311.8237842169,
+        "burner_heat_loss_W_m2": 45277.58203816031,
+        "outlet_enthalpy_loss_W_m2": 45386.01773200275,
+        "relative_energy_closure_error": 0.002389187226840093,
+        "mass_flux_relative_spread": 3.694741281631402e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -2.67303272632498e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "development",
+      "case_index": 0
+    },
+    {
+      "phi": 1.095,
+      "fraction": 0.175,
+      "mass_flux_kg_m2_s": 0.07498303083876831,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 478,
+      "reference_nodes": 428,
+      "resolved_nodes": 473,
+      "interpolation": {
+        "coverage_fraction": 0.9895397489539749,
+        "temperature_Linf_K": 0.8785262447186142,
+        "all_Y_Linf": 0.0001622344054122704,
+        "omega_C_Linf_over_native_peak": 0.016180406846926173,
+        "qdot_Linf_over_native_peak": 0.014506514193679557
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.016180406846926173,
+          "L2_relative": 0.014441582652078419,
+          "L1_relative": 0.01801201197072781,
+          "integral_error_over_abs_integral": 0.0012444189607667432,
+          "integral_truth": 0.020905920623970186,
+          "absolute_source_coverage": 0.9999003074446542,
+          "worst_index": 341,
+          "worst_z_mm": 1.095583510850972,
+          "truth_at_worst": 27.088318770555247,
+          "prediction_at_worst": 26.30576623889767,
+          "truth_peak": 48.364206108095416,
+          "peak_amplitude_error": 0.0040220915602034455
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.014506514193679557,
+          "L2_relative": 0.01280308374130119,
+          "L1_relative": 0.016410022742979976,
+          "integral_error_over_abs_integral": 0.0026584545077317483,
+          "integral_truth": 200276.93135277068,
+          "absolute_source_coverage": 0.9996176190545197,
+          "worst_index": 334,
+          "worst_z_mm": 1.0649032976770705,
+          "truth_at_worst": 252649625.6108237,
+          "prediction_at_worst": 246297825.2629061,
+          "truth_peak": 437858486.40916413,
+          "peak_amplitude_error": 0.002764358410633751
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.04392631223593071,
+        "species": 0.03244688108245408,
+        "node_coverage": 0.858985200845666,
+        "omega_C_peak": 0.3236081369385234,
+        "omega_C_L1": 0.36024023941455613,
+        "omega_C_integral": 0.04148063202555811,
+        "omega_C_coverage": 0.9900987054699929,
+        "qdot_peak": 0.29013028387359113,
+        "qdot_L1": 0.3282004548595995,
+        "qdot_integral": 0.08861515025772494,
+        "qdot_coverage": 0.990378701944433
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 5.5533870134664964e-14,
+        "qdot_same_state_relative_error": 2.2903476339358177e-14,
+        "mass_source_sum_over_peak": 1.1396774695498183e-15,
+        "Z_source_over_mass_peak": 3.366333407248491e-16,
+        "integrated_progress_balance_relative_error": 0.0010882752009832542
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.3008285221455935,
+        "all_Y_Linf": 3.563374825442389e-05,
+        "burned_deficit_relative_error": 0.00031717386627068346,
+        "energy_closure_error": 0.0014001238274989163,
+        "mass_flux_relative_spread": 1.9069619496346962e-11,
+        "omega_C_Linf_over_reference_peak": 0.0011714159540632983,
+        "qdot_Linf_over_reference_peak": 0.0011272396599181097
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.0816681711721685e-17,
+        "C_Linf": 1.8041124150158794e-16,
+        "h_Linf_J_kg": 9.882496669888496e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -277489.2341878823,
+        "burned_enthalpy_deficit_J_kg": 711531.3762993842,
+        "burner_heat_loss_W_m2": 53278.07863411669,
+        "outlet_enthalpy_loss_W_m2": 53352.77913144191,
+        "relative_energy_closure_error": 0.0014001238274989163,
+        "mass_flux_relative_spread": 1.9069619496346962e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 8.047292671300326e-16,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "development",
+      "case_index": 1
+    },
+    {
+      "phi": 1.24,
+      "fraction": 0.072,
+      "mass_flux_kg_m2_s": 0.024052910006770782,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 509,
+      "reference_nodes": 336,
+      "resolved_nodes": 507,
+      "interpolation": {
+        "coverage_fraction": 0.9960707269155207,
+        "temperature_Linf_K": 0.15767016450718074,
+        "all_Y_Linf": 6.451528004731977e-05,
+        "omega_C_Linf_over_native_peak": 0.008971206980627457,
+        "qdot_Linf_over_native_peak": 0.008899514485037521
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.008971206980627457,
+          "L2_relative": 0.009887729796179558,
+          "L1_relative": 0.01180297821492523,
+          "integral_error_over_abs_integral": 0.01179334669366809,
+          "integral_truth": 0.006795438328731301,
+          "absolute_source_coverage": 0.9997879745638208,
+          "worst_index": 391,
+          "worst_z_mm": 2.986321426446381,
+          "truth_at_worst": 4.058021271421945,
+          "prediction_at_worst": 4.103516905210604,
+          "truth_peak": 5.071294630355034,
+          "peak_amplitude_error": 0.008439212308846585
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.008899514485037521,
+          "L2_relative": 0.010015040156145651,
+          "L1_relative": 0.012406811211078783,
+          "integral_error_over_abs_integral": 0.012378350696470268,
+          "integral_truth": 61022.339177330614,
+          "absolute_source_coverage": 0.9998894492694649,
+          "worst_index": 391,
+          "worst_z_mm": 2.986321426446381,
+          "truth_at_worst": 34767782.62777629,
+          "prediction_at_worst": 35146011.05623094,
+          "truth_peak": 42499894.69544166,
+          "peak_amplitude_error": 0.008565404104656742
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.007883508225359038,
+        "species": 0.012903056009463953,
+        "node_coverage": 0.853353057199211,
+        "omega_C_peak": 0.17942413961254913,
+        "omega_C_L1": 0.2360595642985046,
+        "omega_C_integral": 0.39311155645560303,
+        "omega_C_coverage": 0.9902099496964933,
+        "qdot_peak": 0.17799028970075043,
+        "qdot_L1": 0.24813622422157566,
+        "qdot_integral": 0.4126116898823423,
+        "qdot_coverage": 0.9901094573238168
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 3.161248092277541e-14,
+        "qdot_same_state_relative_error": 1.3717867676783201e-14,
+        "mass_source_sum_over_peak": 7.964651284293129e-16,
+        "Z_source_over_mass_peak": 2.4729844597396236e-16,
+        "integrated_progress_balance_relative_error": 0.0016925077820772103
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 1.4553121701753753,
+        "all_Y_Linf": 0.00017606629137002783,
+        "burned_deficit_relative_error": 0.00041966355931502856,
+        "energy_closure_error": 0.0003468499303140008,
+        "mass_flux_relative_spread": 5.278359287502692e-11,
+        "omega_C_Linf_over_reference_peak": 0.005486032761421315,
+        "qdot_Linf_over_reference_peak": 0.005371827825388692
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 8.326672684688674e-17,
+        "h_Linf_J_kg": 9.927898645401e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -311988.2700710563,
+        "burned_enthalpy_deficit_J_kg": 735970.5136234626,
+        "burner_heat_loss_W_m2": 17708.374680055684,
+        "outlet_enthalpy_loss_W_m2": 17702.232531531932,
+        "relative_energy_closure_error": 0.0003468499303140008,
+        "mass_flux_relative_spread": 5.278359287502692e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 1.4404196864683725e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "development",
+      "case_index": 2
+    },
+    {
+      "phi": 0.835,
+      "fraction": 0.6,
+      "mass_flux_kg_m2_s": 0.20199909489962475,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 424,
+      "reference_nodes": 467,
+      "resolved_nodes": 413,
+      "interpolation": {
+        "coverage_fraction": 0.9740566037735849,
+        "temperature_Linf_K": 0.46750012326106116,
+        "all_Y_Linf": 0.0001390670732295497,
+        "omega_C_Linf_over_native_peak": 0.01263994880250066,
+        "qdot_Linf_over_native_peak": 0.012187221178202524
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.01263994880250066,
+          "L2_relative": 0.011445060924004873,
+          "L1_relative": 0.013698574010573103,
+          "integral_error_over_abs_integral": 0.0023311303153531137,
+          "integral_truth": 0.04680170049625583,
+          "absolute_source_coverage": 0.9995872650097852,
+          "worst_index": 182,
+          "worst_z_mm": 0.4740339089377137,
+          "truth_at_worst": 112.0294883861747,
+          "prediction_at_worst": 114.26480102050165,
+          "truth_peak": 176.84507028103752,
+          "peak_amplitude_error": 0.007305557987487958
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.012187221178202524,
+          "L2_relative": 0.011497560776426292,
+          "L1_relative": 0.014398966643169248,
+          "integral_error_over_abs_integral": 0.000543729605010332,
+          "integral_truth": 470118.3362678772,
+          "absolute_source_coverage": 0.9992378820377034,
+          "worst_index": 182,
+          "worst_z_mm": 0.4740339089377137,
+          "truth_at_worst": 1091060495.453401,
+          "prediction_at_worst": 1109453047.9501312,
+          "truth_peak": 1509167038.8017673,
+          "peak_amplitude_error": 0.007227366291596806
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.023375006163053057,
+        "species": 0.027813414645909938,
+        "node_coverage": 0.872639225181598,
+        "omega_C_peak": 0.25279897605001317,
+        "omega_C_L1": 0.27397148021146206,
+        "omega_C_integral": 0.07770434384510379,
+        "omega_C_coverage": 0.9904087763566182,
+        "qdot_peak": 0.24374442356405046,
+        "qdot_L1": 0.28797933286338495,
+        "qdot_integral": 0.018124320167011067,
+        "qdot_coverage": 0.9907550722367882
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 1.4303662156293584e-14,
+        "qdot_same_state_relative_error": 7.267091287243821e-15,
+        "mass_source_sum_over_peak": 8.619179160836082e-16,
+        "Z_source_over_mass_peak": 2.0046137900234031e-16,
+        "integrated_progress_balance_relative_error": 0.001762426070119592
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.26430966116026866,
+        "all_Y_Linf": 2.724956516271526e-05,
+        "burned_deficit_relative_error": 0.0002503869968639594,
+        "energy_closure_error": 0.002256255314122178,
+        "mass_flux_relative_spread": 2.6706891772775793e-11,
+        "omega_C_Linf_over_reference_peak": 0.0007802216359383545,
+        "qdot_Linf_over_reference_peak": 0.0007289782422272226
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.0122792321330962e-16,
+        "C_Linf": 9.71445146547012e-16,
+        "h_Linf_J_kg": 8.09959601610899e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -214233.57276515107,
+        "burned_enthalpy_deficit_J_kg": 214048.58399562535,
+        "burner_heat_loss_W_m2": 43140.065121241445,
+        "outlet_enthalpy_loss_W_m2": 43237.62023165912,
+        "relative_energy_closure_error": 0.002256255314122178,
+        "mass_flux_relative_spread": 2.6706891772775793e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -2.7677869222408697e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "confirmatory",
+      "case_index": 0
+    },
+    {
+      "phi": 0.905,
+      "fraction": 0.3,
+      "mass_flux_kg_m2_s": 0.11539544515379824,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 394,
+      "reference_nodes": 390,
+      "resolved_nodes": 385,
+      "interpolation": {
+        "coverage_fraction": 0.9771573604060914,
+        "temperature_Linf_K": 0.3353470176894007,
+        "all_Y_Linf": 6.742519863797702e-05,
+        "omega_C_Linf_over_native_peak": 0.004447852648760789,
+        "qdot_Linf_over_native_peak": 0.004292805265092112
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.004447852648760789,
+          "L2_relative": 0.0038783319029152574,
+          "L1_relative": 0.007479742581489411,
+          "integral_error_over_abs_integral": 0.0022189543252805898,
+          "integral_truth": 0.028906025215680843,
+          "absolute_source_coverage": 0.9997177742656606,
+          "worst_index": 192,
+          "worst_z_mm": 0.5969315890326765,
+          "truth_at_worst": 72.03115241824668,
+          "prediction_at_worst": 72.42738758190629,
+          "truth_peak": 89.08459765860401,
+          "peak_amplitude_error": 0.002377028387444349
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.004292805265092112,
+          "L2_relative": 0.003946466801584778,
+          "L1_relative": 0.007246105144731452,
+          "integral_error_over_abs_integral": 0.002171517421231799,
+          "integral_truth": 290506.40450465714,
+          "absolute_source_coverage": 0.999494699578072,
+          "worst_index": 180,
+          "worst_z_mm": 0.5645190140625765,
+          "truth_at_worst": 553112481.8755188,
+          "prediction_at_worst": 556392088.0630957,
+          "truth_peak": 763977395.9107177,
+          "peak_amplitude_error": 0.0023084043150827104
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.016767350884470032,
+        "species": 0.013485039727595405,
+        "node_coverage": 0.8698701298701299,
+        "omega_C_peak": 0.08895705297521578,
+        "omega_C_L1": 0.1495948516297882,
+        "omega_C_integral": 0.07396514417601967,
+        "omega_C_coverage": 0.9902794823541087,
+        "qdot_peak": 0.08585610530184223,
+        "qdot_L1": 0.14492210289462903,
+        "qdot_integral": 0.07238391404105997,
+        "qdot_coverage": 0.9905005003207319
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 2.2293045022892008e-14,
+        "qdot_same_state_relative_error": 1.1585800570178025e-14,
+        "mass_source_sum_over_peak": 7.287945419328613e-16,
+        "Z_source_over_mass_peak": 2.794149337926048e-16,
+        "integrated_progress_balance_relative_error": 0.0020191616167539953
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.336733837873453,
+        "all_Y_Linf": 3.869453947304147e-05,
+        "burned_deficit_relative_error": 0.00011194650022092718,
+        "energy_closure_error": 0.0016445950366278154,
+        "mass_flux_relative_spread": 3.580788450159972e-09,
+        "omega_C_Linf_over_reference_peak": 0.0012822389927913886,
+        "qdot_Linf_over_reference_peak": 0.0012233024268664726
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 5.551115123125783e-17,
+        "h_Linf_J_kg": 7.832422852516174e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -231443.4556631866,
+        "burned_enthalpy_deficit_J_kg": 505142.9233177485,
+        "burner_heat_loss_W_m2": 58195.3270896901,
+        "outlet_enthalpy_loss_W_m2": 58291.192495547395,
+        "relative_energy_closure_error": 0.0016445950366278154,
+        "mass_flux_relative_spread": 3.580788450159972e-09,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 2.1215470119070996e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "confirmatory",
+      "case_index": 1
+    },
+    {
+      "phi": 1.255,
+      "fraction": 0.065,
+      "mass_flux_kg_m2_s": 0.020638857004203485,
+      "native_refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "native_nodes": 479,
+      "reference_nodes": 331,
+      "resolved_nodes": 477,
+      "interpolation": {
+        "coverage_fraction": 0.9958246346555324,
+        "temperature_Linf_K": 0.14854770189367628,
+        "all_Y_Linf": 5.764245212896979e-05,
+        "omega_C_Linf_over_native_peak": 0.01082066110332977,
+        "qdot_Linf_over_native_peak": 0.010694003222242229
+      },
+      "interpolation_limits": {
+        "coverage_fraction_min": 0.85,
+        "temperature_Linf_K_max": 20.0,
+        "all_Y_Linf_max": 0.005,
+        "omega_C_Linf_over_native_peak_max": 0.05,
+        "qdot_Linf_over_native_peak_max": 0.05
+      },
+      "interpolation_passed": true,
+      "sources": {
+        "omega_C": {
+          "Linf_over_truth_peak": 0.01082066110332977,
+          "L2_relative": 0.011672494037634611,
+          "L1_relative": 0.013274631621533925,
+          "integral_error_over_abs_integral": 0.013273149879557234,
+          "integral_truth": 0.005827304904335462,
+          "absolute_source_coverage": 0.9997926330150549,
+          "worst_index": 366,
+          "worst_z_mm": 3.2086177685199226,
+          "truth_at_worst": 3.46673514414918,
+          "prediction_at_worst": 3.507768925996126,
+          "truth_peak": 3.7921695777274547,
+          "peak_amplitude_error": 0.009915484278104557
+        },
+        "qdot": {
+          "Linf_over_truth_peak": 0.010694003222242229,
+          "L2_relative": 0.011733598798148741,
+          "L1_relative": 0.013655088072227832,
+          "integral_error_over_abs_integral": 0.01363065498416173,
+          "integral_truth": 52144.307924820125,
+          "absolute_source_coverage": 0.9999265533639577,
+          "worst_index": 366,
+          "worst_z_mm": 3.2086177685199226,
+          "truth_at_worst": 29346785.661369916,
+          "prediction_at_worst": 29687305.325633243,
+          "truth_peak": 31842113.48983766,
+          "peak_amplitude_error": 0.009883077817869117
+        }
+      },
+      "source_limits": {
+        "omega_C": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        },
+        "qdot": {
+          "Linf_over_truth_peak_max": 0.05,
+          "L1_relative_max": 0.05,
+          "integral_error_over_abs_integral_max": 0.03,
+          "absolute_source_coverage_min": 0.99
+        }
+      },
+      "sources_passed": true,
+      "interpolation_tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      },
+      "interpolation_error_ratios": {
+        "temperature": 0.007427385094683814,
+        "species": 0.011528490425793958,
+        "node_coverage": 0.8535639412997903,
+        "omega_C_peak": 0.2164132220665954,
+        "omega_C_L1": 0.2654926324306785,
+        "omega_C_integral": 0.44243832931857446,
+        "omega_C_coverage": 0.990205335894981,
+        "qdot_peak": 0.21388006444484456,
+        "qdot_L1": 0.2731017614445566,
+        "qdot_integral": 0.45435516613872434,
+        "qdot_coverage": 0.9900727175105384
+      },
+      "chemistry": {
+        "omega_C_same_state_relative_error": 2.576351720683393e-14,
+        "qdot_same_state_relative_error": 1.1816248323614994e-14,
+        "mass_source_sum_over_peak": 1.1594061935131472e-15,
+        "Z_source_over_mass_peak": 2.0982827304982381e-16,
+        "integrated_progress_balance_relative_error": 0.0013981968839477717
+      },
+      "chemistry_limits": {
+        "omega_C_same_state_relative_error": 1e-09,
+        "qdot_same_state_relative_error": 1e-09,
+        "mass_source_sum_over_peak": 1e-10,
+        "Z_source_over_mass_peak": 1e-10,
+        "integrated_progress_balance_relative_error": 0.005
+      },
+      "chemistry_passed": true,
+      "reference": {
+        "temperature_Linf_K": 0.2618343102635663,
+        "all_Y_Linf": 0.00012685666296419207,
+        "burned_deficit_relative_error": 0.0009838384792799817,
+        "energy_closure_error": 0.000448081951272561,
+        "mass_flux_relative_spread": 5.265278184618857e-11,
+        "omega_C_Linf_over_reference_peak": 0.0010135293403464593,
+        "qdot_Linf_over_reference_peak": 0.0010314895759116335
+      },
+      "reference_limits": {
+        "temperature_Linf_K": 5.0,
+        "all_Y_Linf": 0.002,
+        "burned_deficit_relative_error": 0.01,
+        "energy_closure_error": 0.02,
+        "mass_flux_relative_spread": 1e-05,
+        "omega_C_Linf_over_reference_peak": 0.02,
+        "qdot_Linf_over_reference_peak": 0.02
+      },
+      "reference_passed": true,
+      "conservation": {
+        "Z_Linf": 2.7755575615628914e-17,
+        "C_Linf": 1.1102230246251565e-16,
+        "h_Linf_J_kg": 9.904615581035614e-07,
+        "sum_Y_error": 4.440892098500626e-16
+      },
+      "conservation_passed": true,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -315526.0605537059,
+        "burned_enthalpy_deficit_J_kg": 764437.5773485232,
+        "burner_heat_loss_W_m2": 15784.190458090956,
+        "outlet_enthalpy_loss_W_m2": 15777.117847231237,
+        "relative_energy_closure_error": 0.000448081951272561,
+        "mass_flux_relative_spread": 5.265278184618857e-11,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -3.1517956447346676e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "passed": true,
+      "group": "confirmatory",
+      "case_index": 2
+    }
+  ],
+  "table_flames": 432,
+  "scope": "A priori tabulation against native detailed profiles and independent Cantera references; no reduced transport or experimental validation.",
+  "source_sha256": {
+    "src/kflame/api.py": "fbe611af84487b4fc9306d282208cf78b285727d4e79a937fdccbd7150dd0761",
+    "src/kflame/flame/config.py": "8a9cf194a26ce3bdf6bcb0539b4643366f72d4ba426a49923a5bfa7fb55cf258",
+    "src/kflame/flame/problem.py": "24d8508a95bdf648382b2986ca02876b6fbb57dc920f79ebf496d4595921dd5b",
+    "src/kflame/flame/equations.py": "8852cc4ea62687dad5596c41adc8795d70a0eba1a9f163e2f587e20727729b5f",
+    "src/kflame/flame/analytic_jacobian.py": "0279363f25ef3cb041464b02efdb69cbc7c13a1f8c5d4a7d9b755e5dc45d3a45",
+    "src/kflame/flame/solver.py": "7361f65d729aaaba765cc4c0149d41aa265dc83e66995258fb8da836cf17537e",
+    "src/kflame/flame/enthalpy.py": "2c69d19c0fe3e7a05cbc16be38d3760a4f545c7e0e7c89fcb4ffa61318df6ac3",
+    "src/kflame/chemistry/thermo.py": "d461c3630a77ad861574f8d435bee1e92a043b18ca5357d1e7dd750765c5c187",
+    "src/kflame/chemistry/kinetics.py": "77b28fc76889db6abcaf4bea9b6da1336b06de5a4e0435662bf5f7b1bc7f9dad",
+    "src/kflame/chemistry/mechanism.py": "935132d6a78b3678b8dd546bee67513c1f64ef4081b56b276a4128b0eee6bde0",
+    "src/kflame/fgm/nonadiabatic3d.py": "4f7f297a2788ea5e3221fa65bbb2d071d0784ad6d7dbe5bf6f969b79183d866e",
+    "examples/validate_nonadiabatic_3d.py": "76a7da555a2ed2c7f09759b399e32847895d385b1165bab20bd9e8699aee0036",
+    "examples/audit_nonadiabatic_sources.py": "08461a3c3b01d453a1346b7c2a2698316cf0a862f65cadc52b64d7c4bfff16c3",
+    "src/kflame/fgm/accuracy.py": "d31dcb1458d9df5a27691c1e3ef919b25dbe1b75a1b3e36b55469e42501fcdaa",
+    "src/kflame/fgm/adaptive_nonadiabatic.py": "d41e28fd64d7253e797bb746af36016192617c7f61581a68523e4f6bc8bb1fe0",
+    "src/kflame/fgm/search.py": "e7db3ec3061b57727f682985db5b2b09ef18571428f50df1c995fb2a77aad043",
+    "examples/adaptive_nonadiabatic_3d.py": "24664f51df1f6b2de519f7e1c7b89b4c0ca54de513779e8edfdb3a488b1c559f",
+    "examples/reconstruct_adaptive_table.py": "1196ddd16e26d17422dd5209a833f5fe8f3149cc0418c579ec2ed6e0185ec6ea",
+    "examples/benchmark_fgm_lookup.py": "9dfb7cb2885a5e91e9731a9efd425740099dc75236f3385d92db92d37327f43d"
+  },
+  "table_sha256": "7bcc31d3c3aae7c8df3fa765e33b3d2d03bd1b7fc85c3f3c133489a3a7551280",
+  "training_flames": 432,
+  "reference": "Independent Cantera BurnerFlame"
+}

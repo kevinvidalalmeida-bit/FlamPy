@@ -1,0 +1,111 @@
+{
+  "python": "3.11.0",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+  "versions": {
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "numba": "0.65.1"
+  },
+  "OPENBLAS_NUM_THREADS": "1",
+  "baseline_commit": "14af4ae548223256b4ca70c9cc92895585da903f",
+  "query_states": 347,
+  "query_profiles": [
+    "case_00_comparison.npz",
+    "case_03_comparison.npz",
+    "confirmatory_02_comparison.npz"
+  ],
+  "warmup_excluded": true,
+  "load_s": {
+    "baseline": 0.9041976000007708,
+    "optimized": 2.2036825999966823
+  },
+  "differences": {
+    "T": {
+      "scalar_absolute_max": 1.1368683772161603e-12,
+      "batch_absolute_max": 1.0464304978086147e-09
+    },
+    "Y": {
+      "scalar_absolute_max": 2.220446049250313e-16,
+      "batch_absolute_max": 3.3306690738754696e-16
+    },
+    "omega_C": {
+      "scalar_absolute_max": 2.842170943040401e-14,
+      "batch_absolute_max": 2.842170943040401e-14
+    },
+    "qdot": {
+      "scalar_absolute_max": 2.384185791015625e-07,
+      "batch_absolute_max": 2.384185791015625e-07
+    },
+    "rho": {
+      "scalar_absolute_max": 6.661338147750939e-16,
+      "batch_absolute_max": 3.75655062612168e-12
+    },
+    "cp_mass": {
+      "scalar_absolute_max": 6.821210263296962e-13,
+      "batch_absolute_max": 2.696651790756732e-10
+    },
+    "conductivity": {
+      "scalar_absolute_max": 2.7755575615628914e-17,
+      "batch_absolute_max": 2.7755575615628914e-17
+    }
+  },
+  "lookup": {
+    "baseline_scalar": {
+      "median_s": 0.7089626000088174,
+      "runs_s": [
+        0.7089626000088174,
+        0.710925599996699,
+        0.7013210000004619,
+        0.7159912000061013,
+        0.6922252000076696
+      ]
+    },
+    "optimized_scalar": {
+      "median_s": 0.08601059997454286,
+      "runs_s": [
+        0.08601059997454286,
+        0.11991290000150912,
+        0.0888165999785997,
+        0.08016099999076687,
+        0.08021139999618754
+      ]
+    },
+    "optimized_batch": {
+      "median_s": 0.004375299991806969,
+      "runs_s": [
+        0.004604899993864819,
+        0.00440330000128597,
+        0.004375299991806969,
+        0.0043375999957788736,
+        0.0042474000074435025
+      ]
+    }
+  },
+  "chemistry_profile_nodes": 395,
+  "chemistry_bitwise_equal": true,
+  "chemistry": {
+    "baseline": {
+      "median_s": 0.1691401000134647,
+      "runs_s": [
+        0.1672452000202611,
+        0.16934240001137368,
+        0.1691401000134647
+      ]
+    },
+    "optimized": {
+      "median_s": 0.0127552000049036,
+      "runs_s": [
+        0.0127552000049036,
+        0.012677499995334074,
+        0.013923899998189881
+      ]
+    }
+  },
+  "source_sha256": {
+    "src/kflame/chemistry/kinetics.py": "77b28fc76889db6abcaf4bea9b6da1336b06de5a4e0435662bf5f7b1bc7f9dad",
+    "src/kflame/fgm/search.py": "e7db3ec3061b57727f682985db5b2b09ef18571428f50df1c995fb2a77aad043",
+    "src/kflame/fgm/nonadiabatic3d.py": "4f7f297a2788ea5e3221fa65bbb2d071d0784ad6d7dbe5bf6f969b79183d866e",
+    "examples/benchmark_fgm_lookup.py": "9dfb7cb2885a5e91e9731a9efd425740099dc75236f3385d92db92d37327f43d"
+  }
+}

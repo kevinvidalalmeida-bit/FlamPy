@@ -128,3 +128,13 @@ La primera ejecución incluye compilación JIT y puede tardar más.
 
 Las funciones de dibujo de los ejemplos utilizan arrays guardados: puedes
 modificar colores, campos y límites sin cambiar el solver.
+
+## Tolerancias y refinamiento no adiabático
+
+Edita `fgm_tolerances.json` para elegir errores por magnitud y
+`adaptive_fgm_settings.json` para candidatos y condiciones físicas.
+`adaptive_nonadiabatic_3d.py` genera la familia, `benchmark_fgm_lookup.py`
+compara tiempos con el commit anterior y `reconstruct_adaptive_table.py`
+reproduce la selección publicada sin repetir simulaciones.
+`plot_adaptive_fgm.py` redibuja las tres figuras desde los datos guardados.
+[Unidades, criterios y resultado de validación](../docs/adaptive-fgm.md).

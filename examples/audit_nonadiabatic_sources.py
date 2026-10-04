@@ -15,6 +15,7 @@ from kflame.chemistry.kinetics import NativeKinetics
 from kflame.chemistry.mechanism import load_mechanism, resolve_mechanism
 from kflame.chemistry.thermo import NativeThermo
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM, OutsideManifoldError
+from kflame.fgm.accuracy import source_metrics
 
 
 def detailed_sources(mech, T, Y, pressure):
@@ -33,41 +34,6 @@ def cantera_sources(mechanism, T, Y, pressure):
     states.TPY = T, pressure, Y.T
     return (states.net_production_rates * gas.molecular_weights[None, :]).T, states.heat_release_rate
 
-
-def source_metrics(z, truth, prediction, covered=None):
-    z, truth, prediction = (np.asarray(a,dtype=float) for a in (z,truth,prediction))
-    if covered is None:
-        covered = np.ones(len(z), dtype=bool)
-    covered = np.asarray(covered,dtype=bool)
-    if (z.ndim != 1 or len(z)<2 or truth.shape!=z.shape or prediction.shape!=z.shape
-            or covered.shape!=z.shape or not covered.any()
-            or not np.isfinite(z).all() or np.any(np.diff(z)<=0.)
-            or not np.isfinite(truth).all() or not np.isfinite(prediction[covered]).all()):
-        raise ValueError('Source metrics require increasing finite coordinates and finite covered sources')
-    error = prediction[covered] - truth[covered]
-    peak = max(float(np.max(abs(truth))),1e-300)
-    integral_truth = float(np.trapezoid(truth, z))
-    # Integrate only covered intervals, never bridge an unsupported gap.
-    intervals = covered[:-1] & covered[1:]
-    dz = np.diff(z)[intervals]
-    local_truth = truth[covered]
-    full_error = np.where(covered, prediction-truth, 0.)
-    square_integral = float(np.sum(.5*(full_error[:-1][intervals]**2+full_error[1:][intervals]**2)*dz))
-    square_truth = float(np.sum(.5*(truth[:-1][intervals]**2+truth[1:][intervals]**2)*dz))
-    integral_error = float(np.sum(.5*(full_error[:-1][intervals]+full_error[1:][intervals])*dz))
-    integral_abs_error = float(np.sum(.5*(abs(full_error[:-1][intervals])+abs(full_error[1:][intervals]))*dz))
-    integral_abs = float(np.trapezoid(abs(truth), z))
-    captured_abs = float(np.sum(.5*(abs(truth[:-1][intervals])+abs(truth[1:][intervals]))*dz))
-    covered_indices = np.flatnonzero(covered)
-    j = int(covered_indices[np.argmax(abs(error))])
-    return dict(Linf_over_truth_peak=float(np.max(abs(error))/peak),
-                L2_relative=float(np.sqrt(square_integral/max(square_truth, 1e-300))),
-                L1_relative=integral_abs_error/max(float(np.trapezoid(abs(truth),z)),1e-300),
-                integral_error_over_abs_integral=abs(integral_error)/max(integral_abs, 1e-300),
-                integral_truth=integral_truth, absolute_source_coverage=captured_abs/max(integral_abs, 1e-300),
-                worst_index=j, worst_z_mm=float(1000.*z[j]), truth_at_worst=float(truth[j]),
-                prediction_at_worst=float(prediction[j]), truth_peak=peak,
-                peak_amplitude_error=abs(float(np.max(prediction[covered]))-float(np.max(local_truth)))/peak)
 
 
 def audit(bundle, output, table_folder=None):

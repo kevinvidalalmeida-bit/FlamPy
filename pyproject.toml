@@ -34,5 +34,8 @@ kflame = "kflame.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.setuptools.package-data]
 "kflame.chemistry" = ["data/*.yaml", "data/*.json", "data/*.txt", "data/*.md"]

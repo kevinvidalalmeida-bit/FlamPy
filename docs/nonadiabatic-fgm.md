@@ -266,6 +266,10 @@ aceptados, y `--recheck` recalcula las métricas sin volver a resolverlos.
 
 ## Alcance
 
+La ampliación con [tolerancias por magnitud y refinamiento adaptativo](adaptive-fgm.md)
+conserva esta biblioteca de referencia. Documenta la selección de 432 llamas,
+sus comprobaciones independientes y la aceleración de consultas por lotes.
+
 Se ha validado numéricamente una biblioteca de CH₄ con pérdidas hacia un
 quemador plano a 300 K. Falta acoplar y validar las ecuaciones reducidas de
 transporte. Tampoco se han validado experimentalmente extinción, apagado

@@ -69,6 +69,20 @@ def test_lookup_preserves_local_Z_progress_and_total_enthalpy(tmp_path):
     assert z_weights @ result['Y'] + z_offset == pytest.approx(Z, abs=1e-12)
     assert species_weights @ result['Y'] == pytest.approx(C, abs=1e-12)
     assert thermo.enthalpy_mass(result['T'], result['Y']) == pytest.approx(h, abs=1e-5)
+    rng = np.random.default_rng(218)
+    weights = rng.dirichlet(np.ones(4), 45)
+    queries = weights @ controls
+    batch = model.lookup_batch(Z=queries[:,0], C=queries[:,1], h=queries[:,2])
+    np.testing.assert_allclose(batch['Y'], weights @ Y, atol=1e-12)
+    np.testing.assert_allclose(thermo.enthalpy_mass(batch['T'], batch['Y'].T), queries[:,2], atol=1e-5)
+    for i in range(len(queries)):
+        single = model.lookup(Z=queries[i,0], C=queries[i,1], h=queries[i,2])
+        assert batch['T'][i] == pytest.approx(single['T'], abs=1e-7)
+    masked = model.lookup_batch(Z=[Z,Z], C=[C,C], h=[h,1e12], outside='mask')
+    np.testing.assert_array_equal(masked['covered'], [True,False])
+    assert np.isnan(masked['Y'][1]).all()
+    with pytest.raises(OutsideManifoldError):
+        model.lookup_batch(Z=[Z,Z], C=C, h=[h,1e12])
 
 
 @pytest.mark.parametrize('kwargs', [dict(phis=[1.]), dict(phis=[1., .8]),

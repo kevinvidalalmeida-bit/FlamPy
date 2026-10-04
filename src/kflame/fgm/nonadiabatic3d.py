@@ -11,12 +11,12 @@ from pathlib import Path
 
 import numpy as np
 from scipy.optimize import brentq
-from scipy.spatial import cKDTree
 
 from kflame.chemistry.initialization import _composition, oxygen_demand
 from kflame.chemistry.kinetics import NativeKinetics
 from kflame.chemistry.mechanism import load_mechanism, resolve_mechanism
 from kflame.chemistry.thermo import NativeThermo
+from kflame.fgm.search import build_hierarchy, locate_many
 
 
 class OutsideManifoldError(ValueError):
@@ -91,33 +91,53 @@ class SimplexMesh:
         self.lower, self.upper = vertices.min(axis=1), vertices.max(axis=1)
         if not self.cells.size:
             raise ValueError('No nondegenerate cells in the manifold')
-        self.centers = vertices.mean(axis=1)
-        self.radii = np.max(np.linalg.norm(vertices - self.centers[:, None], axis=2), axis=1)
-        self.tree = cKDTree(self.centers)
-        self.search_radius = float(np.max(self.radii))
+        self.hierarchy = build_hierarchy(self.lower,self.upper)
 
     def locate(self, controls):
-        point = (np.asarray(controls, dtype=float) - self.offset) / self.scale
-        if not np.isfinite(point).all():
-            raise ValueError('Manifold controls must be finite')
-        # A simplex lies inside its vertex bounding sphere. This search is
-        # complete, unlike selecting a fixed number of nearest centroids.
-        possible = np.asarray(self.tree.query_ball_point(point, self.search_radius + 1e-9), dtype=int)
-        possible = possible[np.all(point >= self.lower[possible] - 1e-10, axis=1)
-                            & np.all(point <= self.upper[possible] + 1e-10, axis=1)]
-        if not possible.size:
-            raise OutsideManifoldError('Controls outside the sampled manifold')
-        last = np.einsum('nij,nj->ni', self.inverse[possible], point - self.origin[possible])
-        barycentric = np.column_stack((1. - last.sum(axis=1), last))
-        inside = np.flatnonzero(np.all(barycentric >= -1e-9, axis=1)
-                               & np.all(barycentric <= 1. + 1e-9, axis=1))
-        if not inside.size:
+        nodes,weights,covered=self.locate_batch(np.asarray(controls,dtype=float)[None,:])
+        if not covered[0]:
             raise OutsideManifoldError('Controls outside adjacent resolved flamelets')
-        interior = inside[np.all(barycentric[inside] > 1e-7, axis=1)]
-        if interior.size > 1:
+        return nodes[0],weights[0]
+
+    def locate_batch(self,controls):
+        controls=np.asarray(controls,dtype=float)
+        if controls.ndim!=2 or controls.shape[1]!=len(self.offset):
+            raise ValueError('Manifold controls must have shape (states, dimensions)')
+        points=np.ascontiguousarray((controls-self.offset)/self.scale)
+        if not np.isfinite(points).all():
+            raise ValueError('Manifold controls must be finite')
+        selected,weights,status=locate_many(points,self.origin,self.inverse,self.lower,self.upper,*self.hierarchy)
+        if np.any(status==2):
             raise AmbiguousManifoldError('Nonadjacent flamelet cells overlap in control space')
-        selected = int(interior[0] if interior.size else inside[0])
-        return self.cells[possible[selected]], barycentric[selected]
+        covered=status==0
+        nodes=np.full((len(points),self.cells.shape[1]),-1,dtype=int)
+        nodes[covered]=self.cells[selected[covered]]
+        return nodes,weights,covered
+
+
+def _connected_cells(shape, controls):
+    """Vectorized Freudenthal tetrahedra, with the original orientation check."""
+    n_phi, n_loss, progress_points = shape
+    indices = np.arange(np.prod(shape)).reshape(shape)
+    bases = indices[:-1,:-1,:-1].ravel()
+    strides = np.array([n_loss*progress_points,progress_points,1])
+    offsets, orientation = [], []
+    for permutation in itertools.permutations(range(3)):
+        offsets.append(np.r_[0,np.cumsum(strides[list(permutation)])])
+        corners = np.vstack((np.zeros(3),np.cumsum(np.eye(3)[list(permutation)],axis=0)))
+        orientation.append(np.linalg.det((corners[1:]-corners[0]).T))
+    cells = (bases[:,None,None]+np.asarray(offsets)[None,:,:]).reshape(-1,4)
+    scaled = (controls-controls.min(axis=0))/np.ptp(controls,axis=0)
+    matrix = (scaled[cells[:,1:]]-scaled[cells[:,:1]]).transpose(0,2,1)
+    signed = np.linalg.det(matrix)/np.tile(orientation,len(bases))
+    folded, degenerate = signed < -1e-13, abs(signed) <= 1e-13
+    cells = cells[~folded & ~degenerate]
+    ref = np.arange(n_phi*progress_points).reshape(n_phi,progress_points)
+    a, b = ref[:-1,:-1].ravel(), ref[1:,:-1].ravel()
+    c, d = ref[:-1,1:].ravel(), ref[1:,1:].ravel()
+    triangles = np.stack((np.stack((a,b,d),axis=1),np.stack((a,d,c),axis=1)),axis=1).reshape(-1,3)
+    return cells, triangles, dict(vertices=len(controls), tetrahedra=len(cells),
+        excluded_folded_cells=int(folded.sum()), excluded_degenerate_cells=int(degenerate.sum()))
 
 
 def build_nonadiabatic_table(folder, *, progress_points=181):
@@ -174,35 +194,8 @@ def build_nonadiabatic_table(folder, *, progress_points=181):
     if any(not np.isfinite(value).all() for value in fields.values()):
         raise ValueError('Nonfinite property in resolved flamelet samples')
     controls = np.column_stack([fields[name].ravel() for name in ('Z', 'C', 'h')])
-    indices = np.arange(np.prod(shape)).reshape(shape)
-    cells, orientation = [], []
-    for i, j, k in itertools.product(range(n_phi - 1), range(n_loss - 1), range(progress_points - 1)):
-        base = np.array([i, j, k])
-        for permutation in itertools.permutations(range(3)):
-            corners = [base.copy()]
-            for axis in permutation:
-                corner = corners[-1].copy()
-                corner[axis] += 1
-                corners.append(corner)
-            cell = [int(indices[tuple(corner)]) for corner in corners]
-            cells.append(cell)
-            orientation.append(np.linalg.det((np.array(corners[1:]) - corners[0]).T))
-    cells = np.asarray(cells, dtype=int)
-    scaled = (controls - controls.min(axis=0)) / np.ptp(controls, axis=0)
-    matrix = (scaled[cells[:, 1:]] - scaled[cells[:, :1]]).transpose(0, 2, 1)
-    signed = np.linalg.det(matrix) / np.asarray(orientation)
-    folded = signed < -1e-13
-    degenerate = abs(signed) <= 1e-13
-    # A reversed cell is excluded and reported, never silently used for lookup.
-    # Remaining nonadjacent overlaps are rejected at query time.
-    cells = cells[~folded & ~degenerate]
+    cells, triangles, mesh_statistics = _connected_cells(shape, controls)
     reference_points = np.column_stack((fields['Z'][:, 0].ravel(), fields['C'][:, 0].ravel()))
-    reference_indices = np.arange(n_phi * progress_points).reshape(n_phi, progress_points)
-    triangles = []
-    for i, k in itertools.product(range(n_phi - 1), range(progress_points - 1)):
-        a, b = reference_indices[i, k], reference_indices[i + 1, k]
-        c, d = reference_indices[i, k + 1], reference_indices[i + 1, k + 1]
-        triangles.extend([(a, b, d), (a, d, c)])
     payload = {name: value.reshape((-1, mech.n_species)) if name == 'Y' else value.ravel()
                for name, value in fields.items()}
     payload.update(controls=controls, cells=cells, progress_weights=weights,
@@ -218,12 +211,62 @@ def build_nonadiabatic_table(folder, *, progress_points=181):
                     source_units=dict(omega_C='kg/(m^3 s)', qdot='W/m^3'), progress_points=progress_points,
                     training_profile_sha256=profile_hashes,
                     mechanism_sha256=hashlib.sha256(Path(resolve_mechanism(generation['mechanism'])).read_bytes()).hexdigest(),
-                    mesh=dict(vertices=len(controls), tetrahedra=len(cells),
-                              excluded_folded_cells=int(folded.sum()), excluded_degenerate_cells=int(degenerate.sum())),
+                    mesh=mesh_statistics,
                     interpolation='barycentric_on_adjacent_flamelets_with_enthalpy_temperature_recovery',
                     limitations='Steady planar burner library; no conjugate solid heat transfer, radiation or transient wall quenching.')
     (folder / 'metadata.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8', newline='\n')
     return folder
+
+
+def subset_nonadiabatic_table(source, output, *, phis, mass_flux_fractions):
+    """Reconstruct a coordinate subset from stored native vertex fields.
+
+    No flame is solved and no property is interpolated. Connectivity is
+    rebuilt between the retained profiles and rechecked for folded cells.
+    The selection itself requires separate error/coverage validation.
+    """
+    source = Path(source)
+    meta = json.loads((source/'metadata.json').read_text(encoding='utf-8'))
+    with np.load(source/'nonadiabatic_fgm.npz',allow_pickle=False) as saved:
+        original = {k:saved[k] for k in saved.files}
+    phis = np.asarray(phis,dtype=float)
+    fractions = np.sort(np.asarray(mass_flux_fractions,dtype=float))[::-1]
+    if (phis.ndim!=1 or len(phis)<2 or np.any(np.diff(phis)<=0.)
+            or fractions.ndim!=1 or not len(fractions) or np.any(np.diff(fractions)>=0.)):
+        raise ValueError('Subset coordinates must be distinct; phis must increase')
+    def indices(values, available):
+        result = []
+        for value in values:
+            matches = np.flatnonzero(np.asarray(available)==value)
+            if len(matches)!=1:
+                raise ValueError('Every subset coordinate must exist in the source table')
+            result.append(int(matches[0]))
+        return result
+    p = indices(phis,meta['phis'])
+    r = [0]+[j+1 for j in indices(fractions,meta['mass_flux_fractions'])]
+    shape = tuple(original['structured_shape'])
+    selected = np.arange(np.prod(shape)).reshape(shape)[np.ix_(p,r,np.arange(shape[2]))].ravel()
+    payload = {k:v.copy() for k,v in original.items()}
+    for name in ('Y','Z','C','h','T','rho','cp_mass','conductivity','omega_C','qdot','controls'):
+        payload[name] = original[name][selected]
+    new_shape = (len(p),len(r),shape[2])
+    cells, triangles, statistics = _connected_cells(new_shape,payload['controls'])
+    payload.update(cells=cells,structured_shape=np.asarray(new_shape),reference_cells=triangles,
+        reference_points=original['reference_points'].reshape(shape[0],shape[2],2)[p].reshape(-1,2),
+        reference_h=original['reference_h'].reshape(shape[0],shape[2])[p].ravel())
+    rows = []
+    for row in meta['rows']:
+        i,j = row['composition_index'],row['loss_index']
+        if i in p and j in r:
+            rows.append(dict(row,composition_index=p.index(i),loss_index=r.index(j)))
+    public = dict(meta,phis=phis.tolist(),mass_flux_fractions=fractions.tolist(),rows=rows,mesh=statistics,
+                  source_table_sha256=hashlib.sha256((Path(source)/'nonadiabatic_fgm.npz').read_bytes()).hexdigest(),
+                  training_profile_sha256={row['output']:meta['training_profile_sha256'][row['output']] for row in rows})
+    output = Path(output)
+    output.mkdir(parents=True,exist_ok=False)
+    np.savez_compressed(output/'nonadiabatic_fgm.npz',**payload)
+    (output/'metadata.json').write_text(json.dumps(public,indent=2)+'\n',encoding='utf-8',newline='\n')
+    return output
 
 
 class NonAdiabaticFGM:
@@ -263,3 +306,65 @@ class NonAdiabaticFGM:
                     cp_mass=float(self.thermo.cp_mass(T, Y)),
                     **{name: float(barycentric @ self.table[name][nodes])
                        for name in ('omega_C', 'qdot', 'conductivity')})
+
+    def lookup_batch(self, *, Z, C, h, outside='raise'):
+        """Query 1D broadcastable arrays; Y has shape (states, species).
+
+        outside='mask' returns covered flags and NaNs for unsupported states.
+        Interior overlaps always raise. T is recovered from total h and Y.
+        """
+        if outside not in ('raise','mask'):
+            raise ValueError("outside must be 'raise' or 'mask'")
+        values=np.broadcast_arrays(*[np.atleast_1d(np.asarray(v,dtype=float)) for v in (Z,C,h)])
+        if values[0].ndim!=1:
+            raise ValueError('Batch controls must be one-dimensional')
+        controls=np.column_stack(values)
+        nodes,bary,covered=self.mesh.locate_batch(controls)
+        if outside=='raise' and not covered.all():
+            raise OutsideManifoldError('Controls outside adjacent resolved flamelets')
+        n=len(controls)
+        result={k:np.full(n,np.nan) for k in ('T','rho','cp_mass','omega_C','qdot','conductivity','delta_h')}
+        result.update(Z=values[0].copy(),C=values[1].copy(),h=values[2].copy(),covered=covered,
+                      Y=np.full((n,self.thermo.n_sp),np.nan))
+        if not covered.any():
+            return result
+        chosen=nodes[covered];weights=bary[covered]
+        Y=np.einsum('ni,nij->nj',weights,self.table['Y'][chosen])
+        target=values[2][covered]
+        guess=(np.einsum('ni,ni->n',weights,self.table['T'][chosen])
+               if 'T' in self.table else np.full(len(Y),1200.))
+        T=self._recover_temperature(target,Y.T,guess)
+        result['Y'][covered]=Y;result['T'][covered]=T
+        result['rho'][covered]=self.thermo.density(T,self.metadata['pressure_Pa'],Y.T)
+        result['cp_mass'][covered]=self.thermo.cp_mass(T,Y.T)
+        for key in ('omega_C','qdot','conductivity'):
+            result[key][covered]=np.einsum('ni,ni->n',weights,self.table[key][chosen])
+        ref_nodes,ref_weights,ref_covered=self.reference_mesh.locate_batch(controls[:,:2])
+        result['delta_h'][ref_covered]=np.einsum('ni,ni->n',ref_weights[ref_covered],self.table['reference_h'][ref_nodes[ref_covered]])-values[2][ref_covered]
+        result['delta_h'][~covered]=np.nan
+        return result
+
+    def _recover_temperature(self,h,Y,guess):
+        """Safeguarded vector Newton iteration; scalar Brent fallback.
+
+        The 1e-6 J/kg closure is an internal inversion tolerance, independent
+        of the user's allowed tabulation error in kelvin.
+        """
+        T=np.clip(np.asarray(guess,dtype=float),200.,self.max_temperature)
+        lower=np.full(len(T),200.);upper=np.full(len(T),self.max_temperature)
+        for _ in range(16):
+            residual=self.thermo.enthalpy_mass(T,Y)-h
+            done=abs(residual)<=1e-6
+            if done.all():
+                return T
+            lower=np.where(residual<0.,T,lower)
+            upper=np.where(residual>0.,T,upper)
+            cp=self.thermo.cp_mass(T,Y)
+            proposed=T-residual/cp
+            safe=(cp>0.) & np.isfinite(proposed) & (proposed>lower) & (proposed<upper)
+            T=np.where(done,T,np.where(safe,proposed,.5*(lower+upper)))
+        bad=abs(self.thermo.enthalpy_mass(T,Y)-h)>1e-6
+        for i in np.flatnonzero(bad):
+            T[i]=brentq(lambda temperature:float(self.thermo.enthalpy_mass(temperature,Y[:,i]))-h[i],
+                        200.,self.max_temperature,xtol=1e-8)
+        return T

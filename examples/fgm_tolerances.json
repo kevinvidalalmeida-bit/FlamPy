@@ -1,0 +1,9 @@
+{
+  "temperature_K": 20.0,
+  "species_absolute": 0.005,
+  "node_coverage_min": 0.85,
+  "source_peak_relative": {"omega_C": 0.05, "qdot": 0.05},
+  "source_L1_relative": {"omega_C": 0.05, "qdot": 0.05},
+  "source_integral_relative": {"omega_C": 0.03, "qdot": 0.03},
+  "source_coverage_min": {"omega_C": 0.99, "qdot": 0.99}
+}

@@ -2,12 +2,13 @@
 
 [Inicio](../README.md) · [Archivos y consulta](outputs.md) · [Ejemplos](../examples/README.md)
 
-La interfaz pública expone cinco funciones, con argumentos exclusivamente
+La interfaz pública expone seis funciones, con argumentos exclusivamente
 por nombre:
 
 ~~~python
 from kflame import solve_flame, solve_burner_flame, generate_fgm, generate_burner_fgm
 from kflame import generate_nonadiabatic_fgm
+from kflame import generate_adaptive_nonadiabatic_fgm
 ~~~
 
 Todas utilizan el núcleo nativo de CPU. La configuración interna del
@@ -26,6 +27,26 @@ mezcla. `raw_only=True` permite guardar las llamas antes de tabular;
 `reuse_from` reutiliza únicamente perfiles nativos aceptados con química,
 alimentación, transporte, tolerancias y refinamiento coincidentes.
 [Definiciones, consulta y reproducción](nonadiabatic-fgm.md).
+
+`generate_adaptive_nonadiabatic_fgm(phis=..., mass_flux_fractions=..., output=..., tolerances=..., **opciones)`
+selecciona una familia tensorial por errores en perfiles nativos. Ambas listas
+requieren al menos tres candidatos. `tolerances` acepta `FGMTolerances`, un
+diccionario parcial o `None` para los valores por defecto. Los límites de
+temperatura, especies, fuentes y cobertura se eligen por separado.
+`max_flames=500` incluye sondas y referencias; `max_iterations=30` limita
+las rondas; `initial_phi_count=3` y `initial_loss_count=5` definen el inicio.
+`indicator_safety_factor=0.8` reserva margen en los errores de las sondas.
+Devuelve la carpeta de la tabla aceptada por sus indicadores; guarda el
+historial y lanza `AdaptiveAccuracyError` si no cumple dentro del presupuesto.
+La comprobación independiente posterior sigue siendo necesaria.
+[Configuración, unidades y mediciones](adaptive-fgm.md).
+
+`NonAdiabaticFGM.lookup_batch(Z=..., C=..., h=..., outside="raise")`
+acepta escalares o arrays unidimensionales compatibles, devuelve campos
+con longitud `n` y `Y` con forma `(n, n_species)`. Con `outside="mask"`,
+`covered` identifica estados válidos y el resto de propiedades devuelve
+`NaN`. Los solapamientos interiores siempre generan un error. La consulta
+escalar conserva su interfaz; se recomienda reutilizar el objeto cargado.
 
 En modo quemador, `initial_solution` acepta la carpeta de otra llama nativa
 aceptada con la misma química y alimentación. Sirve como estimación inicial

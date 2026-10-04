@@ -55,6 +55,25 @@ if njit is not None:
     _negative_mass_action_factor = njit(cache=True)(_negative_mass_action_factor)
 
 
+def _apply_negative_factors(C, forward, reverse, r_idx, r_nu, r_count,
+                            p_idx, p_nu, p_count):
+    """Apply the same signed continuation using only reaction participants.
+
+    Positive-state rate arithmetic and signed third-body concentrations remain
+    unchanged. Sparse indices follow the original species order.
+    """
+    for m in range(C.shape[1]):
+        if not np.any(C[:, m] < 0.):
+            continue
+        for r in range(len(r_count)):
+            forward[r, m] *= _negative_mass_action_factor(C[:, m], r_idx[r], r_nu[r], r_count[r])
+            reverse[r, m] *= _negative_mass_action_factor(C[:, m], p_idx[r], p_nu[r], p_count[r])
+
+
+if njit is not None:
+    _apply_negative_factors = njit(cache=True)(_apply_negative_factors)
+
+
 def _make_mass_action_plan(indices, orders, counts):
     """Classify molecularity once; -1 retains the general-order log product."""
     plan = np.full((len(counts), 4), -1, dtype=np.int64)
@@ -720,15 +739,20 @@ class NativeKinetics:
             c_work = C if C.ndim == 2 else C[:, None]
             rf_work = Rf if Rf.ndim == 2 else Rf[:, None]
             rr_work = Rr if Rr.ndim == 2 else Rr[:, None]
-            all_indices = range(self.n_sp)
-            for m in range(c_work.shape[1]):
-                if not self.xp.any(c_work[:, m] < 0.0):
-                    continue
-                for r in range(self.nu_r.shape[1]):
-                    rf_work[r, m] *= _negative_mass_action_factor_python(
-                        c_work[:, m], all_indices, self.nu_r[:, r], self.n_sp)
-                    rr_work[r, m] *= _negative_mass_action_factor_python(
-                        c_work[:, m], all_indices, self.nu_p[:, r], self.n_sp)
+            if self._numba_available:
+                _apply_negative_factors(c_work, rf_work, rr_work,
+                    self._sp_r_idx, self._sp_r_nu, self._sp_r_count,
+                    self._sp_p_idx, self._sp_p_nu, self._sp_p_count)
+            else:
+                all_indices = range(self.n_sp)
+                for m in range(c_work.shape[1]):
+                    if not self.xp.any(c_work[:, m] < 0.0):
+                        continue
+                    for r in range(self.nu_r.shape[1]):
+                        rf_work[r, m] *= _negative_mass_action_factor_python(
+                            c_work[:, m], all_indices, self.nu_r[:, r], self.n_sp)
+                        rr_work[r, m] *= _negative_mass_action_factor_python(
+                            c_work[:, m], all_indices, self.nu_p[:, r], self.n_sp)
 
         # Three-body enhancement
         M = self.third_body_conc(C)
