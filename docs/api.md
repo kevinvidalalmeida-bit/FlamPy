@@ -173,7 +173,10 @@ folder = generate_fgm(
 ~~~
 
 Este ejemplo refina el intervalo φ = 0,7–1,4. Las figuras publicadas
-proceden de 71 composiciones fijas entre 0,5 y 5; para reproducirlas,
+proceden de 86 composiciones entre 0,5 y 5 y 2001 puntos de progreso,
+seleccionados mediante controles de composición y progreso. Se verifican
+el indicador interno y las pruebas reservadas de temperatura y fuente
+al 1 %; para reproducir las imágenes,
 utiliza los [datos y el generador incluidos](results.md#reproducir-las-imágenes).
 
 Los pesos se comprueban sobre las trayectorias calculadas. El defecto por

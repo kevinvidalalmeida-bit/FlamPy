@@ -120,7 +120,7 @@ una ruta, debe ser una carpeta que todavía no exista.
 
 ![FGM de H₂–aire: temperatura, H₂O, OH y fuente de progreso](docs/assets/fgm-h2-map.png)
 
-*H₂–aire: 71 flamelets, φ = 0,5–5 y 1001 puntos de progreso.
+*H₂–aire: 86 flamelets, φ = 0,5–5 y 2001 puntos de progreso.
 Ambas familias usan entrada a 300 K y 101 325 Pa, transporte promediado
 sin Soret, Zᵢₙ horizontal y progreso c vertical. Zᵢₙ conserva su intervalo
 físico. [Figuras, datos y código exacto de reproducción](docs/results.md).*

@@ -43,10 +43,10 @@ son diferentes y se indican en la tabla.
 | Mecanismo | `gri30.yaml` | `h2o2.yaml` |
 | Intervalo de φ | 0,7–1,4 | 0,5–5 |
 | Bilger de entrada Zᵢₙ | 0,03928–0,07559 | 0,01447–0,12801 |
-| Flamelets del mapa | 40 | 71 |
-| Puntos de progreso | 241 | 1001 |
+| Flamelets del mapa | 40 | 86 |
+| Puntos de progreso | 241 | 2001 |
 | Todas las llamas finales aceptadas | Sí | Sí |
-| Defecto por exclusión en la tabla ilustrada | 0,903 % | 1,098 % |
+| Defecto por exclusión en la tabla ilustrada | 0,903 % | 0,714 % |
 | Progreso sin normalizar | Y_CO₂ + Y_H₂O + Y_CO + 0,5 Y_H₂ | Y_H₂O + 10 Y_HO₂ − Y_OH |
 
 Las dos imágenes usan la misma escala de color para temperatura. El eje
@@ -60,9 +60,12 @@ El número final de flamelets es propio de cada construcción y no un
 resultado garantizado para cualquier configuración o versión. El defecto
 por exclusión mide consistencia de interpolación entre filas; no es una
 medida de error frente a experimentos ni una cota global del error físico.
-CH₄ se refinó hacia un objetivo del 1 %. En H₂ se resolvieron las mismas
-71 composiciones con ambos solvers y los cuatro transportes; sus defectos
-medidos abarcan 1,065–1,107 %, sin imponer el objetivo del 1 %.
+CH₄ se refinó hacia un objetivo del 1 %. En H₂, el control conjunto de
+composición y progreso pasó de 71 filas y 1001 puntos a 86 filas y 2001
+puntos comunes a los dos solvers y los cuatro transportes. Las ocho tablas
+reconstruidas cumplen el indicador del 1 %, con defectos de 0,709
+a 0,739 %. El número obtenido corresponde a estas
+condiciones y criterios; no es un tamaño universal para H₂.
 
 ## Fidelidad de interpolación
 
@@ -71,7 +74,7 @@ medidos abarcan 1,065–1,107 %, sin imponer el objetivo del 1 %.
 ![Interpolación de la tabla H₂ y errores en doce llamas independientes](assets/fgm-h2-fidelity.png)
 
 La prueba de CH₄ utiliza una tabla independiente de **44 flamelets**;
-la de H₂ utiliza la misma tabla de **71** del mapa. Cada prueba compara
+la de H₂ utiliza la misma tabla de **86** del mapa. Cada prueba compara
 doce llamas ajenas a la construcción, en 1001 posiciones uniformes de c.
 Los paneles (a–d) muestran la llama más próxima a φ = 1 en log φ.
 Las cajas muestran mediana, cuartiles y bigotes P5–P95; el mapa de error
@@ -85,16 +88,36 @@ normalizados de los errores relativos locales de especies minoritarias.
 
 | Error máximo normalizado [%] | CH₄ | H₂ |
 |---|---:|---:|
-| Temperatura | 0,423 | 1,670 |
-| CO₂ / H₂O | 1,048 | 0,153 |
-| CO / OH | 0,821 | 0,779 |
-| Fuente de progreso | 1,219 | 0,765 |
+| Temperatura | 0,423 | 0,741 |
+| CO₂ / H₂O | 1,048 | 0,147 |
+| CO / OH | 0,821 | 0,723 |
+| Fuente de progreso | 1,219 | 0,611 |
+
+En H₂ se comprueban **doce llamas reservadas por transporte**, resueltas
+después de fijar la selección final, frente a las tablas de ambos solvers.
+Los controles de desarrollo y el primer conjunto reservado fallido se
+conservan aparte y no forman parte de esta prueba final. Máximos
+normalizados; en cada celda, FlamPy / Cantera:
+
+| Transporte | Temperatura [%] | Fuente de progreso [%] |
+|---|---:|---:|
+| P | 0,741 / 0,784 | 0,611 / 0,659 |
+| PS | 0,786 / 0,888 | 0,698 / 0,629 |
+| M | 0,745 / 0,779 | 0,686 / 0,626 |
+| MS | 0,722 / 0,760 | 0,691 / 0,621 |
+
+El objetivo del 1 % se exige a temperatura y fuente en estas pruebas.
+Las otras especies se informan por separado. Cumplir las pruebas reservadas
+no demuestra una cota para todos los estados ni valida el modelo frente a
+experimentos. La malla de progreso también importa: añadir mezclas casi
+coincidentes no eliminó algunos errores térmicos con 1001 puntos; el
+refinamiento del eje de progreso permitió cumplir el objetivo.
 
 ## Tiempo por flamelet
 
 ![Tiempo de las ocho construcciones FGM de CH₄](assets/fgm-ch4-family.png)
 
-![Tiempo de las ocho construcciones FGM de H₂, con 71 llamas por panel](assets/fgm-h2-family.png)
+![Tiempo de las ocho construcciones FGM de H₂, con 86 llamas por panel](assets/fgm-h2-family.png)
 
 P indica transporte promediado, M multicomponente y S Soret. Cada panel
 corresponde a una construcción, con tiempos registrados que incluyen
@@ -107,10 +130,17 @@ NumPy 2.4.6, SciPy 1.17.1, Numba 0.65.1 y Cantera 3.2.0;
 cuatro hilos Numba y uno para BLAS/OpenMP, con casos secuenciales.
 
 H₂ se resuelve en orden creciente de φ: FlamPy utiliza un arranque,
-una copia y 69 predictores secantes por familia; Cantera utiliza un
-arranque y 70 perfiles previos. CH₄ comienza con cinco composiciones y
+una copia y 84 predictores secantes por familia; Cantera utiliza un
+arranque y 85 perfiles previos. CH₄ comienza con cinco composiciones y
 después incorpora las solicitadas por refinamiento, por lo que su orden
 de resolución no es un barrido monótono de φ.
+
+En H₂, los tiempos acumulados son 135,67 s y 2162,77 s,
+con factor 15,94 y reducción del 93,7 %. Se mide una
+reconstrucción desde cero por tabla, incluida la tabulación y el indicador
+final, sobre la malla común ya seleccionada. Se excluyen el estudio previo
+de selección y las pruebas independientes; no es una medición del coste de
+descubrir la malla ni una comparación del solver a igual semilla.
 
 ## Reproducir las imágenes
 

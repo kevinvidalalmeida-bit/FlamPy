@@ -5,357 +5,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 0.49044590000994503,
+        "measured_s": 0.4977010000147857,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 0.16465299999981653,
+        "measured_s": 0.15651460000663064,
         "predictor_kind": "copy_fresh_projected"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 0.15679350000573322,
+        "measured_s": 0.16212330001872033,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 0.162456200007,
+        "measured_s": 0.15606010000919923,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 0.1773786999983713,
+        "measured_s": 0.16663820002577268,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.17157930000394117,
+        "measured_s": 0.1750367000058759,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.18006279999099206,
+        "measured_s": 0.16742869999143295,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 0.16633129998808727,
+        "measured_s": 0.19313500000862405,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.17764749999332707,
+        "measured_s": 0.17903759999899194,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.23250889999326319,
+        "measured_s": 0.238008299987996,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 0.1804318000067724,
+        "measured_s": 0.17102720000548288,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 0.1748308999958681,
+        "measured_s": 0.17246989998966455,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.24307619998580776,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 0.18204819998936728,
+        "measured_s": 0.19454480000422336,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.18408350000390783,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 0.1918837999983225,
+        "measured_s": 0.18089160000090487,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 0.1991386000008788,
+        "measured_s": 0.20063390000723302,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 0.2027047000010498,
+        "measured_s": 0.2035559999931138,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 0.21460739999020007,
+        "measured_s": 0.20092740000109188,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 0.19199490000028163,
+        "measured_s": 0.2190448000037577,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 0.42227110000385437,
+        "measured_s": 0.42009660002077,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 0.19801690000167582,
+        "measured_s": 0.1979730000020936,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 0.3390110000036657,
+        "measured_s": 0.3081060999829788,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 0.2567505000042729,
+        "measured_s": 0.26524710000376217,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 0.202008799999021,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 0.41504349999013357,
+        "measured_s": 0.37684419998549856,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 0.3473731999984011,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 0.34850409999489784,
+        "measured_s": 0.2902159999939613,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 0.2438354000041727,
+        "measured_s": 0.22242279999773018,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0,
-        "measured_s": 0.35506649999297224,
+        "measured_s": 0.34739429998444393,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 0.21973110000544693,
+        "measured_s": 0.23347449998254888,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 0.22152559999085497,
+        "measured_s": 0.22730920001049526,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 0.2912530999892624,
+        "measured_s": 0.3079100000031758,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 0.21552189999783877,
+        "measured_s": 0.23327769999741577,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 0.29190970001218375,
+        "measured_s": 0.313328599993838,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 0.22959160000027623,
+        "measured_s": 0.5692485999898054,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 0.46705560000555124,
+        "measured_s": 0.24283160001505166,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 0.22535429999697953,
+        "measured_s": 0.23128389997873455,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 0.24523390000103973,
+        "measured_s": 0.22381599998334423,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 0.21240110001235735,
+        "measured_s": 0.2365914999973029,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 0.23016690000076778,
+        "measured_s": 0.23128400000859983,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 0.2156185999920126,
+        "measured_s": 0.2489458000054583,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 0.23142809999990277,
+        "measured_s": 0.23647219999111257,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 0.2486654000094859,
+        "measured_s": 0.23204679999616928,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 0.2376659000001382,
+        "measured_s": 0.23444900001049973,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 0.22806059999857098,
+        "measured_s": 0.2180843999958597,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 0.22715780000726227,
+        "measured_s": 0.23849750001681969,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 0.23779949999880046,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 0.2178903000021819,
+        "measured_s": 0.22564920000149868,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 0.22990040000877343,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 0.22677700000349432,
+        "measured_s": 0.23497219997807406,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 0.23869210001430474,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 0.23161699998308904,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 0.2427826999919489,
+        "measured_s": 0.2311321000161115,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 0.2482023000047775,
+        "measured_s": 0.2246976999740582,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 0.24071330000879243,
+        "measured_s": 0.23058500001206994,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 0.24488419998669997,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 0.2518291999876965,
+        "measured_s": 0.23831000001518987,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 0.2394229999918025,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 0.23085570000694133,
+        "measured_s": 0.23396969999885187,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 0.2418309000058798,
+        "measured_s": 0.2555229999998119,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 0.2474003000097582,
+        "measured_s": 0.2447665999934543,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 0.24295359998359345,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 0.23279720000573434,
+        "measured_s": 0.25753200001781806,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 0.23751710000215098,
+        "measured_s": 0.23316210001939908,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 0.24096640000061598,
+        "measured_s": 0.2391154000069946,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 0.2423417999962112,
+        "measured_s": 0.2427775000105612,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 0.23339879998820834,
+        "measured_s": 0.24625969998305663,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 0.24655499999062158,
+        "measured_s": 0.2496058999968227,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 0.2328918999992311,
+        "measured_s": 0.2579445999872405,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 0.24247670000477228,
+        "measured_s": 0.23811710000154562,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 0.2525936999882106,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 0.2425183999876026,
+        "measured_s": 0.25132689997553825,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 0.43783509999047965,
+        "measured_s": 0.2399804000160657,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 0.24354020001192112,
+        "measured_s": 0.3780892000067979,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 0.24440560000948608,
+        "measured_s": 0.25409469997975975,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 0.3169132000039099,
+        "measured_s": 0.32562099999631755,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 0.2436470999964513,
+        "measured_s": 0.26741780000156723,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 0.25204620001022704,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 0.25539540000318084,
+        "measured_s": 0.2642316999845207,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 0.250785399985034,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 0.2600672999978997,
+        "measured_s": 0.24124119998305105,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 0.25691509997705,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 0.34465970000019297,
+        "measured_s": 0.4108548999938648,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 0.2566188999917358,
+        "measured_s": 0.263616300013382,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 5.0,
-        "measured_s": 0.2532578999962425,
+        "measured_s": 0.2705238999915309,
         "predictor_kind": "secant_fresh_projected"
       }
     ]
@@ -366,357 +441,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.060732800004189,
+        "measured_s": 1.0661774999753106,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 0.7746031999995466,
+        "measured_s": 0.7726421999977902,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 0.6164021000004141,
+        "measured_s": 0.6207409999915399,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 0.6215550000051735,
+        "measured_s": 0.6115724999981467,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 0.6647193999961019,
+        "measured_s": 0.6278862000035588,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.6145760999934282,
+        "measured_s": 0.6414218999852892,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.4475324999948498,
+        "measured_s": 0.4407690999796614,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 0.6114519999973709,
+        "measured_s": 0.6112667999987025,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.609841099998448,
+        "measured_s": 0.6138663000019733,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.6210024999891175,
+        "measured_s": 0.619840600003954,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 0.6341861999972025,
+        "measured_s": 0.6251036000030581,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 0.8146583000052487,
+        "measured_s": 0.8182597999984864,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.6722949999966659,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 0.6863183999957982,
+        "measured_s": 0.6700181000051089,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.6831605000188574,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 0.6936682999948971,
+        "measured_s": 0.7006761999800801,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 0.7161803999915719,
+        "measured_s": 0.7113966000033543,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 0.9181252999987919,
+        "measured_s": 0.9399583000049461,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 0.7451147999963723,
+        "measured_s": 0.7412555999762844,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 0.7386548000067705,
+        "measured_s": 0.7603534000227228,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 0.7550678999978118,
+        "measured_s": 0.7469506000052206,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 1.4099444000021322,
+        "measured_s": 1.4358446999976877,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 0.9972497999988263,
+        "measured_s": 0.991778300027363,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 1.2290164000005461,
+        "measured_s": 1.2061756000039168,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 0.7633004999952391,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 1.174005599998054,
+        "measured_s": 1.2004926000081468,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 0.9972655999881681,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 1.015136000001803,
+        "measured_s": 0.804972199985059,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 2.3599919000116643,
+        "measured_s": 2.4317614000174217,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0,
-        "measured_s": 1.0135722999984864,
+        "measured_s": 1.025642099994002,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 0.7854966000013519,
+        "measured_s": 0.8260000000009313,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 1.0085611999966204,
+        "measured_s": 1.2065107999951579,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 1.0943952000088757,
+        "measured_s": 1.205454400012968,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 1.2476090999989538,
+        "measured_s": 1.2504698999982793,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 0.9756004999944707,
+        "measured_s": 0.9668281000049319,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 1.8030411999934586,
+        "measured_s": 1.8332013000035658,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 0.9945142999931704,
+        "measured_s": 0.997100100008538,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 0.9980350999976508,
+        "measured_s": 1.0430540000088513,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 1.000984400001471,
+        "measured_s": 1.0046173999726307,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 1.0037167999980738,
+        "measured_s": 0.997315599990543,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 1.0017316000012215,
+        "measured_s": 1.0464677999843843,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 1.0300648000120418,
+        "measured_s": 1.0878751999989618,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 1.0282796999963466,
+        "measured_s": 1.0171873999934178,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 1.0130996000079904,
+        "measured_s": 1.05696970000281,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 1.0122090999939246,
+        "measured_s": 1.0413614999852143,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 1.3216165000048932,
+        "measured_s": 1.345942699990701,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 1.0376642000046559,
+        "measured_s": 1.0520404999842867,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 1.0564520999905653,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 1.0964217000000644,
+        "measured_s": 1.1088300000119489,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 3.527137099998072,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 1.1805495000007795,
+        "measured_s": 3.394211400009226,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 3.0203293000231497,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 3.3874760000035167,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 5.201651399998809,
+        "measured_s": 4.82431710002129,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 6.680215799991856,
+        "measured_s": 6.738358700007666,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 8.791301500008558,
+        "measured_s": 8.88822560000699,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 8.09470639997744,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 9.811170400003903,
+        "measured_s": 9.405689800012624,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 9.513841300009517,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 12.508991799986688,
+        "measured_s": 10.215009100007592,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 12.062367499995162,
+        "measured_s": 10.75587860000087,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 11.788049399998272,
+        "measured_s": 11.618959499988705,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 10.17478330002632,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 14.672781999994186,
+        "measured_s": 13.367074100009631,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 13.266496800002642,
+        "measured_s": 12.962103800004115,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 13.84897120000096,
+        "measured_s": 13.428221400012262,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 13.827981499998714,
+        "measured_s": 13.823258099990198,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 13.937449200006085,
+        "measured_s": 13.969165200018324,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 14.51533360000758,
+        "measured_s": 14.097381299972767,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 15.547703700009151,
+        "measured_s": 15.120944900001632,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 16.47803460000432,
+        "measured_s": 15.35157810000237,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 11.805749399994966,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 15.495987100002822,
+        "measured_s": 11.439618600008544,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 17.45608400000492,
+        "measured_s": 15.465868700004648,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 13.810801399988122,
+        "measured_s": 13.515766399999848,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 15.164500499988208,
+        "measured_s": 12.979369600012433,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 14.629987199994503,
+        "measured_s": 12.475049400003627,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 12.960969799998566,
+        "measured_s": 11.31898710000678,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 8.349713900010101,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 14.195150300001842,
+        "measured_s": 9.915961699996842,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 7.815547200007131,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 11.420979700007592,
+        "measured_s": 7.755947400000878,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 7.953023999987636,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 8.410759800011874,
+        "measured_s": 6.0710123000026215,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 2.3232280999945942,
+        "measured_s": 2.1960101000149734,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 5.0,
-        "measured_s": 2.06030899999314,
+        "measured_s": 1.7376951000187546,
         "predictor_kind": "cantera_previous_profile"
       }
     ]
@@ -727,357 +877,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.3953149000008125,
+        "measured_s": 1.0047301999875344,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 0.41911529999924824,
+        "measured_s": 0.3083045000093989,
         "predictor_kind": "copy_fresh_projected"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 0.4213803000020562,
+        "measured_s": 0.32237930002156645,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 0.4165420999925118,
+        "measured_s": 0.30390950001310557,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 0.43541419999382924,
+        "measured_s": 0.3209439000056591,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.4429863999976078,
+        "measured_s": 0.3162448999937624,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.4313567999924999,
+        "measured_s": 0.30771480000112206,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 0.45031010000093374,
+        "measured_s": 0.31470280000939965,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.43003829999361187,
+        "measured_s": 0.32589330000337213,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.43633320000662934,
+        "measured_s": 0.34015760000329465,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 0.44257860000652727,
+        "measured_s": 0.3506039999774657,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 0.45513309999660123,
+        "measured_s": 0.3410020000010263,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.34685809997608885,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 0.7694264000019757,
+        "measured_s": 0.5418483999965247,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.35085660000913776,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 0.4902237000060268,
+        "measured_s": 0.35436689999187365,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 0.48631759999261703,
+        "measured_s": 0.39591290001408197,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 0.8087106000020867,
+        "measured_s": 0.5780174999963492,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 0.5088816000061342,
+        "measured_s": 0.3967780999955721,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 0.522689099991112,
+        "measured_s": 0.3803654000221286,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 0.8419136000011349,
+        "measured_s": 0.600639999989653,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 0.8295725000061793,
+        "measured_s": 0.6370328999764752,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 0.6902000999980373,
+        "measured_s": 0.5116248999838717,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 1.2937698000023374,
+        "measured_s": 0.9470200999930967,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 0.4111520999867935,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 0.7098968000063905,
+        "measured_s": 0.6546488000021782,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 0.5489584000024479,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 0.9031484000006458,
+        "measured_s": 0.5764208000036888,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 0.7622301999945194,
+        "measured_s": 0.585979600000428,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0,
-        "measured_s": 1.1360553999984404,
+        "measured_s": 0.8406163000036031,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 0.60170859999198,
+        "measured_s": 0.47085909999441355,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 0.6084659999905853,
+        "measured_s": 0.4439317000214942,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 0.7344044999917969,
+        "measured_s": 0.5695653000148013,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 0.7720058999984758,
+        "measured_s": 0.552637999993749,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 0.6197832000034396,
+        "measured_s": 0.43480239997734316,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 0.935663399999612,
+        "measured_s": 0.6698994000034872,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 0.7376423000096111,
+        "measured_s": 0.5356397999858018,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 0.5791477000020677,
+        "measured_s": 0.4194922000169754,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 0.3983665999985533,
+        "measured_s": 0.3062604999868199,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 0.5684645000001183,
+        "measured_s": 0.42916869997861795,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 0.5801090000022668,
+        "measured_s": 0.42208479999681003,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 0.5708320999983698,
+        "measured_s": 0.42569770000409335,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 0.5808287999971071,
+        "measured_s": 0.4331829000147991,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 0.5594764999987092,
+        "measured_s": 0.4195465999946464,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 0.6175143000000389,
+        "measured_s": 0.46780920002493076,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 0.5824352000054205,
+        "measured_s": 0.452291099994909,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 0.6039887000079034,
+        "measured_s": 0.4523594999918714,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 0.49442329999874346,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 0.6237197000009473,
+        "measured_s": 0.45385150000220165,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 0.44417600001906976,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 0.6074304999929154,
+        "measured_s": 0.44270939999842085,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 0.4240505000052508,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 0.42835590001777746,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 0.6038075999967987,
+        "measured_s": 0.43904299999121577,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 0.5986354999913601,
+        "measured_s": 0.441869600006612,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 0.6126491999893915,
+        "measured_s": 0.44976290001068264,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 0.42620200000237674,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 0.6332924999878742,
+        "measured_s": 0.4642018000013195,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 0.48093839999637567,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 0.602346600004239,
+        "measured_s": 0.47977229999378324,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 0.6209631000092486,
+        "measured_s": 0.4692307999939658,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 0.6602130999963265,
+        "measured_s": 0.492302099999506,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 0.44541949999984354,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 0.7953415000083623,
+        "measured_s": 0.4413446999969892,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 0.6305868000054033,
+        "measured_s": 0.4443219999957364,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 0.6054876999987755,
+        "measured_s": 0.4455954000004567,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 0.5941585999971721,
+        "measured_s": 0.43888780000270344,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 0.6033127999980934,
+        "measured_s": 0.4500116999843158,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 0.5864441000012448,
+        "measured_s": 0.4236065000004601,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 0.5865905000100611,
+        "measured_s": 0.429962299996987,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 0.6265482000017073,
+        "measured_s": 0.45011380000505596,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 0.4175212000263855,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 0.6133714000025066,
+        "measured_s": 0.45467399997869506,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 0.8024027000064962,
+        "measured_s": 0.4715646000113338,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 0.6402143000013893,
+        "measured_s": 0.4617071999819018,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 0.6990137999964645,
+        "measured_s": 0.45136590002221055,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 0.8994788999989396,
+        "measured_s": 0.6013188000069931,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 0.6794353000004776,
+        "measured_s": 0.6226123000087682,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 0.4634795000019949,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 1.0946237999887671,
+        "measured_s": 0.48841610000818036,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 0.46900599999935366,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 0.7052592999971239,
+        "measured_s": 0.48614170000655577,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 0.4905956999864429,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 1.3740975000109756,
+        "measured_s": 0.9211585999873932,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 0.7200179000064963,
+        "measured_s": 0.47936070000287145,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 5.0,
-        "measured_s": 0.6980383000045549,
+        "measured_s": 0.5155094999936409,
         "predictor_kind": "secant_fresh_projected"
       }
     ]
@@ -1088,357 +1313,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.8101469999965047,
+        "measured_s": 1.5059147999854758,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 1.06842319999123,
+        "measured_s": 0.8708513000165112,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 1.0499864000012167,
+        "measured_s": 0.8850636999995913,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 1.0282963000063319,
+        "measured_s": 0.8258134000061546,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 1.007915399997728,
+        "measured_s": 0.8211538000032306,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.965181699997629,
+        "measured_s": 0.7936297999985982,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.951461400007247,
+        "measured_s": 0.8190659999963827,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 1.1850346999999601,
+        "measured_s": 1.000458599999547,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.9583246999973198,
+        "measured_s": 0.8456325000151992,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.9637227000057464,
+        "measured_s": 0.8463386999792419,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 1.2204628999897977,
+        "measured_s": 1.019283399975393,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 1.2621708999940893,
+        "measured_s": 1.0676036999793723,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.87909609999042,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 1.284594200013089,
+        "measured_s": 1.1517315000237431,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.9355887999990955,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 1.4787312999978894,
+        "measured_s": 1.3658530999964569,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 2.911933300012606,
+        "measured_s": 2.3088999999745283,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 3.9104195999971125,
+        "measured_s": 2.994483799993759,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 2.955490499996813,
+        "measured_s": 2.3820725999830756,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 1.6993453999893973,
+        "measured_s": 1.5106429999868851,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 2.420025400002487,
+        "measured_s": 2.426400600001216,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 2.019228299992392,
+        "measured_s": 1.9091452000138815,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 1.250056000004406,
+        "measured_s": 1.1661366999906022,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 1.722003799994127,
+        "measured_s": 1.6177945999952499,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 1.1478743999905419,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 2.018116799998097,
+        "measured_s": 1.3987881999928504,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 1.5042957000259776,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 3.81964830000652,
+        "measured_s": 3.0007673000218347,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 1.2707955999940168,
+        "measured_s": 1.212245399976382,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0,
-        "measured_s": 1.3215053000021726,
+        "measured_s": 1.2170224000001326,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 1.3156998000049498,
+        "measured_s": 1.1984279000025708,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 1.5955625999922631,
+        "measured_s": 1.4288742000062484,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 1.3903387000027578,
+        "measured_s": 1.267726699996274,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 1.350295999989612,
+        "measured_s": 1.4802477000048384,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 1.4762293999956455,
+        "measured_s": 1.825556099996902,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 2.7981236000050558,
+        "measured_s": 2.3648773999884725,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 1.6514805999904638,
+        "measured_s": 1.5600082000019029,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 1.3242104000091786,
+        "measured_s": 1.2803063000028487,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 1.6052417000028072,
+        "measured_s": 1.2728993000055198,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 1.548284499993315,
+        "measured_s": 1.277894800005015,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 1.564592900002026,
+        "measured_s": 1.3592979999957606,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 1.5604842000029748,
+        "measured_s": 1.3312979000038467,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 1.6000401999917813,
+        "measured_s": 1.3321720999956597,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 1.584539900009986,
+        "measured_s": 1.3493607999989763,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 1.552220400000806,
+        "measured_s": 1.4028594999981578,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 2.2714373000053456,
+        "measured_s": 1.97990249999566,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 1.6165824999916367,
+        "measured_s": 1.401341799995862,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 1.4305466999940109,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 1.7080904999893392,
+        "measured_s": 1.4464093999995384,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 1.4812697999877855,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 1.7234157999919262,
+        "measured_s": 5.38897729999735,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 6.028543599997647,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 6.43252850000863,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 8.568923600003473,
+        "measured_s": 6.9907998999988195,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 12.273610600008396,
+        "measured_s": 11.244047499989392,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 14.566696500012768,
+        "measured_s": 13.05428780001239,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 11.34683190000942,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 15.549755700005335,
+        "measured_s": 13.73078300000634,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 13.87352930000634,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 17.584117900012643,
+        "measured_s": 15.491229300008854,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 4.339557100000093,
+        "measured_s": 3.919438800017815,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 17.543567300002906,
+        "measured_s": 17.772026599996025,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 17.043538799975067,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 22.13600800000131,
+        "measured_s": 20.482763000007253,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 19.79330060000939,
+        "measured_s": 19.55136240000138,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 21.790405899999314,
+        "measured_s": 21.621590400027344,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 25.3864290999918,
+        "measured_s": 21.989735299983295,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 25.43051479999849,
+        "measured_s": 22.507701199996518,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 25.956591900001513,
+        "measured_s": 23.73726049999823,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 26.086486400003196,
+        "measured_s": 24.147729999996955,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 26.65162049999344,
+        "measured_s": 25.057265799987363,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 9.557751100015594,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 26.9070253999962,
+        "measured_s": 9.440779100026703,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 27.92111819999991,
+        "measured_s": 25.40654719999293,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 12.847565799995209,
+        "measured_s": 12.059378800011473,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 11.034713499990175,
+        "measured_s": 9.970190499996534,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 11.690512800007127,
+        "measured_s": 10.908410400006687,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 11.209835699992254,
+        "measured_s": 10.364707600005204,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 10.217373799998313,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 11.821537800002261,
+        "measured_s": 10.332584399991902,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 10.70257940000738,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 12.01010149999638,
+        "measured_s": 10.784633399976883,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 11.121362900012173,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 19.070084000006318,
+        "measured_s": 17.846558099990943,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 18.82289039999887,
+        "measured_s": 17.98577440000372,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 5.0,
-        "measured_s": 19.000842499997816,
+        "measured_s": 18.060270999994827,
         "predictor_kind": "cantera_previous_profile"
       }
     ]
@@ -1449,357 +1749,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.1874042999988887,
+        "measured_s": 0.872633399994811,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 0.36165859999891836,
+        "measured_s": 0.27395719999913126,
         "predictor_kind": "copy_fresh_projected"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 0.36283969999931287,
+        "measured_s": 0.27135070000076666,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 0.3516491999907885,
+        "measured_s": 0.2745044999755919,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 0.37774850000278093,
+        "measured_s": 0.2985751999949571,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.38857170000846963,
+        "measured_s": 0.2898690000001807,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.36962560001120437,
+        "measured_s": 0.2724105000088457,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 0.3658736999932444,
+        "measured_s": 0.26812839999911375,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.3937403000018094,
+        "measured_s": 0.2779292000050191,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.5046891000092728,
+        "measured_s": 0.39067079999949783,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 0.3946314000058919,
+        "measured_s": 0.2861521999875549,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 0.412652099999832,
+        "measured_s": 0.2880328000173904,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.2993646999821067,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 0.4116836000030162,
+        "measured_s": 0.3086096000042744,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.2942373000259977,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 0.5588363999995636,
+        "measured_s": 0.2921245000034105,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 0.4329591999994591,
+        "measured_s": 0.3051522999885492,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 0.42925659999309573,
+        "measured_s": 0.3103375000064261,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 0.4416528000001563,
+        "measured_s": 0.31356660000164993,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 0.4320383000012953,
+        "measured_s": 0.3372005000128411,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 0.9564032999915071,
+        "measured_s": 0.7401939000119455,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 0.4415789000049699,
+        "measured_s": 0.3279725999746006,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 0.6827955000044312,
+        "measured_s": 0.5349107999936678,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 0.5765066000021761,
+        "measured_s": 0.42528299998957664,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 0.6534604000044055,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 0.8833748000033665,
+        "measured_s": 0.3485801999922842,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 0.4724951999960467,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 0.634411100007128,
+        "measured_s": 0.35149030000320636,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 0.7423418000107631,
+        "measured_s": 0.5626464999804739,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0,
-        "measured_s": 0.4880391999904532,
+        "measured_s": 0.38417109998408705,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 0.4969496999983676,
+        "measured_s": 0.3555058999918401,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 0.6428663000115193,
+        "measured_s": 0.47009330001310445,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 0.4857602999982191,
+        "measured_s": 0.3630317999923136,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 0.4994525999936741,
+        "measured_s": 0.3595396000018809,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 0.5362749999912921,
+        "measured_s": 0.388642300007632,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 0.3608382999955211,
+        "measured_s": 0.2916190999967512,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 0.3712027000001399,
+        "measured_s": 0.26908530000946485,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 0.3655116000009002,
+        "measured_s": 0.755703300004825,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 1.0930544000002556,
+        "measured_s": 0.3635929000156466,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 0.48867279999831226,
+        "measured_s": 0.3399772999982815,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 0.35875460000534076,
+        "measured_s": 0.25196180000784807,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 0.522214199998416,
+        "measured_s": 0.3765959999873303,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 0.5188109000009717,
+        "measured_s": 0.37405549999675713,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 0.5126261999976123,
+        "measured_s": 0.37863439999637194,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 0.5395704999973532,
+        "measured_s": 0.3909709000145085,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 0.5391201000020374,
+        "measured_s": 0.4101877000066452,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 0.5433483000088017,
+        "measured_s": 0.38576110001304187,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 0.3761383999953978,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 0.53289400000358,
+        "measured_s": 0.4052750999981072,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 0.39516670000739396,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 0.5201139999990119,
+        "measured_s": 0.3735101000056602,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 0.38994340001954697,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 0.3856933999923058,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 0.5492984000011347,
+        "measured_s": 0.4104255000129342,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 0.5393173000047682,
+        "measured_s": 0.3865798000188079,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 0.547839799997746,
+        "measured_s": 0.3990281999867875,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 0.4046797000046354,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 0.5626923000090756,
+        "measured_s": 0.3939022999838926,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 0.4277991999988444,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 0.5658540000003995,
+        "measured_s": 0.4052514999930281,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 0.5592663999996148,
+        "measured_s": 0.4155046000087168,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 0.5741627999959746,
+        "measured_s": 0.41616620001150295,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 0.4023178000061307,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 0.564961999989464,
+        "measured_s": 0.40068649998283945,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 0.5601553000014974,
+        "measured_s": 0.413402899983339,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 0.443058300006669,
+        "measured_s": 0.42072309998911805,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 0.5520034999935888,
+        "measured_s": 0.39684590001706965,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 0.4524437000072794,
+        "measured_s": 0.40815209998982027,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 0.43902730000263546,
+        "measured_s": 0.4165148999891244,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 0.44792030000826344,
+        "measured_s": 0.4203753999900073,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 0.47211849999439437,
+        "measured_s": 0.4294825999822933,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 0.4116961999970954,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 0.4530569999915315,
+        "measured_s": 0.39566770000965334,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 0.3949101000034716,
+        "measured_s": 0.43169729999499395,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 0.4399624999932712,
+        "measured_s": 0.4173161000071559,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 0.6566278999962378,
+        "measured_s": 0.41943999999784864,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 0.9123437000089325,
+        "measured_s": 0.7568450999970082,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 0.4093713000038406,
+        "measured_s": 0.4220309999946039,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 0.42826489999424666,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 0.41913179999392014,
+        "measured_s": 0.46107100002700463,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 0.5230099000036716,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 0.6448660000023665,
+        "measured_s": 0.42820059999939986,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 0.5135415999975521,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 0.42337839999527205,
+        "measured_s": 0.5268211000075098,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 0.3991995999967912,
+        "measured_s": 0.43254129998967983,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 5.0,
-        "measured_s": 0.414815100011765,
+        "measured_s": 0.42482850002124906,
         "predictor_kind": "secant_fresh_projected"
       }
     ]
@@ -1810,357 +2185,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.738378100009868,
+        "measured_s": 1.742140800022753,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 1.054862500008312,
+        "measured_s": 1.097035999991931,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 1.2138416999951005,
+        "measured_s": 1.2231323000160046,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 1.1646116999909282,
+        "measured_s": 1.1903729000187013,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 1.2044107999972766,
+        "measured_s": 1.1836272000218742,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.925524200007203,
+        "measured_s": 0.907363299978897,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.7498277999984566,
+        "measured_s": 0.7926079999888316,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 1.094108100005542,
+        "measured_s": 1.1087893000221811,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 1.1010395000048447,
+        "measured_s": 1.1611858000105713,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 1.1145068000041647,
+        "measured_s": 1.1769295999838505,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 1.4587262999993982,
+        "measured_s": 1.4755342999997083,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 1.2288260000059381,
+        "measured_s": 1.2803521000023466,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 1.276261400023941,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 1.265356799995061,
+        "measured_s": 1.2839991999790072,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 1.292514199973084,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 1.3051065000036033,
+        "measured_s": 1.377777799993055,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 1.6686222999996971,
+        "measured_s": 1.5825571999885142,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 1.390153400003328,
+        "measured_s": 1.3159066000080202,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 1.320113300011144,
+        "measured_s": 1.3508534999855328,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 1.3626704000052996,
+        "measured_s": 1.3779058999789413,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 2.2577460000029532,
+        "measured_s": 2.269335300021339,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 1.0728327999968315,
+        "measured_s": 1.3519849999865983,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 1.6022375999891665,
+        "measured_s": 1.4238211000047158,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 1.9676448999962304,
+        "measured_s": 1.976732200011611,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 1.3584907999902498,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 1.8197386000101687,
+        "measured_s": 1.8079181000066455,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 1.363129300007131,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 3.5448689999902854,
+        "measured_s": 3.5931615000008605,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 1.760127100002137,
+        "measured_s": 2.0816054999886546,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0,
-        "measured_s": 1.4543167000083486,
+        "measured_s": 1.4831177000014577,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 1.7838085999974282,
+        "measured_s": 1.7719097000081092,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 1.4962407999992138,
+        "measured_s": 1.4846837999939453,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 1.8965667000011308,
+        "measured_s": 1.8265406000136863,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 1.5755842000071425,
+        "measured_s": 1.5704503000015393,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 2.5589956999901915,
+        "measured_s": 2.5206068999832496,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 1.57894259999739,
+        "measured_s": 1.6229276999947615,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 1.6216783999989275,
+        "measured_s": 1.6168827999790665,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 1.7963997000042582,
+        "measured_s": 1.6101463000231888,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 1.3320758999907412,
+        "measured_s": 1.2799908999877516,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 1.6584871000086423,
+        "measured_s": 1.5899695999978576,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 1.9585334000003058,
+        "measured_s": 2.0160397000145167,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 1.2735908000031486,
+        "measured_s": 1.681979599990882,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 1.738257800010615,
+        "measured_s": 1.3450549999834038,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 1.6676391999935731,
+        "measured_s": 1.3418591999798082,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 1.6943157999921823,
+        "measured_s": 1.75564379998832,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 1.9492924999940442,
+        "measured_s": 1.9449023999914061,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 1.7168431999889435,
+        "measured_s": 1.8147778999991715,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 1.785596000001533,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 2.093630999996094,
+        "measured_s": 1.7650426999898627,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 1.8055370000074618,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 1.8714531000005081,
+        "measured_s": 1.89857699998538,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 1.8971954000007827,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 1.91392300001462,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 1.887961100001121,
+        "measured_s": 1.8898089000140317,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 1.9634439999936149,
+        "measured_s": 1.9686821000068448,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 2.356649200009997,
+        "measured_s": 2.3145819999917876,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 4.617750000004889,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 4.598003799997969,
+        "measured_s": 4.64137369999662,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 4.732211900001857,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 4.800779100012733,
+        "measured_s": 4.9491750999877695,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 5.233092000009492,
+        "measured_s": 5.066196500003571,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 5.355685899994569,
+        "measured_s": 5.068090200016741,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 4.77814949999447,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 6.526331199987908,
+        "measured_s": 5.664377500012051,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 5.8705253999942215,
+        "measured_s": 5.736338499991689,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 6.180153599998448,
+        "measured_s": 6.1596160999906715,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 6.397154999998747,
+        "measured_s": 6.337903100007679,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 6.419688499998301,
+        "measured_s": 6.204982800001744,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 6.589539699998568,
+        "measured_s": 6.330015599989565,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 6.6765767999895616,
+        "measured_s": 6.5533593999862205,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 6.948598299990408,
+        "measured_s": 6.750441300013335,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 18.08918150002137,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 7.182097800003248,
+        "measured_s": 18.44624869999825,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 8.223480000000563,
+        "measured_s": 7.769516900007147,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 8.400233199994545,
+        "measured_s": 7.615960800001631,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 9.891634200001135,
+        "measured_s": 8.201388699992094,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 11.371924199993373,
+        "measured_s": 9.11851729999762,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 11.601949899995816,
+        "measured_s": 9.210863699991023,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 18.06350580000435,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 12.8917924999987,
+        "measured_s": 14.008535400003893,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 12.708421100018313,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 10.771159600000829,
+        "measured_s": 19.23194019999937,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 19.897670799982734,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 15.287549400003627,
+        "measured_s": 20.323139000014635,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 20.070234800004982,
+        "measured_s": 19.923710699978983,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 5.0,
-        "measured_s": 23.742886099993484,
+        "measured_s": 22.30535469998722,
         "predictor_kind": "cantera_previous_profile"
       }
     ]
@@ -2171,357 +2621,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 1.1194917999964673,
+        "measured_s": 1.2450601999880746,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 0.279517399991164,
+        "measured_s": 0.3052210999885574,
         "predictor_kind": "copy_fresh_projected"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 0.2743097000056878,
+        "measured_s": 0.28894230001606047,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 0.29883970000082627,
+        "measured_s": 0.272585499973502,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 0.29384439998830203,
+        "measured_s": 0.2991254999942612,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 0.3037791999959154,
+        "measured_s": 0.32054069999139756,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 0.27740089999861084,
+        "measured_s": 0.27233520001755096,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 0.2912055000051623,
+        "measured_s": 0.2892619999765884,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 0.30344799999147654,
+        "measured_s": 0.27048789997934364,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 0.30393829999957234,
+        "measured_s": 0.29528320001554675,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 0.3043739999993704,
+        "measured_s": 0.2998022999963723,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 0.3163102999969851,
+        "measured_s": 0.3016879000060726,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 0.5472608999989461,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 0.5944238000083715,
+        "measured_s": 0.304039400012698,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 0.2987501999887172,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 0.34063929998956155,
+        "measured_s": 0.3057414999930188,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 0.33578109998779837,
+        "measured_s": 0.32109509999281727,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 0.33640790000208654,
+        "measured_s": 0.337505700008478,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 0.40168809999886435,
+        "measured_s": 0.33709379998617806,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 0.5405838000006042,
+        "measured_s": 0.5357026999990921,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 0.4731329000060214,
+        "measured_s": 0.5079525000182912,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 0.4122687999915797,
+        "measured_s": 0.4661084999970626,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 0.897772399999667,
+        "measured_s": 0.8777205999940634,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 0.46063370000047144,
+        "measured_s": 0.4421872000093572,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 0.33717660000547767,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 0.6419763000012608,
+        "measured_s": 0.5728862000105437,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 0.4683062999974936,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 0.5186457999952836,
+        "measured_s": 0.3839911999821197,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 0.7096354000095744,
+        "measured_s": 0.7190129999944475,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0,
-        "measured_s": 0.38484470000548754,
+        "measured_s": 0.3811936999845784,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 0.4917961000028299,
+        "measured_s": 0.4720292999991216,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 0.4032934000133537,
+        "measured_s": 0.3870926999952644,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 0.3760065999958897,
+        "measured_s": 0.3826876000093762,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 0.7222770000080345,
+        "measured_s": 0.6992294999945443,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 0.4123840999964159,
+        "measured_s": 0.41073279999545775,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 0.38219910000043456,
+        "measured_s": 0.38629799999762326,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 0.4747944999980973,
+        "measured_s": 0.48686289999750443,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 0.40877979999640957,
+        "measured_s": 0.4230266999802552,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 0.4900643000000855,
+        "measured_s": 0.47673560000839643,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 0.3769210999889765,
+        "measured_s": 0.3690203999867663,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 0.37329899999895133,
+        "measured_s": 0.39040979999117553,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 0.3626690000091912,
+        "measured_s": 0.3784025000059046,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 0.3725257000041893,
+        "measured_s": 0.36891730001661927,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 0.38487850000092294,
+        "measured_s": 0.3984558999945875,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 0.3785337999870535,
+        "measured_s": 0.37446650001220405,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 0.3735468000086257,
+        "measured_s": 0.3780823999841232,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 0.3873262999986764,
+        "measured_s": 0.3622490999987349,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 0.38038430002052337,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 0.4385407999943709,
+        "measured_s": 0.38696010000421666,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 0.38924930000212044,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 0.39725120000366587,
+        "measured_s": 0.3935362000192981,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 0.36867959998198785,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 0.36257800000021234,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 0.4467904000048293,
+        "measured_s": 0.37485299998661503,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 0.40944659999513533,
+        "measured_s": 0.4151281999947969,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 0.40997979999519885,
+        "measured_s": 0.3864149000146426,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 0.37656269999570213,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 0.39880290000292007,
+        "measured_s": 0.42495190000045113,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 0.39715289999730885,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 0.3910029999969993,
+        "measured_s": 0.4096352999913506,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 0.42105760000413284,
+        "measured_s": 0.42048099997919053,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 0.4223582999984501,
+        "measured_s": 0.4009117000096012,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 0.38618879998102784,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 0.43667789999744855,
+        "measured_s": 0.4210670000175014,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 0.43352439999580383,
+        "measured_s": 0.4152450000110548,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 0.43993789999512956,
+        "measured_s": 0.408071599988034,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 0.445906200009631,
+        "measured_s": 0.4559854999824893,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 0.4630151000019396,
+        "measured_s": 0.4211844999808818,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 0.43408210000779945,
+        "measured_s": 0.41090439999243245,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 0.44928889999573585,
+        "measured_s": 0.42723910001222976,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 0.5543961000075797,
+        "measured_s": 0.5169017000007443,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 0.4268611000152305,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 0.674141099996632,
+        "measured_s": 0.5062178999942262,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 0.5411937000026228,
+        "measured_s": 0.6422699999820907,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 0.5505234000011114,
+        "measured_s": 0.5631570999976248,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 0.5331785999878775,
+        "measured_s": 0.557088700006716,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 0.6838611999992281,
+        "measured_s": 0.545116399996914,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 0.6924587999965297,
+        "measured_s": 0.7007274999923538,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 0.43691020002006553,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 0.5573602999938885,
+        "measured_s": 0.5459824999852572,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 0.5388378000061493,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 0.7173996000055922,
+        "measured_s": 0.5729002000007313,
+        "predictor_kind": "secant_fresh_projected"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 0.45916159998159856,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 0.5828003000060562,
+        "measured_s": 0.5766340999980457,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 1.1404241999989608,
+        "measured_s": 1.0814237000013236,
         "predictor_kind": "secant_fresh_projected"
       },
       {
         "phi": 5.0,
-        "measured_s": 0.5190923000045586,
+        "measured_s": 0.5117727000033483,
         "predictor_kind": "secant_fresh_projected"
       }
     ]
@@ -2532,357 +3057,432 @@
     "trace": [
       {
         "phi": 0.5,
-        "measured_s": 2.8417177999945125,
+        "measured_s": 2.2425468000001274,
         "predictor_kind": "cold"
       },
       {
         "phi": 0.5021051248299162,
-        "measured_s": 1.4742789000010816,
+        "measured_s": 1.3104154000175186,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5104093140911031,
-        "measured_s": 1.556369600002654,
+        "measured_s": 1.2517540999979246,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5188508442314713,
-        "measured_s": 1.549442599993199,
+        "measured_s": 1.2192377999890596,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5274319866969744,
-        "measured_s": 1.5276646999991499,
+        "measured_s": 1.2392372000031173,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5361550505004342,
-        "measured_s": 1.7323810000088997,
+        "measured_s": 1.4807561000052374,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5450223828428495,
-        "measured_s": 1.4429241999896476,
+        "measured_s": 1.2760378000093624,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5540363697449813,
-        "measured_s": 1.425146900000982,
+        "measured_s": 1.1291907999839168,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5631994366893821,
-        "measured_s": 1.4768832999980077,
+        "measured_s": 1.2110259000037331,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5725140492730452,
-        "measured_s": 1.4383588999917265,
+        "measured_s": 1.274990700010676,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5819827138708469,
-        "measured_s": 2.1583737999899313,
+        "measured_s": 1.7617662999837194,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.5916079783099616,
-        "measured_s": 1.9390886000037426,
+        "measured_s": 1.5640625999949407,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.598113098421271,
+        "measured_s": 1.5447972000110894,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6113387094070716,
-        "measured_s": 3.1867117999936454,
+        "measured_s": 2.5179788999957964,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.6214494852079075,
+        "measured_s": 1.6788332000141963,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6317274805643217,
-        "measured_s": 3.2943104000005405,
+        "measured_s": 1.7272726999945007,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6527962380906763,
-        "measured_s": 3.349346599992714,
+        "measured_s": 2.929810900008306,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6745676602269475,
-        "measured_s": 3.999135499994736,
+        "measured_s": 3.6664720000117086,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.6970651815564709,
-        "measured_s": 3.330688199988799,
+        "measured_s": 2.9177218999830075,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7203130182299022,
-        "measured_s": 3.8135306000040146,
+        "measured_s": 3.479492000013124,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7443361940312868,
-        "measured_s": 3.0868495000031544,
+        "measured_s": 2.9193790999997873,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7691605673134587,
-        "measured_s": 3.630397600005381,
+        "measured_s": 3.345803899981547,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.7948128588317641,
-        "measured_s": 3.187510599993402,
+        "measured_s": 2.8823869999905583,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8213206805060661,
-        "measured_s": 2.4065790999884484,
+        "measured_s": 2.0730974999896716,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.8394819076111701,
+        "measured_s": 1.3442491999885533,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.8770179971434217,
-        "measured_s": 2.9825492999952985,
+        "measured_s": 2.114023100002669,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 0.9062674442492492,
+        "measured_s": 1.8586808999825735,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.936492390328625,
-        "measured_s": 2.710727499987115,
+        "measured_s": 1.6585610999900382,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 0.9677253692699314,
-        "measured_s": 3.782255600002827,
+        "measured_s": 3.2748370000044815,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0,
-        "measured_s": 1.8216468000027817,
+        "measured_s": 1.6651012999936938,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.031052394314951,
-        "measured_s": 1.7238285000057658,
+        "measured_s": 1.7143615999957547,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.063069039822593,
-        "measured_s": 2.034440599993104,
+        "measured_s": 1.946538899996085,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.0960798788311805,
-        "measured_s": 1.8144469000108074,
+        "measured_s": 1.7367960000119638,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.1301157834293298,
-        "measured_s": 2.0664839999953983,
+        "measured_s": 2.023447199986549,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2013911007785751,
-        "measured_s": 1.9064515999925788,
+        "measured_s": 1.8115239000180736,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.2386971709664243,
-        "measured_s": 2.6671187999891117,
+        "measured_s": 2.5244754999876022,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.277161683956088,
-        "measured_s": 1.8794973000040045,
+        "measured_s": 1.832349600008456,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.316820612170239,
-        "measured_s": 1.501566399994772,
+        "measured_s": 1.4924857000005431,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.3577110450614043,
-        "measured_s": 1.5989435000083176,
+        "measured_s": 1.5238211000105366,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.399871223798415,
-        "measured_s": 1.583502800000133,
+        "measured_s": 1.55692539998563,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4433405770299563,
-        "measured_s": 1.642817300002207,
+        "measured_s": 1.551406600017799,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.4881597577586594,
-        "measured_s": 1.7058457999955863,
+        "measured_s": 1.6431130999990273,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.534370681360223,
-        "measured_s": 1.6732564999983879,
+        "measured_s": 1.7618511999899056,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.5820165647831204,
-        "measured_s": 1.693388400002732,
+        "measured_s": 1.7761899999750312,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.63114196696555,
-        "measured_s": 1.7385549000027822,
+        "measured_s": 1.7466851999924984,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.6817928305074288,
-        "measured_s": 2.3978009999991627,
+        "measured_s": 2.3582323000009637,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.734016524636403,
-        "measured_s": 1.7996530999953393,
+        "measured_s": 1.7251409000018612,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.7878618895080534,
+        "measured_s": 1.7188174000184517,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.8433792818817307,
-        "measured_s": 2.100098099996103,
+        "measured_s": 1.820641099999193,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 1.9006206222147333,
+        "measured_s": 4.822928599984152,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 1.9596394432188726,
-        "measured_s": 2.81158389999473,
+        "measured_s": 5.799771600024542,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0,
+        "measured_s": 6.318628000008175,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.0411918191591734,
+        "measured_s": 6.611243600025773,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.0832320213011677,
-        "measured_s": 9.046873400002369,
+        "measured_s": 7.161804900009884,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.214619464612312,
-        "measured_s": 11.396669099995052,
+        "measured_s": 9.653690600011032,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.3542933878178354,
-        "measured_s": 13.778913000001921,
+        "measured_s": 11.398187200014945,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.4027822015571503,
+        "measured_s": 10.134103599993978,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.5027764112481856,
-        "measured_s": 19.550857399997767,
+        "measured_s": 16.771396500000264,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.5804936112524217,
+        "measured_s": 16.099058399995556,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.6606241163962436,
-        "measured_s": 21.523996799995075,
+        "measured_s": 16.7872434000019,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.743242865582448,
-        "measured_s": 19.14539330000116,
+        "measured_s": 18.054320800001733,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 2.82842712474619,
-        "measured_s": 8.116731100002653,
+        "measured_s": 7.541154300008202,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 2.8866811540599127,
+        "measured_s": 18.887433600000804,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.0068133077121093,
-        "measured_s": 25.861620700001367,
+        "measured_s": 22.37699029999203,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.1001820601746273,
-        "measured_s": 25.82670830001007,
+        "measured_s": 22.648892800003523,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.196450135955307,
-        "measured_s": 26.817913399994723,
+        "measured_s": 24.10455770001863,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.29570756598507,
-        "measured_s": 27.548792799992952,
+        "measured_s": 25.588140700012445,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.3980471768708056,
-        "measured_s": 26.890147900005104,
+        "measured_s": 26.5005974000087,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.503564677707803,
-        "measured_s": 31.48433569999179,
+        "measured_s": 28.83654449999449,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.6123587495879197,
-        "measured_s": 30.336962699992,
+        "measured_s": 27.866577500011772,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.7245311378871864,
-        "measured_s": 31.042287300006137,
+        "measured_s": 28.529175800009398,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 3.7819168573706667,
+        "measured_s": 25.182524300005753,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.840186747419172,
-        "measured_s": 34.35902190000343,
+        "measured_s": 25.26403890000074,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 3.959433740543081,
-        "measured_s": 33.59398550000333,
+        "measured_s": 30.59929439998814,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.082383638318346,
-        "measured_s": 37.53603289999592,
+        "measured_s": 35.09235059999628,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.209151424800311,
-        "measured_s": 15.783598899986828,
+        "measured_s": 15.706922899989877,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.339855654574548,
-        "measured_s": 18.134020400000736,
+        "measured_s": 16.34099939998123,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.474618563630366,
-        "measured_s": 18.319465000007767,
+        "measured_s": 16.88420450000558,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.543561256329595,
+        "measured_s": 17.454091100022197,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.613566183677215,
-        "measured_s": 19.734907600010047,
+        "measured_s": 17.55383640000946,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.6846497120552755,
+        "measured_s": 17.475271699979203,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.756828460010883,
-        "measured_s": 19.904867000004742,
+        "measured_s": 18.807336199999554,
+        "predictor_kind": "cantera_previous_profile"
+      },
+      {
+        "phi": 4.830119302141437,
+        "measured_s": 19.96586440000101,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.9045393730397215,
-        "measured_s": 21.329660400006105,
+        "measured_s": 20.868122200015932,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 4.980106071299788,
-        "measured_s": 20.59990440000547,
+        "measured_s": 19.410785999993095,
         "predictor_kind": "cantera_previous_profile"
       },
       {
         "phi": 5.0,
-        "measured_s": 20.255132000005688,
+        "measured_s": 19.32222620001994,
         "predictor_kind": "cantera_previous_profile"
       }
     ]

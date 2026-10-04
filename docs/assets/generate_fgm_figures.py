@@ -146,6 +146,7 @@ def fidelity(fuel, data, folder=ASSETS, name=None):
 
 def families(fuel, rows, folder=ASSETS, name=None):
     """Plot recorded time including properties, retaining the actual solve order."""
+    max_count = max(len(row["trace"]) for row in rows)
     with plt.rc_context(STYLE):
         fig, axes = plt.subplots(4, 2, figsize=(6.05, 3.3), sharex=True, sharey=True)
         fig.subplots_adjust(left=.11, right=.98, top=.86, bottom=.20, hspace=.60, wspace=.35)
@@ -165,7 +166,7 @@ def families(fuel, rows, folder=ASSETS, name=None):
                         facecolors=color if kind == "cold" else "white", edgecolors=color, linewidths=.6)
                 title = {"P": "P", "PS": "P+S", "M": "M", "MS": "M+S"}[tag]
                 ax.set_yscale("log"); ax.set_title(f"{title} / {len(trace)} llamas", pad=2)
-                ax.set_xticks([1, 35, 71] if fuel == "H2" else [1, 20, 40])
+                ax.set_xticks(sorted(set([1, (max_count+1)//2, max_count])))
                 ax.tick_params(labelleft=True)
         for ax in axes.flat: ax.set_ylim(min(values)/1.3, max(values)*1.3)
         for ax in axes[-1]: ax.set_xlabel("Orden de resolución")

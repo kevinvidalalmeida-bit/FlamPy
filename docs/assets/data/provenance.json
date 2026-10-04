@@ -111,7 +111,7 @@
     {
       "snapshot": "fgm-h2.npz",
       "source_run": "H2_T300_p1_P_kflame",
-      "source_sha256": "a55e78c4c48a2f36e7494ce1909c2bf7d81bd3644c83371ebf32965a41708ca7",
+      "source_sha256": "09f04a0728f81a57179f7710a275c5c29f83b043f1cbbb9d277aa440f3e41e66",
       "mechanism": "h2o2.yaml",
       "temperature_K": 300.0,
       "pressure_Pa": 101325.0,
@@ -125,8 +125,8 @@
         0.014467517838966196,
         0.12800760730923438
       ],
-      "flamelets": 71,
-      "progress_points": 1001,
+      "flamelets": 86,
+      "progress_points": 2001,
       "all_final_accepted": true,
       "progress_weights": {
         "H2O": 1.0,
@@ -135,13 +135,13 @@
       },
       "coordinate_reference_stream_basis": "mole",
       "extra_Z_normalization": false,
-      "sha256": "a548488ddf3fe202646582a471a6a0b8aca2baeb1980c8119a52e79a8861a864"
+      "sha256": "2698a8011441c058e9d47d70796af769492766bfe93ccad2cfc80d495e667ab7"
     },
     {
       "snapshot": "fgm-h2-fidelity.npz",
-      "source_sha256": "502f4fc64c89a1bb236bb8a23398d2abca4668767e20ae7b73a9400df5668657",
-      "validation_table_source_sha256": "a55e78c4c48a2f36e7494ce1909c2bf7d81bd3644c83371ebf32965a41708ca7",
-      "validation_table_flamelets": 71,
+      "source_sha256": "fa9ffb431bc50258dbd9093de76121ed201a8df02028ad066bfca83182d48d1c",
+      "validation_table_source_sha256": "09f04a0728f81a57179f7710a275c5c29f83b043f1cbbb9d277aa440f3e41e66",
+      "validation_table_flamelets": 86,
       "held_out_flames": 12,
       "queries_per_flame": 1001,
       "fields": [
@@ -151,73 +151,843 @@
         "omega_c"
       ],
       "mean_percent": [
-        0.02568283027819207,
-        0.01981037870063554,
-        0.04773545622903778,
-        0.06566215251614706
+        0.025084465036608983,
+        0.022029979329347322,
+        0.046930813444740344,
+        0.05645162623981883
       ],
       "p95_percent": [
-        0.10371420999692217,
-        0.10324914123985549,
-        0.2029835421288158,
-        0.19417105148469896
+        0.08413984634628442,
+        0.10412741443240359,
+        0.193630626502036,
+        0.15171213545026402
       ],
       "max_percent": [
-        1.6702518387088883,
-        0.15254602200297432,
-        0.7787056946622782,
-        0.765207985488576
+        0.7414352560607476,
+        0.14725549193293982,
+        0.7226521532276982,
+        0.6110654789386258
       ],
-      "sha256": "ec149c0de60fcd1b95173118f7ba59ec1a401b5490755a9dd9b1b636dece1f6f"
+      "sha256": "fa9ffb431bc50258dbd9093de76121ed201a8df02028ad066bfca83182d48d1c",
+      "role": "Reserved after adaptive selection; never used to refine final schedule"
     },
     {
       "snapshot": "fgm-h2-family.json",
       "source_trace_sha256": [
-        "81cf8f644de838b5e0b3a79a082c8fcbd9a9a0e8c1d9856ee015554f0b6ce6ac",
-        "fcd64446d483250264ea5b003465ce72bc0dbf91db13c8f9bb467c2896413e92",
-        "6452c51a016629b08ba8b600e4495845d3407f894c66639addb213ee001dbba5",
-        "c1c0ab8a4dc0995eb5bc897e3219a8c02025cc9fe791cf3ce42a9d924149c0ae",
-        "9eca5564794aa492ada88578ab482c438e7f346108724fd948e572e7ffd33669",
-        "7e26075bc6c478a5f4ed0616aa504ad9ac36783fdc9f5ca3baf77c278641a127",
-        "797c0a4c44ac562f7024801ac13c77f9221556ab8c41abcc65f6ba4aa3ab65c2",
-        "c4b8b7f5e43540d138b123ef38c3242491bb3dbfa02b119bc14260b4bed1f3cb"
+        "39f5fd22efd0cb9419e3a13878f049764e8b0f2059208de8c8010c877e7c4188",
+        "9168d2e8896d8165cd2a0171e65d0976717c2840d905b1ba08b77b7e6b011c56",
+        "4879b2b5aa61cec97f7e47334c681606c9500ca766769dfe291dc9fa5a13cf2e",
+        "08b59f0f7bb60af55e8d7943f1844ba36284a55548d87091e15e02ef60e763f6",
+        "d749be10a41d5da0dfdb8ed0b365a5fcc0a45bc3e043f6a623772871610c3ecf",
+        "241886c8a67d89eee814692df81d4870e898a9a8e559da67709fedb6225a76fe",
+        "270eb856b148e63170ac2e52d96fabd7b4af337c00d52326f690742656ccce5c",
+        "9936d0d217d47e4fddf96f522136528649578de6df3edc5818d041256097eb74"
       ],
       "construction_count": 8,
       "flamelets_per_panel": [
-        71,
-        71,
-        71,
-        71,
-        71,
-        71,
-        71,
-        71
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86,
+        86
       ],
       "time_includes_properties": true,
       "warmup_excluded": true,
       "repetitions_per_construction": 1,
-      "sha256": "f40255d8420185b208d5590ef114c02e8fdd0c551e39ed943d163751f4c415e2"
+      "sha256": "45756359c135ec1de9a998060b3ddf0eeb4cfb3cda0537cc5a79eacf3d52ba33",
+      "discovery_cost_excluded": true
     }
   ],
   "figures_generator": "../generate_fgm_figures.py",
-  "generator_sha256": "822a05be9b077393e8e5a748c69a8821bad506053310eab8dfa68cb6c0b7c3c8",
-  "H2_common_71_row_schedule": true,
-  "H2_adaptive_1_percent_target_enforced": false,
+  "generator_sha256": "0e90427f14dc1d39fb578b20835598fa55d3df9acdc1a5b5b83c5abbbeb61520",
+  "H2_adaptive_1_percent_target_enforced": true,
   "H2_defect_percent_by_case": {
-    "H2_T300_p1_P_kflame": 1.097810120259542,
-    "H2_T300_p1_P_cantera": 1.1050291688427443,
-    "H2_T300_p1_PS_kflame": 1.0796047594716343,
-    "H2_T300_p1_PS_cantera": 1.0849114154410424,
-    "H2_T300_p1_M_kflame": 1.1023570691914881,
-    "H2_T300_p1_M_cantera": 1.1071172230350421,
-    "H2_T300_p1_MS_kflame": 1.0647836584244903,
-    "H2_T300_p1_MS_cantera": 1.0731283660697617
+    "H2_T300_p1_P_kflame": 0.7136017052149116,
+    "H2_T300_p1_P_cantera": 0.7085853147350267,
+    "H2_T300_p1_PS_kflame": 0.7392313660598576,
+    "H2_T300_p1_PS_cantera": 0.7172072316687635,
+    "H2_T300_p1_M_kflame": 0.7140891214204728,
+    "H2_T300_p1_M_cantera": 0.7165989720741124,
+    "H2_T300_p1_MS_kflame": 0.7172340849906798,
+    "H2_T300_p1_MS_cantera": 0.7262956109406166
   },
-  "H2_total_speedup": 13.8322147706409,
+  "H2_total_speedup": 15.94158618020368,
   "versions": {
     "numpy": "2.4.6",
     "matplotlib": "3.11.1"
   },
   "saved_data_reproduction": "No new simulation; recorded wall times are not remeasured.",
-  "CH4_coordinate_note": "Archived mass-basis stream labels mapped affinely to mole-basis Bilger inlet labels. Thermochemical arrays and timing values unchanged."
+  "CH4_coordinate_note": "Archived mass-basis stream labels mapped affinely to mole-basis Bilger inlet labels. Thermochemical arrays and timing values unchanged.",
+  "H2_common_row_schedule": true,
+  "H2_flamelets_per_table": 86,
+  "H2_progress_points": 2001,
+  "H2_reserved_validation_by_case": {
+    "H2_T300_p1_P_kflame": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.5886147123947,
+        0.2505582996781941,
+        0.010458283737345165,
+        11152.135893040611
+      ],
+      "mean_percent": [
+        0.025084465036608983,
+        0.022029979329347322,
+        0.046930813444740344,
+        0.05645162623981883
+      ],
+      "p95_percent": [
+        0.08413984634628442,
+        0.10412741443240359,
+        0.193630626502036,
+        0.15171213545026402
+      ],
+      "max_percent": [
+        0.7414352560607476,
+        0.14725549193293982,
+        0.7226521532276982,
+        0.6110654789386258
+      ],
+      "composition_mean_percent": 0.012075480349794832,
+      "composition_p95_percent": 0.04942307032918756,
+      "composition_max_percent": 0.06764613300366464,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "09f04a0728f81a57179f7710a275c5c29f83b043f1cbbb9d277aa440f3e41e66",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 4.440892098500626e-16,
+        "min_mass_fraction": 0.0,
+        "min_temperature_K": 300.0,
+        "min_density_kg_m3": 0.09954006625046272,
+        "min_conductivity_W_mK": 0.0415409949435957
+      },
+      "maxima_locations": [
+        {
+          "field": "T",
+          "phi": 2.4522865745397286,
+          "Z_in": 0.0671629966570611,
+          "c": 0.988,
+          "error_percent": 0.7414352560607476
+        },
+        {
+          "field": "Y_H2O",
+          "phi": 0.6791628733028584,
+          "Z_in": 0.019550251819925053,
+          "c": 1.0,
+          "error_percent": 0.14725549193293982
+        },
+        {
+          "field": "Y_OH",
+          "phi": 1.2137863045138364,
+          "Z_in": 0.03441026005391484,
+          "c": 0.859,
+          "error_percent": 0.7226521532276982
+        },
+        {
+          "field": "omega_c",
+          "phi": 1.2137863045138364,
+          "Z_in": 0.03441026005391484,
+          "c": 0.849,
+          "error_percent": 0.6110654789386258
+        }
+      ]
+    },
+    "H2_T300_p1_P_cantera": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.5886147123947,
+        0.2505582996781941,
+        0.010458283737345165,
+        11152.135893040611
+      ],
+      "mean_percent": [
+        0.026063404059263093,
+        0.02390437522315876,
+        0.04931175333050583,
+        0.057819167276867506
+      ],
+      "p95_percent": [
+        0.08389409745316509,
+        0.106159035509303,
+        0.2013028262644094,
+        0.15323788166793384
+      ],
+      "max_percent": [
+        0.7836599093981595,
+        0.14844409438127015,
+        0.7854133379142868,
+        0.6585391386447733
+      ],
+      "composition_mean_percent": 0.013067694946556392,
+      "composition_p95_percent": 0.05049855901662516,
+      "composition_max_percent": 0.0685592202315735,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "e88323a9ad434688b7d6f08a12dc1f0c3bda64f65df75688cdd90a95abce2b62",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 7.522396816561638e-09,
+        "min_mass_fraction": -3.1018740049057807e-12,
+        "min_temperature_K": 299.9999999999352,
+        "min_density_kg_m3": 0.09953523755007479,
+        "min_conductivity_W_mK": 0.04154593940582889
+      }
+    },
+    "H2_T300_p1_PS_kflame": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.2301278234336,
+        0.2505975452262295,
+        0.01039047535870744,
+        10698.504842663075
+      ],
+      "mean_percent": [
+        0.022919889728112455,
+        0.02149982986032129,
+        0.044500365438678996,
+        0.05083372796254351
+      ],
+      "p95_percent": [
+        0.08023107963394001,
+        0.0959726379196574,
+        0.18202274834801352,
+        0.14467692306901714
+      ],
+      "max_percent": [
+        0.7857474973236667,
+        0.12138929029876891,
+        0.7740959032806115,
+        0.6981132862091342
+      ],
+      "composition_mean_percent": 0.012334414234207143,
+      "composition_p95_percent": 0.04683767438896044,
+      "composition_max_percent": 0.056655235510784586,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "fb54f14404fd957a24c14157c9af62f0094c3fb9a966615910f904775dbb3515",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 4.440892098500626e-16,
+        "min_mass_fraction": 0.0,
+        "min_temperature_K": 300.0,
+        "min_density_kg_m3": 0.09960310811499654,
+        "min_conductivity_W_mK": 0.04033658930877709
+      }
+    },
+    "H2_T300_p1_PS_cantera": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.2301278234336,
+        0.2505975452262295,
+        0.01039047535870744,
+        10698.504842663075
+      ],
+      "mean_percent": [
+        0.022869748940604305,
+        0.0226391321408163,
+        0.045791472582762734,
+        0.051409055448793164
+      ],
+      "p95_percent": [
+        0.08414253298093421,
+        0.10299559205727615,
+        0.1891693261136717,
+        0.14488786179979568
+      ],
+      "max_percent": [
+        0.8879637617970976,
+        0.13623145654382274,
+        0.7248634222148855,
+        0.629249056444637
+      ],
+      "composition_mean_percent": 0.01316334547064169,
+      "composition_p95_percent": 0.04926012255326989,
+      "composition_max_percent": 0.06370980780425717,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "06f161dc0bf779f76ffb95d259a97df216e4f54775ad58f5def0b42faf0ff9b6",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 8.247887928192199e-09,
+        "min_mass_fraction": -1.9717419249305655e-11,
+        "min_temperature_K": 300.0,
+        "min_density_kg_m3": 0.09960118513498639,
+        "min_conductivity_W_mK": 0.04033084486098482
+      }
+    },
+    "H2_T300_p1_M_kflame": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.7284394760754,
+        0.2505668282418864,
+        0.010448922450306033,
+        10980.733999989608
+      ],
+      "mean_percent": [
+        0.026572105125744237,
+        0.02250027494809968,
+        0.04552883761137725,
+        0.05661927374704273
+      ],
+      "p95_percent": [
+        0.08444400588475065,
+        0.10382119076642433,
+        0.1932407942312103,
+        0.15495982062863498
+      ],
+      "max_percent": [
+        0.7446239598541777,
+        0.14600287439084297,
+        0.7633341241740508,
+        0.6862281321075464
+      ],
+      "composition_mean_percent": 0.011957336572138226,
+      "composition_p95_percent": 0.04915761147005492,
+      "composition_max_percent": 0.06705805119260881,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "313eab1418cd9ea0335d1d7d216010f5b595905abbc2aed4e879cb421aba4e88",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 6.087130799414808e-12,
+        "min_mass_fraction": -2.215753835441217e-15,
+        "min_temperature_K": 300.0,
+        "min_density_kg_m3": 0.09947310438295122,
+        "min_conductivity_W_mK": 0.038983028879237304
+      }
+    },
+    "H2_T300_p1_M_cantera": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.7284394760754,
+        0.2505668282418864,
+        0.010448922450306033,
+        10980.733999989608
+      ],
+      "mean_percent": [
+        0.025167654790415023,
+        0.02282516060093551,
+        0.04633390505047949,
+        0.054838480705838376
+      ],
+      "p95_percent": [
+        0.08333210787466094,
+        0.10997395390308073,
+        0.19753952327343363,
+        0.1592366824644851
+      ],
+      "max_percent": [
+        0.7785607694576481,
+        0.14850471049793526,
+        0.7235978106899221,
+        0.6255377357259513
+      ],
+      "composition_mean_percent": 0.012491952306007914,
+      "composition_p95_percent": 0.05161957207873441,
+      "composition_max_percent": 0.06848332837516471,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "7bfa0e96d5f9ca956ba527e6a9080cded8407ae433941f66aeaad131eab622e0",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 2.892592831926777e-10,
+        "min_mass_fraction": -2.4828964969691964e-12,
+        "min_temperature_K": 299.9999999970447,
+        "min_density_kg_m3": 0.0995379569384194,
+        "min_conductivity_W_mK": 0.03898983679527679
+      }
+    },
+    "H2_T300_p1_MS_kflame": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.2872941604855,
+        0.25059788001238703,
+        0.010386222323094592,
+        10561.714542395073
+      ],
+      "mean_percent": [
+        0.021637004053159856,
+        0.01990639089679939,
+        0.042641862812435524,
+        0.04879667026190473
+      ],
+      "p95_percent": [
+        0.07669148598714916,
+        0.0913728721629746,
+        0.17487563891499502,
+        0.13661030449194878
+      ],
+      "max_percent": [
+        0.721727280476375,
+        0.11726577004523106,
+        0.7608195719526737,
+        0.6909272492755258
+      ],
+      "composition_mean_percent": 0.011709138178716931,
+      "composition_p95_percent": 0.04436780209373864,
+      "composition_max_percent": 0.05414949133177339,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "7c7b0f27beaa862476b9b3d2e09345b4396843ba930d43b497466def0cf993d7",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 4.96624963375325e-12,
+        "min_mass_fraction": -1.981323606197245e-15,
+        "min_temperature_K": 299.99999999999994,
+        "min_density_kg_m3": 0.09960146912072246,
+        "min_conductivity_W_mK": 0.03806141729953429
+      }
+    },
+    "H2_T300_p1_MS_cantera": {
+      "n_holdouts": 12,
+      "n_progress_queries": 1001,
+      "holdout_phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "labels": [
+        "T",
+        "Y_H2O",
+        "Y_OH",
+        "omega_c"
+      ],
+      "scales": [
+        2079.2872941604855,
+        0.25059788001238703,
+        0.010386222323094592,
+        10561.714542395073
+      ],
+      "mean_percent": [
+        0.021822972009264262,
+        0.021394945409535335,
+        0.04383642619074719,
+        0.04927537199795377
+      ],
+      "p95_percent": [
+        0.07885142363763542,
+        0.10099499382168711,
+        0.18360216920434985,
+        0.1467952978144567
+      ],
+      "max_percent": [
+        0.7602251858303415,
+        0.12763676145235875,
+        0.7089041047769594,
+        0.6213375604394321
+      ],
+      "composition_mean_percent": 0.012606439726087342,
+      "composition_p95_percent": 0.04907767927317496,
+      "composition_max_percent": 0.0590748779809399,
+      "no_extrapolation": true,
+      "temperature_and_source_target_percent": 1.0,
+      "passed": true,
+      "table_sha256": "19eda37363fd2580f4aaf63820413e2ab33d559953966eccb8d5541eb4d24397",
+      "table_contract": {
+        "valid": true,
+        "n_Z": 86,
+        "n_c": 2001,
+        "n_species": 10,
+        "max_mass_fraction_sum_error": 2.6335023051160533e-10,
+        "min_mass_fraction": -5.450941813753737e-12,
+        "min_temperature_K": 300.0,
+        "min_density_kg_m3": 0.09959078854097977,
+        "min_conductivity_W_mK": 0.03806616671992217
+      }
+    }
+  },
+  "H2_reserved_max_temperature_percent": 0.8879637617970976,
+  "H2_reserved_max_source_percent": 0.6981132862091342,
+  "H2_timing_scope": "One fresh rebuild per table on the selected common schedule; discovery, validation, warmup and file writing excluded.",
+  "H2_criteria_and_schedule": {
+    "selection": {
+      "target_defect": 0.01,
+      "pointwise_temperature_source_target": 0.01,
+      "indicator_safety_factor": 0.8,
+      "design": "Four native transports; leave-one-out plus disjoint development controls; common union of geometric bridges",
+      "max_flames": 256
+    },
+    "phi": [
+      0.5,
+      0.5021051248299162,
+      0.5104093140911031,
+      0.5188508442314713,
+      0.5274319866969744,
+      0.5361550505004342,
+      0.5450223828428495,
+      0.5540363697449813,
+      0.5631994366893821,
+      0.5725140492730452,
+      0.5819827138708469,
+      0.5916079783099616,
+      0.598113098421271,
+      0.6113387094070716,
+      0.6214494852079075,
+      0.6317274805643217,
+      0.6527962380906763,
+      0.6745676602269475,
+      0.6970651815564709,
+      0.7203130182299022,
+      0.7443361940312868,
+      0.7691605673134587,
+      0.7948128588317641,
+      0.8213206805060661,
+      0.8394819076111701,
+      0.8770179971434217,
+      0.9062674442492492,
+      0.936492390328625,
+      0.9677253692699314,
+      1.0,
+      1.031052394314951,
+      1.063069039822593,
+      1.0960798788311805,
+      1.1301157834293298,
+      1.2013911007785751,
+      1.2386971709664243,
+      1.277161683956088,
+      1.316820612170239,
+      1.3577110450614043,
+      1.399871223798415,
+      1.4433405770299563,
+      1.4881597577586594,
+      1.534370681360223,
+      1.5820165647831204,
+      1.63114196696555,
+      1.6817928305074288,
+      1.734016524636403,
+      1.7878618895080534,
+      1.8433792818817307,
+      1.9006206222147333,
+      1.9596394432188726,
+      2.0,
+      2.0411918191591734,
+      2.0832320213011677,
+      2.214619464612312,
+      2.3542933878178354,
+      2.4027822015571503,
+      2.5027764112481856,
+      2.5804936112524217,
+      2.6606241163962436,
+      2.743242865582448,
+      2.82842712474619,
+      2.8866811540599127,
+      3.0068133077121093,
+      3.1001820601746273,
+      3.196450135955307,
+      3.29570756598507,
+      3.3980471768708056,
+      3.503564677707803,
+      3.6123587495879197,
+      3.7245311378871864,
+      3.7819168573706667,
+      3.840186747419172,
+      3.959433740543081,
+      4.082383638318346,
+      4.209151424800311,
+      4.339855654574548,
+      4.474618563630366,
+      4.543561256329595,
+      4.613566183677215,
+      4.6846497120552755,
+      4.756828460010883,
+      4.830119302141437,
+      4.9045393730397215,
+      4.980106071299788,
+      5.0
+    ],
+    "settings": {
+      "mech": "h2o2.yaml",
+      "fuel": "H2",
+      "oxidizer": "O2:1,N2:3.76",
+      "transport_model": "mixture-averaged",
+      "transport_backend": "native",
+      "flux_gradient_basis": "molar",
+      "soret_enabled": false,
+      "multicomponent_bootstrap": false,
+      "bootstrap_mesh_factor": 2.0,
+      "lag_multicomponent_transport": false,
+      "outlet_species_bc": "zero_gradient",
+      "T_in": 300.0,
+      "P": 101325.0,
+      "width": 0.03,
+      "initial_grid_points": 8,
+      "phi_min": 0.5,
+      "phi_max": 5.0,
+      "n_phi": 86,
+      "phi_values": "",
+      "phi_schedule_json": "",
+      "use_z_grid": false,
+      "z_min": 0.03,
+      "z_max": 0.08,
+      "n_z": 5,
+      "z_values": "",
+      "phi_bracket_min": 0.0001,
+      "phi_bracket_max": 1000.0,
+      "ratio": 2.5,
+      "slope": 0.005,
+      "curve": 0.01,
+      "prune": 0.0005,
+      "max_grid_points": 4000,
+      "max_refine_passes": 12,
+      "require_grid_convergence": true,
+      "grid_min": 0.0,
+      "tight_refine_passes": 0,
+      "tight_ratio": 2.5,
+      "tight_slope": 0.04,
+      "tight_curve": 0.08,
+      "tight_prune": 0.003,
+      "loglevel": 0,
+      "profile_solver": true,
+      "max_residual_inf": 10.0,
+      "acceptance_criterion": "cantera",
+      "max_weighted_step_norm": 1.0,
+      "residual_guard_inf": 10000.0,
+      "max_flame_time_s": 300.0,
+      "max_jac_age": 20,
+      "damp_factor": 1.4142135623730951,
+      "continuation_max_jac_age": 20,
+      "jac_threshold": 0.0,
+      "jacobian_mode": "block_tridiag",
+      "precompute_jacobian_thermo": true,
+      "analytic_chemistry": false,
+      "analytic_spatial": true,
+      "compiled_block_substitution": true,
+      "local_jacobian_refresh": true,
+      "local_jacobian_refresh_defect_threshold": 0.2,
+      "local_jacobian_refresh_max_fraction": 0.35,
+      "local_jacobian_refresh_min_blocks": 1,
+      "allow_failed_flamelets": false,
+      "continuation_predictor_damping": 0.7,
+      "continuation_seed_mesh_points": 0,
+      "continuation_trust_ratio": 1.15,
+      "restart_insert_anchor": false,
+      "auto_bootstrap_grids": false,
+      "seed_profile_npz": "",
+      "seed_profile_source": "auto",
+      "disable_seed_cache": true,
+      "seed_cache_dir": "",
+      "parallel_workers": 1,
+      "numba_kinetics_threads": 4,
+      "n_c": 2001,
+      "c_fine": 8001,
+      "refine_bias": 5.0,
+      "progress_species": "H2O:1,HO2:10,OH:-1",
+      "indicator_species": "H2,O2,H2O,OH,HO2,H2O2",
+      "indicator_weight_grad": 1.0,
+      "indicator_weight_conc": 0.6,
+      "indicator_weight_temp": 0.8,
+      "indicator_weight_qdot": 0.4,
+      "output_root": "runs/fgm",
+      "run_name": "",
+      "save_raw_profiles": true,
+      "upwind_factor": 1.0,
+      "domain_edge_slope_tol": 0.02
+    },
+    "reserved_design": {
+      "phi": [
+        0.560356415189522,
+        0.6791628733028584,
+        0.7979742260549743,
+        0.9886210424440575,
+        1.2137863045138364,
+        1.4825611800786103,
+        1.7371218237245218,
+        2.085165713274953,
+        2.4522865745397286,
+        2.9316912810190368,
+        3.6779096329104184,
+        4.160606119142789
+      ],
+      "frozen_schedule_sha256": "2dcfba6e24e1b095ba61a096560a175282b6dcb6a66f594f536cb4447637748d",
+      "role": "Reserved after selection; never read by the refinement controller"
+    }
+  }
 }
