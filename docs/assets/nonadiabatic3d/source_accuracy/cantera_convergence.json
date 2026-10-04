@@ -1,0 +1,37 @@
+{
+  "reference": "Cantera grid refinement from its independent solution",
+  "reference_version": "3.2.0",
+  "old_nodes": 350,
+  "new_nodes": 648,
+  "T_Linf_K": 1.6924894404621682,
+  "omega_C": {
+    "Linf_over_truth_peak": 0.0060876570260456914,
+    "L2_relative": 0.006294057901191698,
+    "L1_relative": 0.0070424087563417635,
+    "integral_error_over_abs_integral": 1.325147534841778e-05,
+    "integral_truth": 0.008450387818243026,
+    "absolute_source_coverage": 1.0,
+    "worst_index": 154,
+    "worst_z_mm": 1.951171875,
+    "truth_at_worst": 5.3040127981691745,
+    "prediction_at_worst": 5.350384349064374,
+    "truth_peak": 7.617306739982456,
+    "peak_amplitude_error": 0.0010845674336658474
+  },
+  "qdot": {
+    "Linf_over_truth_peak": 0.005872129044294262,
+    "L2_relative": 0.005947183696285122,
+    "L1_relative": 0.006619230133250651,
+    "integral_error_over_abs_integral": 4.5675029305131725e-05,
+    "integral_truth": 76192.19851988606,
+    "absolute_source_coverage": 1.0,
+    "worst_index": 152,
+    "worst_z_mm": 1.939453125,
+    "truth_at_worst": 44753857.30692353,
+    "prediction_at_worst": 45128176.94484668,
+    "truth_peak": 63745131.46758317,
+    "peak_amplitude_error": 0.0010427824710147378
+  },
+  "source_reference_sha256": "e4f0febfcf9233b61c6cd1f5d552dba817e8e4d1cd4f754a230391f52ca5740a",
+  "script_sha256": "a5865c3b8e82dc81bec3040e9b32eef8521900c1e1dc5a56f4d0f2e42e52199b"
+}

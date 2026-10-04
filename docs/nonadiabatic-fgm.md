@@ -50,11 +50,15 @@ de especies y entalpía; disponer de una tabla no sustituye esas ecuaciones.
 El ejemplo publicado utiliza GRI-Mech 3.0, CH₄-aire, 300 K, 101325 Pa,
 transporte promediado por mezcla sin Soret y un dominio de 30 mm:
 
-- Composiciones: `phi = [0.7, 0.85, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3]`.
-- Caudales de quemador: `r = [0.65, 0.45, 0.25, 0.20, 0.16, 0.12, 0.10, 0.08, 0.06]`,
-  con `mdot = r rho_u Su` y `Su` resuelta para la referencia adiabática de cada mezcla.
-- 90 llamas aceptadas: 9 adiabáticas y 81 en quemador; 181 muestras por trayectoria.
-- 16290 vértices y 77760 tetraedros; ninguna celda invertida o degenerada.
+- 25 composiciones: se dividen en tres los intervalos de la familia base
+  `phi = [0.7, 0.85, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3]`.
+- 17 fracciones de caudal: se conservan
+  `r = [0.65, 0.45, 0.25, 0.20, 0.16, 0.12, 0.10, 0.08, 0.06]`
+  y se dividen en tres los intervalos `[0.25,0.45]`, `[0.08,0.10]`,
+  `[0.10,0.12]` y `[0.06,0.08]`.
+  `mdot = r rho_u Su`, con `Su` resuelta para la referencia adiabática de cada mezcla.
+- 450 llamas aceptadas: 25 adiabáticas y 425 en quemador; 181 muestras por trayectoria.
+- 81450 vértices y 440640 tetraedros; ninguna celda invertida o degenerada.
 
 La malla física de cada llama es no uniforme y adaptativa. La continuación
 entre caudales proporciona una estimación inicial nativa; cada llama se vuelve
@@ -90,60 +94,119 @@ print(state["T"], state["omega_C"])
 
 ## Validación numérica
 
-Se resuelven llamas detalladas con composiciones **y** caudales ausentes del
-entrenamiento. Sus controles locales sirven para consultar el FGM: es una
-prueba **a priori de tabulación**. Cada llama detallada se compara además con
-una solución independiente de `Cantera 3.2.0 BurnerFlame`, con el mismo
-mecanismo, condiciones y transporte. Las llamas retenidas y las referencias
-utilizan refinamiento más fino: pendiente 0.02 y curvatura 0.04.
+Se distinguen tres comprobaciones: la evaluación de la química a temperatura
+y composición conocidas, la convergencia de la llama detallada y la
+interpolación de la tabla. Una temperatura próxima a la referencia no basta
+para demostrar que sus fuentes químicas sean precisas.
 
-Los umbrales de interpolación se fijaron antes de evaluar la primera tabla:
-temperatura ≤20 K, especies ≤0.005, fuentes ≤15 % de su pico nativo y cobertura
-≥85 %. Para la comparación nativa/Cantera se exigen temperatura ≤5 K,
-especies ≤0.002, pérdida de entalpía ≤1 % de error y cierre energético ≤2 %.
+La evaluación nativa de las fuentes de progreso y calor coincide con Cantera
+a la misma `T`, `Y` y presión: el máximo error relativo al pico es
+5.2e-14.
+La comparación entre **llamas resueltas por separado**, con el mismo mecanismo,
+condiciones y transporte, tiene un error máximo de fuentes del
+0.701 %.
+También se verifican la suma de las fuentes de masa, la fuente química de `Z`
+y la conservación de los tres controles al consultar la tabla.
 
-La biblioteca inicial de 30 llamas falló en las fuentes de dos casos ricos,
-con errores de aproximadamente 49 % y 75 %. Se añadieron composiciones y
-caudales, manteniendo esos casos fuera del entrenamiento y los umbrales
-originales. La biblioteca de 90 llamas pasa las comprobaciones siguientes:
+Las llamas retenidas y sus referencias independientes usan una malla más fina
+que las de generación: pendiente 0.02 y curvatura 0.04. El FGM se consulta con
+los controles locales de estas llamas detalladas, por lo que esta prueba mide
+**precisión de tabulación a priori**.
 
-| φ retenida | r retenido | Máx. error T FGM/nativa [K] | Error Ω_C / pico [%] | Cobertura de nodos [%] |
-|---:|---:|---:|---:|---:|
-| 0.771362 | 0.55 | 1.244 | 5.25 | 96.20 |
-| 0.921954 | 0.35 | 1.999 | 4.86 | 95.40 |
-| 1.072381 | 0.18 | 3.093 | 8.37 | 98.54 |
-| 1.222702 | 0.085 | 0.457 | 8.56 | 98.66 |
+Para una fuente `f`, se registran tres errores:
 
-El error máximo de liberación de calor es 8.99 % de su pico; el de especies,
-6.79×10⁻⁴. La comparación nativa/Cantera da como máximo 1.889 K y 2.35×10⁻⁴
-en especies. El cierre energético máximo de estas cuatro llamas es 0.359 %;
-en la biblioteca de entrenamiento es 1.639 %. Se comprueba también la
-conservación de los tres controles y de la suma de fracciones másicas.
+- Máximo respecto al pico: `E_inf = max|f_FGM - f_det| / max|f_det|`.
+- Error absoluto integrado: `E_L1 = integral|f_FGM - f_det| / integral|f_det|`.
+- Error de la integral neta: `E_int = |integral(f_FGM - f_det)| / integral|f_det|`.
 
-Después de fijar la biblioteca se comprobaron otros dos casos, que no
-intervinieron en el refinamiento:
+El primero no es un error relativo punto a punto ni un residuo del solver.
+El segundo evita que los errores positivos y negativos se cancelen. Se
+integran solo intervalos cuyos dos extremos están cubiertos, sin unir huecos;
+el denominador usa toda la fuente detallada. Se informa además la fracción
+de `integral|f_det|` representada por esos intervalos.
 
-| φ retenida | r retenido | Máx. error T FGM/nativa [K] | Error Ω_C / pico [%] | Cobertura de nodos [%] |
-|---:|---:|---:|---:|---:|
-| 1.025 | 0.28 | 2.374 | 5.37 | 97.04 |
-| 1.275 | 0.11 | 0.146 | 7.56 | 98.52 |
+Los objetivos de esta validación son `E_inf < 5 %`, `E_L1 < 5 %`,
+`E_int < 3 %` y cobertura de la fuente superior al 99 %, para ambas fuentes.
+Son criterios propios de esta comprobación, no un estándar universal de FGM.
+Se mantienen los límites de temperatura ≤20 K y especies ≤0.005; para la
+comparación nativa/Cantera se exigen temperatura ≤5 K, especies ≤0.002,
+fuentes ≤2 % del pico, error de pérdida de entalpía ≤1 % y cierre energético ≤2 %.
 
-Ambos pasan los mismos umbrales. Los informes completos y perfiles están en
-[los datos publicados](assets/nonadiabatic3d/); incluyen huellas SHA-256 del
-mecanismo, código de análisis, tabla y perfiles de entrenamiento.
+La tabla anterior de 90 llamas tenía un máximo de fuentes del 8.99 % del pico,
+pero un error de la integral del calor del **13.26 %**. Su criterio anterior
+del 15 % sobre el pico omitía esa diferencia acumulada. Duplicar las muestras
+de progreso a 361 apenas la redujo; se refinaron las composiciones y los
+caudales. Una primera confirmación de la tabla de 400 llamas detectó un error
+integrado de calor del 5.55 % en `phi=1.24, r=0.072`. Se conserva
+[ese resultado fallido](assets/nonadiabatic3d/source_accuracy/development_confirmation400.json)
+y se añadió resolución en `[0.06,0.08]`, manteniendo ese caso fuera de la tabla.
+La familia final de 450 llamas vuelve a usar 181 muestras de progreso y pasa
+los mismos límites.
 
-La cobertura es la fracción de **nodos espaciales** dentro del dominio
-calculado; no mide una fracción de volumen ni garantiza cobertura de un caso
-CFD. Los errores de interpolación se calculan únicamente en esos nodos y
-los restantes se registran como no cubiertos. En las figuras permanecen los
-huecos; no se reemplazan por ceros ni por valores recortados.
+Los nueve casos de desarrollo permanecen ausentes del entrenamiento:
 
-Se comprobaron tres mallas para el caso φ=0.921954, r=0.35: 256, 391 y 746
-nodos. Entre las dos más finas, `Tmax` cambia 0.715 K y el flujo de calor
-0.00853 %. El cierre es 0.162 %, 0.186 % y 0.108 %, respectivamente. Este
-estimador de frontera no decrece de forma monótona cuando se redistribuyen
-nodos; el informe conserva sus tres valores y comprueba también los cambios
-de temperatura y flujo.
+| φ | r | Error T [K] | Error Ω_C / pico [%] | Error q̇ / pico [%] | Máx. error integrado [%] |
+|---:|---:|---:|---:|---:|---:|
+| 0.771362 | 0.55 | 0.220 | 0.52 | 0.52 | 0.36 |
+| 0.921954 | 0.35 | 0.535 | 0.48 | 0.42 | 0.99 |
+| 1.072381 | 0.18 | 0.852 | 1.79 | 1.59 | 0.30 |
+| 1.222702 | 0.085 | 0.148 | 0.95 | 0.97 | 1.42 |
+| 1.025000 | 0.28 | 0.794 | 1.44 | 1.23 | 0.44 |
+| 1.275000 | 0.11 | 0.140 | 1.08 | 1.07 | 1.57 |
+| 0.825000 | 0.52 | 0.240 | 0.93 | 0.91 | 0.41 |
+| 1.095000 | 0.175 | 0.879 | 1.62 | 1.45 | 0.27 |
+| 1.240000 | 0.072 | 0.158 | 0.90 | 0.89 | 1.24 |
+
+Después de congelar la familia se fijaron y resolvieron **tres casos nuevos**,
+que no intervinieron en su refinamiento. Su
+[plan de comprobación](assets/nonadiabatic3d/source_accuracy/confirmatory_plan.json)
+identifica la tabla y las condiciones antes de evaluarlos:
+
+| φ | r | Error T [K] | Error Ω_C / pico [%] | Error q̇ / pico [%] | Máx. error integrado [%] |
+|---:|---:|---:|---:|---:|---:|
+| 0.835000 | 0.6 | 0.468 | 1.26 | 1.22 | 0.23 |
+| 0.905000 | 0.3 | 0.335 | 0.44 | 0.43 | 0.22 |
+| 1.255000 | 0.065 | 0.149 | 1.08 | 1.07 | 1.36 |
+
+En los doce casos, el máximo error de fuentes respecto al pico es
+1.79 %, el error absoluto
+integrado es 2.23 % y el error de
+la integral neta es 1.57 %.
+La cobertura mínima del peso de la fuente es
+99.81 % y el error máximo de
+temperatura FGM/detallada es 0.879 K.
+El cierre energético máximo del entrenamiento es 1.639 %.
+
+El balance de progreso comprueba
+`integral(omega_C dz) = mdot (C_salida - C_entrada)`:
+la condición de Danckwerts impone el flujo total de entrada y el gradiente
+de especies es nulo a la salida. Su desequilibrio máximo es
+0.240 % en las doce llamas
+retenidas y 0.486 % en las 425 llamas de quemador
+del entrenamiento, usando sus mallas espaciales originales.
+
+Se redujeron cien veces las tolerancias de Newton en dos casos y después
+se refinaron sus mallas. El cambio máximo de la fuente de progreso fue
+0.00375 % al modificar solo las tolerancias y 0.501 % al añadir refinamiento
+espacial. La referencia Cantera del caso rico también se refinó desde su
+propia solución: su fuente cambió un 0.609 % del pico. Estas comprobaciones
+separan el error de discretización del error de tabulación.
+El residuo absoluto `Finf` mezcla ecuaciones con escalas distintas; se
+conserva en los informes junto con la norma ponderada del paso de Newton,
+los balances y los cambios de malla. Véanse los
+[criterios de convergencia de Cantera](https://www.cantera.org/3.2/reference/onedim/nonlinear-solver.html)
+y su [análisis de refinamiento](https://www.cantera.org/3.2/examples/python/onedim/flame_speed_convergence_analysis.html).
+
+La fuente usada por el FGM es la **fuente tabulada e interpolada**.
+Reevaluar la química detallada con `T,Y` interpolados es un diagnóstico
+distinto: las tasas son no lineales y sensibles a especies minoritarias, y
+esa reevaluación no asegura menor error. Sus métricas también se conservan
+en `source_audit.json`; no se utiliza en la consulta de producción.
+
+La cobertura de nodos espaciales y la cobertura de la fuente son magnitudes
+distintas. Los nodos exteriores se registran como no cubiertos, conservando
+los huecos en las figuras. Los informes y perfiles publicados incluyen
+huellas SHA-256 del mecanismo, código, tabla y datos utilizados.
 
 ## Figuras y reproducción
 
@@ -155,6 +218,14 @@ de temperatura y flujo.
 
 ![Errores de tabulación](assets/nonadiabatic3d/04_validacion_errores.png)
 
+![Fuentes antes y después del refinamiento](assets/nonadiabatic3d/05_fuentes_antes_despues.png)
+
+![Fuentes de las llamas detalladas y del FGM](assets/nonadiabatic3d/06_perfiles_fuentes.png)
+
+![Convergencia de las fuentes y balance de progreso](assets/nonadiabatic3d/07_convergencia_fuentes.png)
+
+![Casos de confirmación y corrección del intervalo de mayor pérdida](assets/nonadiabatic3d/08_confirmacion_fuentes.png)
+
 Los mapas usan `Z` horizontal y `C` vertical, Cividis e isolíneas. Cada campo
 comparte escala en ambos niveles de pérdida de entalpía; gris significa un
 estado no resuelto. Las curvas utilizan colores diferenciados y tipos de línea.
@@ -162,7 +233,9 @@ estado no resuelto. Las curvas utilizan colores diferenciados y tipos de línea.
 Para reproducir las figuras a partir de los arrays publicados:
 
 ~~~sh
-python examples/plot_nonadiabatic_3d.py docs/assets/nonadiabatic3d --output output/figures/nonadiabatic3d --pdf output/pdf/FGM_no_adiabatico_validacion.pdf
+python examples/plot_nonadiabatic_3d.py docs/assets/nonadiabatic3d --output output/figures/nonadiabatic3d
+python examples/plot_source_audit.py --output output/figures/source_accuracy --pdf output/pdf/Revision_fuentes_FGM.pdf
+python examples/audit_nonadiabatic_sources.py --output runs/source_audit
 ~~~
 
 Para regenerar las llamas y las comparaciones:
@@ -171,8 +244,19 @@ Para regenerar las llamas y las comparaciones:
 python examples/example_nonadiabatic_3d.py --output runs/nonadiabatic
 python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/validation3d --fine-native --mesh-check
 python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/validation3d_extra --phis 1.025 1.275 --fractions 0.28 0.11 --fine-native
+python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/validation3d_development --phis 0.825 1.095 1.24 --fractions 0.52 0.175 0.072 --fine-native
+python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/validation3d_confirmatory --phis 0.835 0.905 1.255 --fractions 0.60 0.30 0.065 --fine-native
+python examples/check_training_balance.py runs/nonadiabatic --output runs/training_progress_balance.json
+python examples/check_burner_accuracy.py runs/validation3d/case_03_native_fine --output runs/convergence_rich --reference runs/validation3d/case_03_reference_fine.npz
+python examples/check_burner_accuracy.py runs/validation3d/case_01_native_fine --output runs/convergence_lean
 python examples/plot_nonadiabatic_3d.py runs/nonadiabatic --validation runs/validation3d --output output/figures/nonadiabatic3d
 ~~~
+
+`example_nonadiabatic_3d.py` genera por defecto la familia final de 450 llamas.
+Para refinar una biblioteca previa se puede usar
+`refine_nonadiabatic_sources.py`, con subdivisiones de composición y los
+intervalos de caudal que requieren más resolución. La función de la API
+permite elegir explícitamente ambas listas y el número de muestras.
 
 El paquete de datos permite consultar la tabla y redibujar las figuras; la
 regeneración resuelve todas las llamas y guarda las trazas completas en `runs/`.

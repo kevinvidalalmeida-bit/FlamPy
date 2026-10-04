@@ -12,19 +12,23 @@ from pathlib import Path
 import numpy as np
 
 from kflame import solve_flame, solve_burner_flame
-from kflame.chemistry.kinetics import NativeKinetics
 from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.thermo import NativeThermo
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM, OutsideManifoldError
+if __package__:
+    from .audit_nonadiabatic_sources import detailed_sources, cantera_sources, source_metrics
+else:
+    from audit_nonadiabatic_sources import detailed_sources, cantera_sources, source_metrics
 
 
 SOURCE_FILES = [
     'src/kflame/api.py', 'src/kflame/flame/config.py', 'src/kflame/flame/problem.py',
     'src/kflame/flame/equations.py', 'src/kflame/flame/analytic_jacobian.py',
     'src/kflame/flame/solver.py', 'src/kflame/flame/enthalpy.py',
-    'src/kflame/chemistry/thermo.py', 'src/kflame/fgm/nonadiabatic3d.py',
-    'examples/validate_nonadiabatic_3d.py',
+    'src/kflame/chemistry/thermo.py', 'src/kflame/chemistry/kinetics.py',
+    'src/kflame/chemistry/mechanism.py', 'src/kflame/fgm/nonadiabatic3d.py',
+    'examples/validate_nonadiabatic_3d.py', 'examples/audit_nonadiabatic_sources.py',
 ]
 WITHHELD_PHIS = np.sqrt(np.array([.7, .85, 1., 1.15]) * np.array([.85, 1., 1.15, 1.3]))
 WITHHELD_FRACTIONS = [.55, .35, .18, .085]
@@ -33,14 +37,6 @@ WITHHELD_FRACTIONS = [.55, .35, .18, .085]
 def read_profile(path):
     with np.load(path, allow_pickle=False) as saved:
         return {k: saved[k] for k in saved.files}
-
-
-def chemistry_source(mech, T, Y, pressure, weights):
-    thermo = NativeThermo(mech)
-    rho = thermo.density(T, pressure, Y)
-    concentration = rho[None, :] * Y * mech.inv_molecular_weights[:, None]
-    omega = NativeKinetics(mech).net_production_rates(T, concentration, thermo.g_RT(T))
-    return weights @ (omega * mech.molecular_weights[:, None])
 
 
 def reference_input_hash(meta, flux):
@@ -74,8 +70,9 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
     Z = t['bilger_weights'] @ native['Y'] + float(t['bilger_offset'])
     C = t['progress_weights'] @ native['Y']
     h = model.thermo.enthalpy_mass(native['T'], native['Y'])
-    omega = chemistry_source(load_mechanism(model.metadata['mechanism']), native['T'], native['Y'],
-                             meta['pressure'], t['progress_weights'])
+    mech = load_mechanism(model.metadata['mechanism'])
+    mass_sources, qdot = detailed_sources(mech, native['T'], native['Y'], meta['pressure'])
+    omega = t['progress_weights'] @ mass_sources
     n = len(Z)
     prediction = {k: np.full(n, np.nan) for k in ('T', 'omega_C', 'qdot')}
     prediction['Y'] = np.full(native['Y'].shape, np.nan)
@@ -99,18 +96,26 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
     if not covered.any():
         raise RuntimeError('No withheld states inside the resolved manifold')
     source_peak = float(np.max(abs(omega)))
-    qdot_peak = float(np.max(abs(native['qdot'])))
+    qdot_peak = float(np.max(abs(qdot)))
+    sources = dict(omega_C=source_metrics(native['z'], omega, prediction['omega_C'], covered),
+                   qdot=source_metrics(native['z'], qdot, prediction['qdot'], covered))
     metrics = dict(
         coverage_fraction=float(covered.mean()),
         temperature_Linf_K=float(np.max(abs(prediction['T'][covered] - native['T'][covered]))),
         all_Y_Linf=float(np.max(abs(prediction['Y'][:, covered] - native['Y'][:, covered]))),
         omega_C_Linf_over_native_peak=float(np.max(abs(prediction['omega_C'][covered] - omega[covered])) / source_peak),
-        qdot_Linf_over_native_peak=float(np.max(abs(prediction['qdot'][covered] - native['qdot'][covered])) / qdot_peak),
+        qdot_Linf_over_native_peak=float(np.max(abs(prediction['qdot'][covered] - qdot[covered])) / qdot_peak),
     )
     limits = dict(coverage_fraction_min=.85, temperature_Linf_K_max=20., all_Y_Linf_max=.005,
-                  omega_C_Linf_over_native_peak_max=.15, qdot_Linf_over_native_peak_max=.15)
+                  omega_C_Linf_over_native_peak_max=.05, qdot_Linf_over_native_peak_max=.05)
+    source_limits = dict(Linf_over_truth_peak_max=.05, L1_relative_max=.05,
+                         integral_error_over_abs_integral_max=.03, absolute_source_coverage_min=.99)
+    source_pass = all(s['Linf_over_truth_peak'] < .05 and s['L1_relative'] < .05
+                      and s['integral_error_over_abs_integral'] < .03
+                      and s['absolute_source_coverage'] > .99 for s in sources.values())
     interpolation_pass = (metrics['coverage_fraction'] >= limits['coverage_fraction_min']
-                          and all(metrics[k[:-4]] <= v for k, v in limits.items() if k.endswith('_max')))
+                          and all(metrics[k[:-4]] <= v for k, v in limits.items() if k.endswith('_max'))
+                          and source_pass)
     reference_T = np.interp(native['z'], reference['z'], reference['T'])
     reference_Y = np.array([np.interp(native['z'], reference['z'], row) for row in reference['Y']])
     ref_metrics = dict(
@@ -119,10 +124,25 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
         burned_deficit_relative_error=float(abs(meta['heat_loss']['burned_enthalpy_deficit_J_kg']
                                               - reference['burned_deficit_J_kg']) / abs(reference['burned_deficit_J_kg'])),
         energy_closure_error=float(meta['heat_loss']['relative_energy_closure_error']),
-        mass_flux_relative_spread=float(meta['heat_loss']['mass_flux_relative_spread']))
+        mass_flux_relative_spread=float(meta['heat_loss']['mass_flux_relative_spread']),
+        omega_C_Linf_over_reference_peak=source_metrics(native['z'], np.interp(native['z'], reference['z'], reference['omega_C']), omega)['Linf_over_truth_peak'],
+        qdot_Linf_over_reference_peak=source_metrics(native['z'], np.interp(native['z'], reference['z'], reference['qdot']), qdot)['Linf_over_truth_peak'])
     ref_limits = dict(temperature_Linf_K=5., all_Y_Linf=.002, burned_deficit_relative_error=.01,
-                      energy_closure_error=.02, mass_flux_relative_spread=1e-5)
+                      energy_closure_error=.02, mass_flux_relative_spread=1e-5,
+                      omega_C_Linf_over_reference_peak=.02, qdot_Linf_over_reference_peak=.02)
     ref_pass = all(ref_metrics[k] <= v for k, v in ref_limits.items())
+    ct_mass, ct_q = cantera_sources(model.metadata['mechanism'], native['T'], native['Y'], meta['pressure'])
+    ct_C = t['progress_weights'] @ ct_mass
+    expected = flux * float(t['progress_weights'] @ (native['Y'][:,-1] - np.asarray(meta['inlet_Y'])))
+    chemistry = dict(omega_C_same_state_relative_error=float(np.max(abs(omega-ct_C))/np.max(abs(ct_C))),
+                     qdot_same_state_relative_error=float(np.max(abs(qdot-ct_q))/np.max(abs(ct_q))),
+                     mass_source_sum_over_peak=float(np.max(abs(mass_sources.sum(axis=0)))/np.max(abs(mass_sources))),
+                     Z_source_over_mass_peak=float(np.max(abs(t['bilger_weights']@mass_sources))/np.max(abs(mass_sources))),
+                     integrated_progress_balance_relative_error=abs(float(np.trapezoid(omega,native['z']))-expected)/abs(expected))
+    chemistry_limits = dict(omega_C_same_state_relative_error=1e-9, qdot_same_state_relative_error=1e-9,
+                            mass_source_sum_over_peak=1e-10, Z_source_over_mass_peak=1e-10,
+                            integrated_progress_balance_relative_error=.005)
+    chemistry_pass = all(chemistry[k] < v for k,v in chemistry_limits.items())
     conservation = dict(zip(('Z_Linf', 'C_Linf', 'h_Linf_J_kg', 'sum_Y_error'),
                             np.max(control_errors, axis=0).tolist()))
     conservation_pass = (conservation['Z_Linf'] < 1e-10 and conservation['C_Linf'] < 1e-10
@@ -132,11 +152,13 @@ def evaluate_case(model, native, reference, meta, phi, fraction, flux):
                   native_refinement=meta['refinement'],
                   native_nodes=n, reference_nodes=len(reference['z']), resolved_nodes=int(covered.sum()),
                   interpolation=metrics, interpolation_limits=limits, interpolation_passed=interpolation_pass,
+                  sources=sources, source_limits=source_limits, sources_passed=source_pass,
+                  chemistry=chemistry, chemistry_limits=chemistry_limits, chemistry_passed=chemistry_pass,
                   reference=ref_metrics, reference_limits=ref_limits, reference_passed=ref_pass,
                   conservation=conservation, conservation_passed=conservation_pass,
-                  heat_loss=meta['heat_loss'], passed=interpolation_pass and ref_pass and conservation_pass)
+                  heat_loss=meta['heat_loss'], passed=interpolation_pass and ref_pass and conservation_pass and chemistry_pass)
     arrays = dict(z=native['z'], T=native['T'], Y=native['Y'], Z=Z, C=C, h=h,
-                  omega_C=omega, qdot=native['qdot'], covered=covered,
+                  omega_C=omega, qdot=qdot, covered=covered,
                   **{'fgm_' + k: v for k, v in prediction.items()},
                   **{'reference_' + k: v for k, v in reference.items()})
     return record, arrays

@@ -1,0 +1,20 @@
+{
+  "table_sha256": "a2568baeafc113798ea32d5348dc46441419252bcbbc7d4ebaa9deebc66d2c20",
+  "phis": [
+    0.825,
+    1.095,
+    1.24
+  ],
+  "fractions": [
+    0.52,
+    0.175,
+    0.072
+  ],
+  "purpose": "Confirmatory cases fixed after table freeze; not used to refine the family",
+  "limits": {
+    "source_Linf_over_peak_max": 0.05,
+    "source_L1_max": 0.05,
+    "integrated_source_error_max": 0.03,
+    "absolute_source_coverage_min": 0.99
+  }
+}

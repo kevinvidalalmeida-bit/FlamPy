@@ -1,0 +1,21 @@
+{
+  "generation_sha256": "812036eb099254364198e21c11bb5568fa3c6cf85b1744ac13923719f8028449",
+  "phis": [
+    0.835,
+    0.905,
+    1.255
+  ],
+  "fractions": [
+    0.6,
+    0.3,
+    0.065
+  ],
+  "purpose": "Second confirmatory set fixed before evaluation; never used for table refinement",
+  "limits": {
+    "source_Linf_over_peak_max": 0.05,
+    "source_L1_max": 0.05,
+    "integrated_source_error_max": 0.03,
+    "absolute_source_coverage_min": 0.99
+  },
+  "table_sha256": "c02f3075fcb98bd79ac857aeb18b1d75736aaf534d609cc5e0d5b1ab443ad201"
+}

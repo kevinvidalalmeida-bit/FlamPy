@@ -91,8 +91,10 @@ def figures(folder, validation, output, pdf_path=None, export=None):
         fig.text(.5, .915, 'Entrada y superficie: 300 K | 101 325 Pa | GRI-Mech 3.0 | Transporte promediado por mezcla',
                  ha='center', fontsize=10)
         ratio = np.array([1., *family['mass_flux_fractions']])
-        for i, phi in enumerate(family['phis']):
-            color = COLORS[i % len(COLORS)]
+        displayed = np.unique(np.linspace(0, len(family['phis'])-1, min(9,len(family['phis'])),dtype=int))
+        for color_index, i in enumerate(displayed):
+            phi = family['phis'][i]
+            color = COLORS[color_index % len(COLORS)]
             axes[0, 0].plot(ratio, summary['T_burned'][i], 'o-', color=color, label=rf'$\phi={phi:g}$', ms=4)
             axes[0, 1].plot(ratio[1:], summary['deficit'][i, 1:] / 1000., 'o-', color=color, ms=4)
             axes[1, 0].plot(ratio[1:], summary['q_burner'][i, 1:] / 1000., 'o-', color=color, ms=4)
@@ -106,7 +108,7 @@ def figures(folder, validation, output, pdf_path=None, export=None):
         axes[0, 0].legend(fontsize=8, ncol=3)
         save(fig, '01_familia_perdidas', 1,
              f'{len(family["rows"])} llamas nativas aceptadas: {len(family["phis"])} adiabáticas y '
-             f'{len(family["rows"])-len(family["phis"])} en quemador. El punto r = 1 es la referencia adiabática.\n'
+             f'{len(family["rows"])-len(family["phis"])} en quemador; se muestran {len(displayed)} composiciones. r = 1: referencia adiabática.\n'
              r'Error de cierre = $|q_{quemador}-\dot m(h_{entrada}-h_b)|/\max(|q_{quemador}|,|\dot m(h_{entrada}-h_b)|)$.')
 
         # Z is horizontal, C vertical. A blank cell is unresolved, never a zero.
@@ -203,7 +205,8 @@ def figures(folder, validation, output, pdf_path=None, export=None):
         q_error = [100*c['interpolation']['qdot_Linf_over_native_peak'] for c in report['cases']]
         axes[1, 1].bar(x-.18, omega_error, .36, color=COLORS[2], label=r'$\Omega_C$')
         axes[1, 1].bar(x+.18, q_error, .36, color=COLORS[3], label=r'$\dot{q}$')
-        axes[1, 1].axhline(15., color='.3', ls=':', label='Umbral fijado: 15 %')
+        source_limit = 100.*report['cases'][0]['interpolation_limits']['omega_C_Linf_over_native_peak_max']
+        axes[1, 1].axhline(source_limit, color='.3', ls=':', label=f'Objetivo: {source_limit:g} %')
         axes[1, 1].set(title='(d) Error de fuentes / pico nativo', ylabel='Error relativo al pico [%]', xlabel='Caso retenido')
         axes[1, 1].legend(fontsize=9, ncol=2)
         for ax in axes[1]:

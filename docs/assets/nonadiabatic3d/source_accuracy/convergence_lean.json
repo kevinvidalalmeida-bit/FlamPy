@@ -1,0 +1,150 @@
+{
+  "case": "case_01_native_fine",
+  "baseline_tolerances": {
+    "rtol": 0.0001,
+    "atol": 1e-09
+  },
+  "checks": [
+    {
+      "check": "tight_tolerance",
+      "reference_nodes": 391,
+      "new_nodes": 391,
+      "temperature_Linf_K": 0.012715626405679359,
+      "Tmax_change_K": 0.00019086302904725017,
+      "omega_C": {
+        "Linf_over_truth_peak": 3.754405066528467e-05,
+        "L2_relative": 4.1135040112366416e-05,
+        "L1_relative": 4.171279276023513e-05,
+        "integral_error_over_abs_integral": 7.487074244906667e-07,
+        "integral_truth": 0.03514639563944037,
+        "absolute_source_coverage": 1.0,
+        "worst_index": 180,
+        "worst_z_mm": 0.5077970078649012,
+        "truth_at_worst": 74.76752901677227,
+        "prediction_at_worst": 74.7718569150945,
+        "truth_peak": 115.27520993446271,
+        "peak_amplitude_error": 7.202595371728194e-07
+      },
+      "qdot": {
+        "Linf_over_truth_peak": 3.603634335474119e-05,
+        "L2_relative": 3.9303992641352314e-05,
+        "L1_relative": 3.534164856669536e-05,
+        "integral_error_over_abs_integral": 3.4535705540627144e-07,
+        "integral_truth": 353122.3105854365,
+        "absolute_source_coverage": 1.0,
+        "worst_index": 241,
+        "worst_z_mm": 0.6725609306295767,
+        "truth_at_worst": 677689462.7058609,
+        "prediction_at_worst": 677653862.6634669,
+        "truth_peak": 987892751.5890431,
+        "peak_amplitude_error": 2.0063888782438535e-09
+      },
+      "source_integrals": [
+        0.03514639563944037,
+        0.035146369325073014
+      ],
+      "progress_balance": 0.002318394896594858,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -235591.70962333353,
+        "burned_enthalpy_deficit_J_kg": 458365.0139277952,
+        "burner_heat_loss_W_m2": 63107.068625490116,
+        "outlet_enthalpy_loss_W_m2": 63224.83237091824,
+        "relative_energy_closure_error": 0.0018626185473650922,
+        "mass_flux_relative_spread": 3.6219839243212394e-15,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": -1.2458904970848458e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "tolerances": {
+        "rtol": 1.0000000000000002e-06,
+        "atol": 1.0000000000000001e-11
+      },
+      "refinement": {
+        "ratio": 2.5,
+        "slope": 0.02,
+        "curve": 0.04,
+        "prune": 0.0015,
+        "max_points": 1600
+      },
+      "solver_acceptance": {
+        "Finf_final": 1.01552835807671,
+        "weighted_step_norm_final": 0.26403852251647175,
+        "grid_converged": true,
+        "final_accepted": true
+      }
+    },
+    {
+      "check": "tight_fine_mesh",
+      "reference_nodes": 391,
+      "new_nodes": 746,
+      "temperature_Linf_K": 1.5845089490383089,
+      "Tmax_change_K": 0.7143684858729102,
+      "omega_C": {
+        "Linf_over_truth_peak": 0.005005379060044791,
+        "L2_relative": 0.005568150830768876,
+        "L1_relative": 0.006330223685040639,
+        "integral_error_over_abs_integral": 0.0008150750558288373,
+        "integral_truth": 0.03514639563944037,
+        "absolute_source_coverage": 1.0,
+        "worst_index": 182,
+        "worst_z_mm": 0.5131991036932513,
+        "truth_at_worst": 78.39034188868021,
+        "prediction_at_worst": 78.96733801062844,
+        "truth_peak": 115.27520993446271,
+        "peak_amplitude_error": 0.0003403393386799516
+      },
+      "qdot": {
+        "Linf_over_truth_peak": 0.004904931797016542,
+        "L2_relative": 0.0053379182891722075,
+        "L1_relative": 0.0060691757868757724,
+        "integral_error_over_abs_integral": 0.0014193556224597753,
+        "integral_truth": 353122.3105854365,
+        "absolute_source_coverage": 1.0,
+        "worst_index": 242,
+        "worst_z_mm": 0.6752619785437517,
+        "truth_at_worst": 662524669.8749802,
+        "prediction_at_worst": 657679123.305669,
+        "truth_peak": 987892751.5890431,
+        "peak_amplitude_error": 0.0003393328092630931
+      },
+      "source_integrals": [
+        0.03514639563944037,
+        0.03511408430813701
+      ],
+      "progress_balance": 0.0011304126542719753,
+      "heat_loss": {
+        "enthalpy_definition": "total_sensible_plus_formation",
+        "h_feed_J_kg": -235591.70962333353,
+        "burned_enthalpy_deficit_J_kg": 457967.0003598912,
+        "burner_heat_loss_W_m2": 63101.682438675874,
+        "outlet_enthalpy_loss_W_m2": 63169.932148652646,
+        "relative_energy_closure_error": 0.0010804144892251125,
+        "mass_flux_relative_spread": 6.9582335612793605e-12,
+        "outlet_gradient_T_K_m": 0.0,
+        "outlet_diffusive_enthalpy_flux_W_m2": 2.3655861634926126e-11,
+        "note": "Boundary fluxes are finite-grid estimates; refine before interpreting small losses."
+      },
+      "tolerances": {
+        "rtol": 1.0000000000000002e-06,
+        "atol": 1.0000000000000001e-11
+      },
+      "refinement": {
+        "ratio": 2.5,
+        "slope": 0.01,
+        "curve": 0.02,
+        "prune": 0.00075,
+        "max_points": 1600
+      },
+      "solver_acceptance": {
+        "Finf_final": 50.622803283876216,
+        "weighted_step_norm_final": 0.17586076074325496,
+        "grid_converged": true,
+        "final_accepted": true
+      }
+    }
+  ],
+  "script_sha256": "a5865c3b8e82dc81bec3040e9b32eef8521900c1e1dc5a56f4d0f2e42e52199b",
+  "baseline_profile_sha256": "28bc7f3359fdcdde376d8f98612584a9af2196b8592c2de91217128a6d350002",
+  "scope": "Compare detailed burner solutions under stricter nonlinear and spatial tolerances."
+}

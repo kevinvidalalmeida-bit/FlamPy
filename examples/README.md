@@ -111,10 +111,16 @@ Para dibujar los datos publicados sin simular:
 
 ~~~sh
 python examples/plot_nonadiabatic_3d.py docs/assets/nonadiabatic3d --output output/figures/nonadiabatic3d
+python examples/plot_source_audit.py --output output/figures/source_accuracy --pdf output/pdf/Revision_fuentes_FGM.pdf
+python examples/audit_nonadiabatic_sources.py --output runs/source_audit
 ~~~
 
 El [modelo y las métricas](../docs/nonadiabatic-fgm.md) distinguen validación
 de la tabulación, comparación numérica independiente y cobertura del dominio.
+El ejemplo genera por defecto 450 llamas; el análisis de fuentes informa
+errores respecto al pico, errores integrados y balances de progreso.
+`check_burner_accuracy.py` comprueba tolerancias y malla en llamas aceptadas,
+y `check_training_balance.py` revisa el balance de todos los perfiles de quemador.
 
 Sin una ruta explícita, cada llamada crea una carpeta fechada en `runs/`,
 ignorada por Git. Las rutas proporcionadas a `output` deben ser nuevas.

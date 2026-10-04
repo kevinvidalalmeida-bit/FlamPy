@@ -1,0 +1,2560 @@
+{
+  "burner_flames": 425,
+  "maximum_progress_balance": 0.004861258152289216,
+  "cases": [
+    {
+      "phi": 0.7,
+      "fraction": 0.65,
+      "nodes": 237,
+      "progress_balance": 0.00045764610492453805
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.45,
+      "nodes": 248,
+      "progress_balance": 0.00043940939656731553
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.3833333333333333,
+      "nodes": 260,
+      "progress_balance": 0.0007275644526996516
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.31666666666666665,
+      "nodes": 280,
+      "progress_balance": 0.0008372714001697509
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.25,
+      "nodes": 300,
+      "progress_balance": 0.0009887355706255283
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.2,
+      "nodes": 327,
+      "progress_balance": 0.000900550854552623
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.16,
+      "nodes": 359,
+      "progress_balance": 0.000989039450694747
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.12,
+      "nodes": 375,
+      "progress_balance": 0.0011609307526047974
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.11333333333333333,
+      "nodes": 385,
+      "progress_balance": 0.0011100724784141498
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.10666666666666667,
+      "nodes": 397,
+      "progress_balance": 0.0010146821342305445
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.1,
+      "nodes": 403,
+      "progress_balance": 0.0011273719278734465
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.09333333333333334,
+      "nodes": 413,
+      "progress_balance": 0.0010951961769338932
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.08666666666666667,
+      "nodes": 427,
+      "progress_balance": 0.0010456463076093862
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.08,
+      "nodes": 442,
+      "progress_balance": 0.0010506349050273304
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.07333333333333333,
+      "nodes": 461,
+      "progress_balance": 0.0009069591431406338
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.06666666666666667,
+      "nodes": 477,
+      "progress_balance": 0.0009979421544532405
+    },
+    {
+      "phi": 0.7,
+      "fraction": 0.06,
+      "nodes": 447,
+      "progress_balance": 0.0013608891806138937
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.65,
+      "nodes": 238,
+      "progress_balance": 6.284087458807647e-05
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.45,
+      "nodes": 249,
+      "progress_balance": 0.00035834428556579385
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.3833333333333333,
+      "nodes": 259,
+      "progress_balance": 0.0003991550112671319
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.31666666666666665,
+      "nodes": 269,
+      "progress_balance": 0.0006764847820911501
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.25,
+      "nodes": 290,
+      "progress_balance": 0.0009266550891257577
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.2,
+      "nodes": 314,
+      "progress_balance": 0.0010087420451805322
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.16,
+      "nodes": 342,
+      "progress_balance": 0.0009469140245520621
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.12,
+      "nodes": 381,
+      "progress_balance": 0.0009547452966210998
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.11333333333333333,
+      "nodes": 393,
+      "progress_balance": 0.0008824943989055031
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.10666666666666667,
+      "nodes": 405,
+      "progress_balance": 0.000810946637592304
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.1,
+      "nodes": 411,
+      "progress_balance": 0.0009481607896277426
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.09333333333333334,
+      "nodes": 424,
+      "progress_balance": 0.0008996835179489749
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.08666666666666667,
+      "nodes": 441,
+      "progress_balance": 0.0007886656053775933
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.08,
+      "nodes": 449,
+      "progress_balance": 0.0009282971607947607
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.07333333333333333,
+      "nodes": 463,
+      "progress_balance": 0.0009087619898304774
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.06666666666666667,
+      "nodes": 478,
+      "progress_balance": 0.000948301890466405
+    },
+    {
+      "phi": 0.75,
+      "fraction": 0.06,
+      "nodes": 498,
+      "progress_balance": 0.0008575663458119843
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.65,
+      "nodes": 240,
+      "progress_balance": 0.00013209680861519033
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.45,
+      "nodes": 252,
+      "progress_balance": 0.0004075991071877103
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.3833333333333333,
+      "nodes": 261,
+      "progress_balance": 0.0004850312180369272
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.31666666666666665,
+      "nodes": 275,
+      "progress_balance": 0.00040371278011000055
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.25,
+      "nodes": 292,
+      "progress_balance": 0.0006103051411828273
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.2,
+      "nodes": 309,
+      "progress_balance": 0.0009239825134876019
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.16,
+      "nodes": 333,
+      "progress_balance": 0.0008961281778132214
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.12,
+      "nodes": 370,
+      "progress_balance": 0.0007401391831040829
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.11333333333333333,
+      "nodes": 378,
+      "progress_balance": 0.0006959025858941317
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.10666666666666667,
+      "nodes": 383,
+      "progress_balance": 0.0008030062523692137
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.1,
+      "nodes": 391,
+      "progress_balance": 0.000860994327530535
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.09333333333333334,
+      "nodes": 403,
+      "progress_balance": 0.0008257859018539781
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.08666666666666667,
+      "nodes": 417,
+      "progress_balance": 0.0008631324106762858
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.08,
+      "nodes": 429,
+      "progress_balance": 0.0008559869329118114
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.07333333333333333,
+      "nodes": 447,
+      "progress_balance": 0.0007409856094577396
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.06666666666666667,
+      "nodes": 466,
+      "progress_balance": 0.0007411188866070879
+    },
+    {
+      "phi": 0.7999999999999999,
+      "fraction": 0.06,
+      "nodes": 471,
+      "progress_balance": 0.0009013678549813584
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.65,
+      "nodes": 244,
+      "progress_balance": 0.002143343996371455
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.45,
+      "nodes": 250,
+      "progress_balance": 0.0029618931804182066
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.3833333333333333,
+      "nodes": 261,
+      "progress_balance": 0.0029622775968778043
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.31666666666666665,
+      "nodes": 276,
+      "progress_balance": 0.002931890123925505
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.25,
+      "nodes": 294,
+      "progress_balance": 0.0027788382925765477
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.2,
+      "nodes": 316,
+      "progress_balance": 0.002397174314239484
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.16,
+      "nodes": 331,
+      "progress_balance": 0.002561775132365263
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.12,
+      "nodes": 358,
+      "progress_balance": 0.0022178310456482057
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.11333333333333333,
+      "nodes": 364,
+      "progress_balance": 0.002128166729250703
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.10666666666666667,
+      "nodes": 371,
+      "progress_balance": 0.0020493417343139153
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.1,
+      "nodes": 382,
+      "progress_balance": 0.0019177959931046414
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.09333333333333334,
+      "nodes": 392,
+      "progress_balance": 0.00183775066962933
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.08666666666666667,
+      "nodes": 403,
+      "progress_balance": 0.0017963293708445204
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.08,
+      "nodes": 412,
+      "progress_balance": 0.0018282584404295432
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.07333333333333333,
+      "nodes": 427,
+      "progress_balance": 0.0017938126338912317
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.06666666666666667,
+      "nodes": 450,
+      "progress_balance": 0.0015787642141957537
+    },
+    {
+      "phi": 0.85,
+      "fraction": 0.06,
+      "nodes": 435,
+      "progress_balance": 0.0016697923470126753
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.65,
+      "nodes": 238,
+      "progress_balance": 0.0028141063959308318
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.45,
+      "nodes": 248,
+      "progress_balance": 0.003282239340085758
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.3833333333333333,
+      "nodes": 254,
+      "progress_balance": 0.0034997327765766413
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.31666666666666665,
+      "nodes": 266,
+      "progress_balance": 0.0035281748906067114
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.25,
+      "nodes": 281,
+      "progress_balance": 0.0036206609891165256
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.2,
+      "nodes": 305,
+      "progress_balance": 0.003091056385339303
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.16,
+      "nodes": 328,
+      "progress_balance": 0.002674624082949377
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.12,
+      "nodes": 358,
+      "progress_balance": 0.00246145144547285
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.11333333333333333,
+      "nodes": 364,
+      "progress_balance": 0.0024067637044581894
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.10666666666666667,
+      "nodes": 371,
+      "progress_balance": 0.00238385507521075
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.1,
+      "nodes": 381,
+      "progress_balance": 0.002198687374614428
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.09333333333333334,
+      "nodes": 390,
+      "progress_balance": 0.002085059596988864
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.08666666666666667,
+      "nodes": 402,
+      "progress_balance": 0.0019220443732135119
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.08,
+      "nodes": 414,
+      "progress_balance": 0.0018653047487596902
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.07333333333333333,
+      "nodes": 426,
+      "progress_balance": 0.0018258705742738397
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.06666666666666667,
+      "nodes": 440,
+      "progress_balance": 0.0018016070847739216
+    },
+    {
+      "phi": 0.9,
+      "fraction": 0.06,
+      "nodes": 458,
+      "progress_balance": 0.0016988981483902655
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.65,
+      "nodes": 248,
+      "progress_balance": 0.0037323648233756734
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.45,
+      "nodes": 262,
+      "progress_balance": 0.003844014298339409
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.3833333333333333,
+      "nodes": 268,
+      "progress_balance": 0.003990988522817899
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.31666666666666665,
+      "nodes": 277,
+      "progress_balance": 0.004217600103453379
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.25,
+      "nodes": 292,
+      "progress_balance": 0.004157181476444895
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.2,
+      "nodes": 312,
+      "progress_balance": 0.003751820671779796
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.16,
+      "nodes": 337,
+      "progress_balance": 0.003158655895401948
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.12,
+      "nodes": 363,
+      "progress_balance": 0.0029936673312681633
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.11333333333333333,
+      "nodes": 373,
+      "progress_balance": 0.002913694322795072
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.10666666666666667,
+      "nodes": 381,
+      "progress_balance": 0.0027866433983358917
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.1,
+      "nodes": 385,
+      "progress_balance": 0.002752810639497212
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.09333333333333334,
+      "nodes": 396,
+      "progress_balance": 0.0025655122183327393
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.08666666666666667,
+      "nodes": 406,
+      "progress_balance": 0.0024476078431798377
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.08,
+      "nodes": 419,
+      "progress_balance": 0.0022864860214085237
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.07333333333333333,
+      "nodes": 433,
+      "progress_balance": 0.002125545630004828
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.06666666666666667,
+      "nodes": 447,
+      "progress_balance": 0.00208252899274903
+    },
+    {
+      "phi": 0.95,
+      "fraction": 0.06,
+      "nodes": 463,
+      "progress_balance": 0.0020337203078668094
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.65,
+      "nodes": 247,
+      "progress_balance": 0.004194254740116205
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.45,
+      "nodes": 261,
+      "progress_balance": 0.004358719142230559
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.3833333333333333,
+      "nodes": 269,
+      "progress_balance": 0.004574209205642923
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.31666666666666665,
+      "nodes": 278,
+      "progress_balance": 0.004750570361667659
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.25,
+      "nodes": 290,
+      "progress_balance": 0.004861258152289216
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.2,
+      "nodes": 313,
+      "progress_balance": 0.004189726249511933
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.16,
+      "nodes": 334,
+      "progress_balance": 0.003879203575209663
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.12,
+      "nodes": 355,
+      "progress_balance": 0.003972623514657209
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.11333333333333333,
+      "nodes": 365,
+      "progress_balance": 0.003747510055593621
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.10666666666666667,
+      "nodes": 370,
+      "progress_balance": 0.0037797974535046996
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.1,
+      "nodes": 374,
+      "progress_balance": 0.0037866517760612437
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.09333333333333334,
+      "nodes": 381,
+      "progress_balance": 0.003809953279952509
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.08666666666666667,
+      "nodes": 395,
+      "progress_balance": 0.003549354631788926
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.08,
+      "nodes": 411,
+      "progress_balance": 0.003116422207889523
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.07333333333333333,
+      "nodes": 427,
+      "progress_balance": 0.0028750726807313526
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.06666666666666667,
+      "nodes": 443,
+      "progress_balance": 0.002774319871360585
+    },
+    {
+      "phi": 1.0,
+      "fraction": 0.06,
+      "nodes": 438,
+      "progress_balance": 0.0029207653832269654
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.65,
+      "nodes": 250,
+      "progress_balance": 0.003799584637933176
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.45,
+      "nodes": 263,
+      "progress_balance": 0.004010804406657147
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.3833333333333333,
+      "nodes": 272,
+      "progress_balance": 0.004125406693824359
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.31666666666666665,
+      "nodes": 280,
+      "progress_balance": 0.0043648707393963496
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.25,
+      "nodes": 293,
+      "progress_balance": 0.004364422431835582
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.2,
+      "nodes": 315,
+      "progress_balance": 0.003814305016356311
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.16,
+      "nodes": 337,
+      "progress_balance": 0.003480652213820245
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.12,
+      "nodes": 359,
+      "progress_balance": 0.0034203605645423533
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.11333333333333333,
+      "nodes": 366,
+      "progress_balance": 0.003282706846120132
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.10666666666666667,
+      "nodes": 373,
+      "progress_balance": 0.003192165376990685
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.1,
+      "nodes": 379,
+      "progress_balance": 0.003139318369901178
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.09333333333333334,
+      "nodes": 392,
+      "progress_balance": 0.002864276702244325
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.08666666666666667,
+      "nodes": 401,
+      "progress_balance": 0.0027871771055429416
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.08,
+      "nodes": 415,
+      "progress_balance": 0.0025741242444769874
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.07333333333333333,
+      "nodes": 428,
+      "progress_balance": 0.0024919492774176637
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.06666666666666667,
+      "nodes": 446,
+      "progress_balance": 0.0022857650633454508
+    },
+    {
+      "phi": 1.0166666666666666,
+      "fraction": 0.06,
+      "nodes": 466,
+      "progress_balance": 0.002136550478011336
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.65,
+      "nodes": 251,
+      "progress_balance": 0.003627907790130676
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.45,
+      "nodes": 265,
+      "progress_balance": 0.003686864898528388
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.3833333333333333,
+      "nodes": 274,
+      "progress_balance": 0.003765543328116914
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.31666666666666665,
+      "nodes": 283,
+      "progress_balance": 0.003789181291694282
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.25,
+      "nodes": 296,
+      "progress_balance": 0.003784348294741911
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.2,
+      "nodes": 317,
+      "progress_balance": 0.003390586090779564
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.16,
+      "nodes": 340,
+      "progress_balance": 0.002906548355315377
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.12,
+      "nodes": 364,
+      "progress_balance": 0.002777941890655112
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.11333333333333333,
+      "nodes": 370,
+      "progress_balance": 0.0027454568192971044
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.10666666666666667,
+      "nodes": 377,
+      "progress_balance": 0.0026574995224165027
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.1,
+      "nodes": 386,
+      "progress_balance": 0.0025206266883434874
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.09333333333333334,
+      "nodes": 396,
+      "progress_balance": 0.0023873508594356467
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.08666666666666667,
+      "nodes": 409,
+      "progress_balance": 0.0021916425260462805
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.08,
+      "nodes": 422,
+      "progress_balance": 0.0020245390318210754
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.07333333333333333,
+      "nodes": 435,
+      "progress_balance": 0.0019275792846451252
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.06666666666666667,
+      "nodes": 452,
+      "progress_balance": 0.001803555285036381
+    },
+    {
+      "phi": 1.0333333333333334,
+      "fraction": 0.06,
+      "nodes": 469,
+      "progress_balance": 0.0017979455642909525
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.65,
+      "nodes": 254,
+      "progress_balance": 0.0031211351108590495
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.45,
+      "nodes": 265,
+      "progress_balance": 0.0033179705527531167
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.3833333333333333,
+      "nodes": 275,
+      "progress_balance": 0.0033649987591976346
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.31666666666666665,
+      "nodes": 287,
+      "progress_balance": 0.003144451881833743
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.25,
+      "nodes": 298,
+      "progress_balance": 0.0032856845118024026
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.2,
+      "nodes": 319,
+      "progress_balance": 0.002849934149790477
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.16,
+      "nodes": 342,
+      "progress_balance": 0.0024591243084085557
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.12,
+      "nodes": 366,
+      "progress_balance": 0.0024303341612315664
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.11333333333333333,
+      "nodes": 373,
+      "progress_balance": 0.0023713329027366353
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.10666666666666667,
+      "nodes": 382,
+      "progress_balance": 0.0022396854679446604
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.1,
+      "nodes": 390,
+      "progress_balance": 0.0021855375004882073
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.09333333333333334,
+      "nodes": 400,
+      "progress_balance": 0.0020420735251906715
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.08666666666666667,
+      "nodes": 412,
+      "progress_balance": 0.0018882037244940684
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.08,
+      "nodes": 425,
+      "progress_balance": 0.0017722493406148866
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.07333333333333333,
+      "nodes": 440,
+      "progress_balance": 0.0016725052224545037
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.06666666666666667,
+      "nodes": 450,
+      "progress_balance": 0.0017411682234131786
+    },
+    {
+      "phi": 1.05,
+      "fraction": 0.06,
+      "nodes": 460,
+      "progress_balance": 0.0018735584108644117
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.65,
+      "nodes": 258,
+      "progress_balance": 0.002540824163393236
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.45,
+      "nodes": 269,
+      "progress_balance": 0.002701520026730238
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.3833333333333333,
+      "nodes": 280,
+      "progress_balance": 0.002584314914914938
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.31666666666666665,
+      "nodes": 290,
+      "progress_balance": 0.0026465491144086494
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.25,
+      "nodes": 302,
+      "progress_balance": 0.002801579412909767
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.2,
+      "nodes": 323,
+      "progress_balance": 0.002464305929975499
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.16,
+      "nodes": 346,
+      "progress_balance": 0.002191010621288746
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.12,
+      "nodes": 370,
+      "progress_balance": 0.002204125206362146
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.11333333333333333,
+      "nodes": 378,
+      "progress_balance": 0.0021402123241941757
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.10666666666666667,
+      "nodes": 385,
+      "progress_balance": 0.002110342821097668
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.1,
+      "nodes": 398,
+      "progress_balance": 0.001887177071848017
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.09333333333333334,
+      "nodes": 408,
+      "progress_balance": 0.001764196695649598
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.08666666666666667,
+      "nodes": 420,
+      "progress_balance": 0.0016660650994580679
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.08,
+      "nodes": 433,
+      "progress_balance": 0.0015540293657499537
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.07333333333333333,
+      "nodes": 441,
+      "progress_balance": 0.0016518019127905541
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.06666666666666667,
+      "nodes": 452,
+      "progress_balance": 0.0017859052319170658
+    },
+    {
+      "phi": 1.0666666666666667,
+      "fraction": 0.06,
+      "nodes": 463,
+      "progress_balance": 0.0019472439032752332
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.65,
+      "nodes": 263,
+      "progress_balance": 0.0019947666492522212
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.45,
+      "nodes": 273,
+      "progress_balance": 0.0021801206375402747
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.3833333333333333,
+      "nodes": 282,
+      "progress_balance": 0.002296840757814508
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.31666666666666665,
+      "nodes": 291,
+      "progress_balance": 0.0024424873051039336
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.25,
+      "nodes": 306,
+      "progress_balance": 0.0024364537910738105
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.2,
+      "nodes": 325,
+      "progress_balance": 0.0022679290664073086
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.16,
+      "nodes": 347,
+      "progress_balance": 0.002083271280368676
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.12,
+      "nodes": 376,
+      "progress_balance": 0.0020714830638797204
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.11333333333333333,
+      "nodes": 382,
+      "progress_balance": 0.0020119876414532545
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.10666666666666667,
+      "nodes": 390,
+      "progress_balance": 0.001929730570635784
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.1,
+      "nodes": 402,
+      "progress_balance": 0.0017678847709947493
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.09333333333333334,
+      "nodes": 413,
+      "progress_balance": 0.0016579244249731073
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.08666666666666667,
+      "nodes": 427,
+      "progress_balance": 0.0015192253308758555
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.08,
+      "nodes": 430,
+      "progress_balance": 0.0017297392626802587
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.07333333333333333,
+      "nodes": 446,
+      "progress_balance": 0.0016457498580811991
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.06666666666666667,
+      "nodes": 457,
+      "progress_balance": 0.001782417953768963
+    },
+    {
+      "phi": 1.0833333333333335,
+      "fraction": 0.06,
+      "nodes": 457,
+      "progress_balance": 0.0020832730184223163
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.65,
+      "nodes": 264,
+      "progress_balance": 0.0016594758018501836
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.45,
+      "nodes": 275,
+      "progress_balance": 0.0019116735701461122
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.3833333333333333,
+      "nodes": 283,
+      "progress_balance": 0.0019885627164059365
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.31666666666666665,
+      "nodes": 292,
+      "progress_balance": 0.002239787396604807
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.25,
+      "nodes": 310,
+      "progress_balance": 0.0021843071159818464
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.2,
+      "nodes": 334,
+      "progress_balance": 0.001929904474659349
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.16,
+      "nodes": 355,
+      "progress_balance": 0.0018625285635645327
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.12,
+      "nodes": 384,
+      "progress_balance": 0.0019473105441497201
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.11333333333333333,
+      "nodes": 393,
+      "progress_balance": 0.0018143419076330992
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.10666666666666667,
+      "nodes": 403,
+      "progress_balance": 0.0017339229094746119
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.1,
+      "nodes": 412,
+      "progress_balance": 0.0016573052968637378
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.09333333333333334,
+      "nodes": 421,
+      "progress_balance": 0.0016793623227136384
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.08666666666666667,
+      "nodes": 433,
+      "progress_balance": 0.0015948155973736812
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.08,
+      "nodes": 439,
+      "progress_balance": 0.001765933904531961
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.07333333333333333,
+      "nodes": 447,
+      "progress_balance": 0.0019176315907059778
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.06666666666666667,
+      "nodes": 456,
+      "progress_balance": 0.0020926999357629783
+    },
+    {
+      "phi": 1.1,
+      "fraction": 0.06,
+      "nodes": 466,
+      "progress_balance": 0.0021413125995257166
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.65,
+      "nodes": 264,
+      "progress_balance": 0.00125403706711041
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.45,
+      "nodes": 276,
+      "progress_balance": 0.0015935545051469734
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.3833333333333333,
+      "nodes": 284,
+      "progress_balance": 0.0016884247319458898
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.31666666666666665,
+      "nodes": 292,
+      "progress_balance": 0.0020681553433859693
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.25,
+      "nodes": 310,
+      "progress_balance": 0.002047951348267413
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.2,
+      "nodes": 334,
+      "progress_balance": 0.001843264536889931
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.16,
+      "nodes": 351,
+      "progress_balance": 0.0020268630620645894
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.12,
+      "nodes": 387,
+      "progress_balance": 0.0018250686201056227
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.11333333333333333,
+      "nodes": 394,
+      "progress_balance": 0.0017745718494542424
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.10666666666666667,
+      "nodes": 401,
+      "progress_balance": 0.0017654108181280272
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.1,
+      "nodes": 411,
+      "progress_balance": 0.0017299007265405143
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.09333333333333334,
+      "nodes": 422,
+      "progress_balance": 0.0016587689518714564
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.08666666666666667,
+      "nodes": 430,
+      "progress_balance": 0.001766970697254498
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.08,
+      "nodes": 432,
+      "progress_balance": 0.0020740067915440866
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.07333333333333333,
+      "nodes": 440,
+      "progress_balance": 0.002170940887067515
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.06666666666666667,
+      "nodes": 449,
+      "progress_balance": 0.002209144260447093
+    },
+    {
+      "phi": 1.1166666666666667,
+      "fraction": 0.06,
+      "nodes": 460,
+      "progress_balance": 0.002291262860180929
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.65,
+      "nodes": 264,
+      "progress_balance": 0.0007517490094494646
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.45,
+      "nodes": 276,
+      "progress_balance": 0.0012134276324402477
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.3833333333333333,
+      "nodes": 284,
+      "progress_balance": 0.0014691339968092947
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.31666666666666665,
+      "nodes": 294,
+      "progress_balance": 0.001801615348682796
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.25,
+      "nodes": 314,
+      "progress_balance": 0.0018475940189646622
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.2,
+      "nodes": 333,
+      "progress_balance": 0.0018897413544081618
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.16,
+      "nodes": 353,
+      "progress_balance": 0.0019849449511829542
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.12,
+      "nodes": 388,
+      "progress_balance": 0.001866766763903615
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.11333333333333333,
+      "nodes": 392,
+      "progress_balance": 0.0019239339444382174
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.10666666666666667,
+      "nodes": 405,
+      "progress_balance": 0.0017733767106869103
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.1,
+      "nodes": 410,
+      "progress_balance": 0.0018940932640531716
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.09333333333333334,
+      "nodes": 420,
+      "progress_balance": 0.0019188667649792377
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.08666666666666667,
+      "nodes": 427,
+      "progress_balance": 0.0020458791799827913
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.08,
+      "nodes": 433,
+      "progress_balance": 0.0021834810497777
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.07333333333333333,
+      "nodes": 441,
+      "progress_balance": 0.002284692584765668
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.06666666666666667,
+      "nodes": 448,
+      "progress_balance": 0.0024146401170842026
+    },
+    {
+      "phi": 1.1333333333333333,
+      "fraction": 0.06,
+      "nodes": 460,
+      "progress_balance": 0.0024814272468684983
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.65,
+      "nodes": 264,
+      "progress_balance": 0.00044193046950409683
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.45,
+      "nodes": 274,
+      "progress_balance": 0.0010985530615809
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.3833333333333333,
+      "nodes": 281,
+      "progress_balance": 0.0015075114174997624
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.31666666666666665,
+      "nodes": 293,
+      "progress_balance": 0.0017133924936501156
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.25,
+      "nodes": 315,
+      "progress_balance": 0.0016475114603701146
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.2,
+      "nodes": 332,
+      "progress_balance": 0.0018401447374803252
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.16,
+      "nodes": 352,
+      "progress_balance": 0.0020748617489611586
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.12,
+      "nodes": 383,
+      "progress_balance": 0.0020349930253838787
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.11333333333333333,
+      "nodes": 394,
+      "progress_balance": 0.0019020924704473835
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.10666666666666667,
+      "nodes": 404,
+      "progress_balance": 0.0018853854898710474
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.1,
+      "nodes": 407,
+      "progress_balance": 0.0020922196885557
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.09333333333333334,
+      "nodes": 413,
+      "progress_balance": 0.0021899802699107285
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.08666666666666667,
+      "nodes": 418,
+      "progress_balance": 0.0023621220463027983
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.08,
+      "nodes": 426,
+      "progress_balance": 0.0024137936852417627
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.07333333333333333,
+      "nodes": 433,
+      "progress_balance": 0.0024891087254877214
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.06666666666666667,
+      "nodes": 444,
+      "progress_balance": 0.002652724480679545
+    },
+    {
+      "phi": 1.15,
+      "fraction": 0.06,
+      "nodes": 455,
+      "progress_balance": 0.002723860669214001
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.65,
+      "nodes": 262,
+      "progress_balance": 0.0002623036348311525
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.45,
+      "nodes": 271,
+      "progress_balance": 0.0011287724875722219
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.3833333333333333,
+      "nodes": 281,
+      "progress_balance": 0.0013571210148949871
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.31666666666666665,
+      "nodes": 289,
+      "progress_balance": 0.0017423414688625986
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.25,
+      "nodes": 313,
+      "progress_balance": 0.0016077728962353177
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.2,
+      "nodes": 331,
+      "progress_balance": 0.0018205287755122576
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.16,
+      "nodes": 353,
+      "progress_balance": 0.001996096945931034
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.12,
+      "nodes": 382,
+      "progress_balance": 0.0022950749665062425
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.11333333333333333,
+      "nodes": 394,
+      "progress_balance": 0.0021668655843313394
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.10666666666666667,
+      "nodes": 399,
+      "progress_balance": 0.0022409471269965392
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.1,
+      "nodes": 406,
+      "progress_balance": 0.002335188828341526
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.09333333333333334,
+      "nodes": 414,
+      "progress_balance": 0.0024198483459111604
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.08666666666666667,
+      "nodes": 422,
+      "progress_balance": 0.0025021866325798062
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.08,
+      "nodes": 430,
+      "progress_balance": 0.002546571843461714
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.07333333333333333,
+      "nodes": 439,
+      "progress_balance": 0.0027333412253121455
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.06666666666666667,
+      "nodes": 453,
+      "progress_balance": 0.002579576450404626
+    },
+    {
+      "phi": 1.1666666666666665,
+      "fraction": 0.06,
+      "nodes": 456,
+      "progress_balance": 0.0027379154755939362
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.65,
+      "nodes": 261,
+      "progress_balance": 0.00013521000162271658
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.45,
+      "nodes": 273,
+      "progress_balance": 0.0009955574470647398
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.3833333333333333,
+      "nodes": 282,
+      "progress_balance": 0.0012768142736984238
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.31666666666666665,
+      "nodes": 294,
+      "progress_balance": 0.0015465726393045546
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.25,
+      "nodes": 312,
+      "progress_balance": 0.0017667654618118084
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.2,
+      "nodes": 336,
+      "progress_balance": 0.00182701027408411
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.16,
+      "nodes": 355,
+      "progress_balance": 0.002109725199631137
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.12,
+      "nodes": 391,
+      "progress_balance": 0.00238582487292176
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.11333333333333333,
+      "nodes": 395,
+      "progress_balance": 0.002566215967524297
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.10666666666666667,
+      "nodes": 403,
+      "progress_balance": 0.002545339651669179
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.1,
+      "nodes": 408,
+      "progress_balance": 0.00262882337029211
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.09333333333333334,
+      "nodes": 415,
+      "progress_balance": 0.0026615690287135098
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.08666666666666667,
+      "nodes": 423,
+      "progress_balance": 0.0027315511116645205
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.08,
+      "nodes": 432,
+      "progress_balance": 0.002613415760030142
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.07333333333333333,
+      "nodes": 438,
+      "progress_balance": 0.002709089474374412
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.06666666666666667,
+      "nodes": 444,
+      "progress_balance": 0.0028383602373795876
+    },
+    {
+      "phi": 1.1833333333333333,
+      "fraction": 0.06,
+      "nodes": 452,
+      "progress_balance": 0.002919473779401756
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.65,
+      "nodes": 264,
+      "progress_balance": 0.00012973642194334897
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.45,
+      "nodes": 276,
+      "progress_balance": 0.001075290630201254
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.3833333333333333,
+      "nodes": 283,
+      "progress_balance": 0.001424634885233765
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.31666666666666665,
+      "nodes": 301,
+      "progress_balance": 0.0014590844177362013
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.25,
+      "nodes": 315,
+      "progress_balance": 0.0018000478372039177
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.2,
+      "nodes": 337,
+      "progress_balance": 0.002040867107602613
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.16,
+      "nodes": 359,
+      "progress_balance": 0.0021765205122345247
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.12,
+      "nodes": 391,
+      "progress_balance": 0.002722962647489886
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.11333333333333333,
+      "nodes": 398,
+      "progress_balance": 0.002694801537187812
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.10666666666666667,
+      "nodes": 404,
+      "progress_balance": 0.0027097333306996254
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.1,
+      "nodes": 412,
+      "progress_balance": 0.0026762372719536937
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.09333333333333334,
+      "nodes": 420,
+      "progress_balance": 0.002634506429268871
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.08666666666666667,
+      "nodes": 425,
+      "progress_balance": 0.0026892217086683756
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.08,
+      "nodes": 431,
+      "progress_balance": 0.002778304840837776
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.07333333333333333,
+      "nodes": 435,
+      "progress_balance": 0.0029102846605752316
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.06666666666666667,
+      "nodes": 441,
+      "progress_balance": 0.0030264823151100045
+    },
+    {
+      "phi": 1.2,
+      "fraction": 0.06,
+      "nodes": 448,
+      "progress_balance": 0.0031047558585972387
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.65,
+      "nodes": 273,
+      "progress_balance": 5.11176196945285e-05
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.45,
+      "nodes": 286,
+      "progress_balance": 0.0009672662945535568
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.3833333333333333,
+      "nodes": 295,
+      "progress_balance": 0.0012599255924294686
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.31666666666666665,
+      "nodes": 308,
+      "progress_balance": 0.001496490176034125
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.25,
+      "nodes": 324,
+      "progress_balance": 0.0018819358231069805
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.2,
+      "nodes": 342,
+      "progress_balance": 0.0022478661348996586
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.16,
+      "nodes": 366,
+      "progress_balance": 0.002693645148471212
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.12,
+      "nodes": 396,
+      "progress_balance": 0.002812352522531785
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.11333333333333333,
+      "nodes": 401,
+      "progress_balance": 0.002809164675586522
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.10666666666666667,
+      "nodes": 407,
+      "progress_balance": 0.0027986761439497926
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.1,
+      "nodes": 412,
+      "progress_balance": 0.002806540993691487
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.09333333333333334,
+      "nodes": 417,
+      "progress_balance": 0.0028712082795726754
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.08666666666666667,
+      "nodes": 421,
+      "progress_balance": 0.002976871431433664
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.08,
+      "nodes": 426,
+      "progress_balance": 0.003061613476648056
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.07333333333333333,
+      "nodes": 433,
+      "progress_balance": 0.0030977096921638975
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.06666666666666667,
+      "nodes": 438,
+      "progress_balance": 0.003227537550414019
+    },
+    {
+      "phi": 1.2166666666666666,
+      "fraction": 0.06,
+      "nodes": 444,
+      "progress_balance": 0.0033633530604536615
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.65,
+      "nodes": 273,
+      "progress_balance": 0.00034750906047103044
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.45,
+      "nodes": 282,
+      "progress_balance": 0.0011035224005550345
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.3833333333333333,
+      "nodes": 296,
+      "progress_balance": 0.0011920205686847241
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.31666666666666665,
+      "nodes": 305,
+      "progress_balance": 0.0016195552699352724
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.25,
+      "nodes": 323,
+      "progress_balance": 0.0020898406321942396
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.2,
+      "nodes": 347,
+      "progress_balance": 0.0023919962979951095
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.16,
+      "nodes": 366,
+      "progress_balance": 0.0028649778811212397
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.12,
+      "nodes": 393,
+      "progress_balance": 0.00292289738822599
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.11333333333333333,
+      "nodes": 398,
+      "progress_balance": 0.002924367890753629
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.10666666666666667,
+      "nodes": 402,
+      "progress_balance": 0.0029626148021609866
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.1,
+      "nodes": 407,
+      "progress_balance": 0.0030061586128772365
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.09333333333333334,
+      "nodes": 411,
+      "progress_balance": 0.0031024659020744243
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.08666666666666667,
+      "nodes": 416,
+      "progress_balance": 0.003162408516113422
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.08,
+      "nodes": 422,
+      "progress_balance": 0.0031999163458001647
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.07333333333333333,
+      "nodes": 427,
+      "progress_balance": 0.0033082479165418618
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.06666666666666667,
+      "nodes": 431,
+      "progress_balance": 0.003474937600903192
+    },
+    {
+      "phi": 1.2333333333333334,
+      "fraction": 0.06,
+      "nodes": 436,
+      "progress_balance": 0.0037017648482898574
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.65,
+      "nodes": 263,
+      "progress_balance": 0.00048537658050380733
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.45,
+      "nodes": 274,
+      "progress_balance": 0.00039943787384841593
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.3833333333333333,
+      "nodes": 280,
+      "progress_balance": 8.930935893892766e-05
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.31666666666666665,
+      "nodes": 292,
+      "progress_balance": 0.00032453147713143476
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.25,
+      "nodes": 311,
+      "progress_balance": 0.0009829206323768791
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.2,
+      "nodes": 328,
+      "progress_balance": 0.0016785516390993571
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.16,
+      "nodes": 358,
+      "progress_balance": 0.001687285942622222
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.12,
+      "nodes": 381,
+      "progress_balance": 0.0020396384763966646
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.11333333333333333,
+      "nodes": 384,
+      "progress_balance": 0.0021455632600570424
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.10666666666666667,
+      "nodes": 387,
+      "progress_balance": 0.002281890339060593
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.1,
+      "nodes": 392,
+      "progress_balance": 0.0023411589337325243
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.09333333333333334,
+      "nodes": 396,
+      "progress_balance": 0.0024637380576930886
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.08666666666666667,
+      "nodes": 401,
+      "progress_balance": 0.0025417673750257877
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.08,
+      "nodes": 405,
+      "progress_balance": 0.002700043498851802
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.07333333333333333,
+      "nodes": 410,
+      "progress_balance": 0.0028418948318283607
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.06666666666666667,
+      "nodes": 417,
+      "progress_balance": 0.002900750834382357
+    },
+    {
+      "phi": 1.25,
+      "fraction": 0.06,
+      "nodes": 421,
+      "progress_balance": 0.0031840912417718443
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.65,
+      "nodes": 257,
+      "progress_balance": 0.001005754376291663
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.45,
+      "nodes": 267,
+      "progress_balance": 0.0004762712936841977
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.3833333333333333,
+      "nodes": 273,
+      "progress_balance": 8.933414407339892e-06
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.31666666666666665,
+      "nodes": 278,
+      "progress_balance": 0.000870445128796796
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.25,
+      "nodes": 303,
+      "progress_balance": 0.00145725353242275
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.2,
+      "nodes": 326,
+      "progress_balance": 0.001758636512901273
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.16,
+      "nodes": 343,
+      "progress_balance": 0.0021373646036072654
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.12,
+      "nodes": 364,
+      "progress_balance": 0.0024105592438802797
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.11333333333333333,
+      "nodes": 368,
+      "progress_balance": 0.002475905198466581
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.10666666666666667,
+      "nodes": 372,
+      "progress_balance": 0.002534351716926977
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.1,
+      "nodes": 376,
+      "progress_balance": 0.002632291431438143
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.09333333333333334,
+      "nodes": 380,
+      "progress_balance": 0.00272659321761218
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.08666666666666667,
+      "nodes": 384,
+      "progress_balance": 0.0028538058259822267
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.08,
+      "nodes": 389,
+      "progress_balance": 0.0029589324179026735
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.07333333333333333,
+      "nodes": 394,
+      "progress_balance": 0.0030728554683311627
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.06666666666666667,
+      "nodes": 400,
+      "progress_balance": 0.00319351613871228
+    },
+    {
+      "phi": 1.2666666666666666,
+      "fraction": 0.06,
+      "nodes": 404,
+      "progress_balance": 0.0034491600231398695
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.65,
+      "nodes": 258,
+      "progress_balance": 0.001293982601120408
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.45,
+      "nodes": 263,
+      "progress_balance": 0.00021052801078362923
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.3833333333333333,
+      "nodes": 269,
+      "progress_balance": 0.0004003688768056312
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.31666666666666665,
+      "nodes": 285,
+      "progress_balance": 0.001058588123455749
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.25,
+      "nodes": 298,
+      "progress_balance": 0.0019517210584399027
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.2,
+      "nodes": 321,
+      "progress_balance": 0.0020933613662363223
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.16,
+      "nodes": 338,
+      "progress_balance": 0.0023740172317574222
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.12,
+      "nodes": 358,
+      "progress_balance": 0.0026690766899888224
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.11333333333333333,
+      "nodes": 362,
+      "progress_balance": 0.002698549008797777
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.10666666666666667,
+      "nodes": 365,
+      "progress_balance": 0.002809835646000681
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.1,
+      "nodes": 370,
+      "progress_balance": 0.0028334668960431388
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.09333333333333334,
+      "nodes": 371,
+      "progress_balance": 0.0030761166163251804
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.08666666666666667,
+      "nodes": 377,
+      "progress_balance": 0.003090441822071604
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.08,
+      "nodes": 381,
+      "progress_balance": 0.0032222470634615547
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.07333333333333333,
+      "nodes": 385,
+      "progress_balance": 0.0033733304494616284
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.06666666666666667,
+      "nodes": 390,
+      "progress_balance": 0.0035286254249900276
+    },
+    {
+      "phi": 1.2833333333333334,
+      "fraction": 0.06,
+      "nodes": 397,
+      "progress_balance": 0.0036146596635962054
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.65,
+      "nodes": 253,
+      "progress_balance": 0.0014518074744992726
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.45,
+      "nodes": 256,
+      "progress_balance": 9.642319933935438e-05
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.3833333333333333,
+      "nodes": 262,
+      "progress_balance": 0.0008583649235962322
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.31666666666666665,
+      "nodes": 278,
+      "progress_balance": 0.0013502046236452407
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.25,
+      "nodes": 297,
+      "progress_balance": 0.0018797620828679635
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.2,
+      "nodes": 312,
+      "progress_balance": 0.0023583767511458323
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.16,
+      "nodes": 331,
+      "progress_balance": 0.002487836820048815
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.12,
+      "nodes": 346,
+      "progress_balance": 0.002907946672837238
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.11333333333333333,
+      "nodes": 349,
+      "progress_balance": 0.0029965524695934036
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.10666666666666667,
+      "nodes": 353,
+      "progress_balance": 0.0030713273351094237
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.1,
+      "nodes": 355,
+      "progress_balance": 0.0032697512362296266
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.09333333333333334,
+      "nodes": 359,
+      "progress_balance": 0.0033531796645877524
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.08666666666666667,
+      "nodes": 362,
+      "progress_balance": 0.0035597813248772433
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.08,
+      "nodes": 364,
+      "progress_balance": 0.003843684913377025
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.07333333333333333,
+      "nodes": 372,
+      "progress_balance": 0.003721642350544092
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.06666666666666667,
+      "nodes": 378,
+      "progress_balance": 0.0038200842132288275
+    },
+    {
+      "phi": 1.3,
+      "fraction": 0.06,
+      "nodes": 390,
+      "progress_balance": 0.003634253561715628
+    }
+  ],
+  "generation_sha256": "812036eb099254364198e21c11bb5568fa3c6cf85b1744ac13923719f8028449",
+  "script_sha256": "388ae4398d849634e58da228b657b5bd8a6520cb449b57d1a4ee4a6dcc8f2c35",
+  "definition": "Trapezoidal source integral compared with imposed fresh progress flux and zero outlet diffusive flux",
+  "scope": "Independent integral diagnostic on the raw spatial grids; not a Newton residual or an FGM interpolation error."
+}

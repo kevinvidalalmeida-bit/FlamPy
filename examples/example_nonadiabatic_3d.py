@@ -11,12 +11,18 @@ from kflame import generate_nonadiabatic_fgm
 from kflame.fgm.nonadiabatic3d import build_nonadiabatic_table
 
 
+BASE_PHIS = [.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3]
+REFINED_PHIS = [a+(b-a)*i/3. for a,b in zip(BASE_PHIS[:-1],BASE_PHIS[1:]) for i in range(3)] + [BASE_PHIS[-1]]
+REFINED_FRACTIONS = sorted([.65,.45,.25,.20,.16,.12,.10,.08,.06,
+                           *[a+(b-a)*i/3. for a,b in ((.25,.45),(.08,.10),(.10,.12),(.06,.08)) for i in (1,2)]],reverse=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--build-only', type=Path)
-    parser.add_argument('--phis', type=float, nargs='+', default=[.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3])
-    parser.add_argument('--mass-flux-fractions', type=float, nargs='+', default=[.65, .45, .25, .20, .16, .12, .10, .08, .06])
+    parser.add_argument('--phis', type=float, nargs='+', default=REFINED_PHIS)
+    parser.add_argument('--mass-flux-fractions', type=float, nargs='+', default=REFINED_FRACTIONS)
     parser.add_argument('--progress-points', type=int, default=181)
     parser.add_argument('--raw-only', action='store_true')
     parser.add_argument('--reuse-from', type=Path)

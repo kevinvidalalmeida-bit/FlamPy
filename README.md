@@ -11,6 +11,8 @@ La rama de pérdidas de calor añade llamas sobre un quemador isotérmico y tabl
 FGM de progreso y entalpía, tanto para composición fija como para controles
 físicos `(Z,C,h)` con composición variable.
 [Modelo de quemador](docs/heat-loss.md) · [FGM no adiabático, validación y gráficas](docs/nonadiabatic-fgm.md).
+La biblioteca publicada de CH₄-aire incluye 450 llamas y comprobaciones
+separadas de las fuentes químicas, la convergencia espacial y la interpolación.
 
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.
