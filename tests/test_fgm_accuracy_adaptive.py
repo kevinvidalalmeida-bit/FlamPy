@@ -73,6 +73,70 @@ def test_native_failure_is_recorded_and_propagated(tmp_path,monkeypatch):
     assert report['reason']=='native_generation_failure'
 
 
+@pytest.mark.parametrize('fractions', [.2, [[.6,.3,.1]], [.6,.3,.3], [np.nan,.3,.1]])
+def test_invalid_adaptive_axis_is_rejected_before_output(tmp_path, fractions):
+    output = tmp_path/'invalid'
+    with pytest.raises(ValueError, match='candidates'):
+        generate_adaptive_nonadiabatic_fgm(phis=[.8,1.,1.2],
+            mass_flux_fractions=fractions, output=output)
+    assert not output.exists()
+
+
+def test_multiple_probe_banks_reuse_new_profiles_and_recheck_physics(tmp_path, monkeypatch):
+    """A partial initial bank must not force repeated native solves."""
+    import json
+    import kflame.api as api
+    from kflame.chemistry.initialization import fresh_mixture
+    from kflame.chemistry.mechanism import resolve_mechanism
+    mech = load_mechanism('h2o2.yaml')
+    thermo = NativeThermo(mech)
+    banks = []
+    for i, phi in enumerate([.8,1.2]):
+        bank = tmp_path/f'bank_{i}'
+        bank.mkdir()
+        banks.append(bank)
+        y = fresh_mixture(mech, phi, 'H2', 'O2:1,N2:3.76')
+        flux = float(thermo.density(300.,101325.,y))
+        rows = []
+        for j, fraction in enumerate([None,.4,.2]):
+            folder = bank/f'flame_{j}'
+            folder.mkdir()
+            free = fraction is None
+            meta = dict(accepted=True, backend='native_cpu',
+                flow_type='free_flame' if free else 'isothermal_burner',
+                report={'grid_converged':True}, mechanism=str(resolve_mechanism('h2o2.yaml')),
+                species_names=mech.species_names, inlet_Y=y.tolist(),
+                temperature=300., pressure=101325., initial_width=.03,
+                transport='mixture-averaged', soret=False, refinement={}, tolerances={})
+            if free:
+                meta['Su'] = 1.
+            else:
+                meta.update(mass_flux=flux*fraction, inlet_velocity=fraction,
+                    heat_loss={'relative_energy_closure_error':0.})
+            (folder/'metadata.json').write_text(json.dumps(meta))
+            np.savez(folder/'flame.npz', T=[300.,900.], Y=np.column_stack([y,y]), z=[0.,.03])
+            rows.append(dict(kind='adiabatic_reference' if free else 'isothermal_burner',
+                phi=phi, fraction=fraction, output=folder.name))
+        (bank/'generation.json').write_text(json.dumps(dict(all_final_accepted=True, rows=rows)))
+    def unexpected_solve(**kwargs):
+        raise RuntimeError('unexpected native solve')
+    # Preserve the inspected public defaults when the solver is replaced.
+    import inspect
+    unexpected_solve.__signature__ = inspect.signature(api.solve_flame)
+    monkeypatch.setattr(api,'solve_flame',unexpected_solve)
+    monkeypatch.setattr(api,'solve_burner_flame',unexpected_solve)
+    folder = api.generate_nonadiabatic_fgm(phis=[.8,1.2],mass_flux_fractions=[.4,.2],
+        mechanism='h2o2.yaml', fuel='H2', progress_species='H2O:1', reuse_from=banks,
+        output=tmp_path/'combined',raw_only=True)
+    report = json.loads((folder/'generation.json').read_text())
+    assert report['reused_profiles'] == 6
+    assert report['all_final_accepted']
+    with pytest.raises(RuntimeError, match='unexpected native solve'):
+        api.generate_nonadiabatic_fgm(phis=[.8,1.2],mass_flux_fractions=[.4,.2],
+            mechanism='h2o2.yaml', fuel='H2', progress_species='H2O:1', pressure=202650., reuse_from=banks,
+            output=tmp_path/'changed_pressure',raw_only=True)
+
+
 def test_hierarchy_matches_exhaustive_barycentric_oracle_and_cross_leaf_overlaps():
     rng = np.random.default_rng(812)
     tet = np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])

@@ -444,7 +444,8 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
     failures retain diagnostics and are not called physical extinction.
     raw_only=True saves profiles for a later build_nonadiabatic_table call.
     reuse_from optionally copies matching accepted native profiles from an
-    earlier family; chemistry, feed, transport and refinement must agree.
+    earlier family, or a sequence of families searched in order; chemistry,
+    feed, transport and refinement must agree for each reused profile.
     The default also builds a connected tetrahedral table; import the loader
     from kflame.fgm.nonadiabatic3d.NonAdiabaticFGM.
     """
@@ -477,24 +478,28 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
     for phi in phis:
         fresh_mixture(mech, float(phi), fuel, oxidizer)
     fractions = np.sort(fractions)[::-1]
-    reusable = None
+    reuse_sources = []
     if reuse_from is not None:
-        reusable = Path(reuse_from).resolve()
-        saved_generation = json.loads((reusable / 'generation.json').read_text(encoding='utf-8'))
-        if not saved_generation.get('all_final_accepted'):
-            raise ValueError('reuse_from must be a complete accepted native family')
+        banks = reuse_from if isinstance(reuse_from, (list, tuple)) else [reuse_from]
+        for bank in banks:
+            reusable = Path(bank).resolve()
+            saved_generation = json.loads((reusable / 'generation.json').read_text(encoding='utf-8'))
+            if not saved_generation.get('all_final_accepted'):
+                raise ValueError('reuse_from must contain complete accepted native families')
+            reuse_sources.append((reusable, saved_generation))
     defaults = {name: parameter.default for name, parameter in inspect.signature(solve_flame).parameters.items()}
     def reuse(kind, phi, fraction, destination):
-        if reusable is None or flame_settings.get('grid') is not None:
+        if flame_settings.get('grid') is not None:
             return None
-        matches = [r for r in saved_generation['rows'] if r['kind'] == kind and r['phi'] == phi
-                   and (kind == 'adiabatic_reference' or r['fraction'] == fraction)]
-        if len(matches) != 1:
-            return None
-        source = reusable / matches[0]['output']
-        meta = json.loads((source / 'metadata.json').read_text(encoding='utf-8'))
-        target = lambda k: flame_settings.get(k, defaults[k])
-        matching = (meta.get('accepted') and meta.get('backend') == 'native_cpu'
+        for reusable, saved_generation in reuse_sources:
+            matches = [r for r in saved_generation['rows'] if r['kind'] == kind and r['phi'] == phi
+                       and (kind == 'adiabatic_reference' or r['fraction'] == fraction)]
+            if len(matches) != 1:
+                continue
+            source = reusable / matches[0]['output']
+            meta = json.loads((source / 'metadata.json').read_text(encoding='utf-8'))
+            target = lambda k: flame_settings.get(k, defaults[k])
+            matching = (meta.get('accepted') and meta.get('backend') == 'native_cpu'
                     and meta.get('flow_type') == ('free_flame' if kind == 'adiabatic_reference' else 'isothermal_burner')
                     and meta['report'].get('grid_converged')
                     and Path(meta['mechanism']).read_bytes() == Path(resolve_mechanism(mechanism)).read_bytes()
@@ -505,13 +510,14 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
                     and meta['soret'] == target('soret')
                     and all(v == target(k) for k, v in meta['refinement'].items())
                     and all(v == target(k) for k, v in meta['tolerances'].items()))
-        if not matching:
-            return None
-        shutil.copytree(source, destination)
-        with np.load(destination / 'flame.npz', allow_pickle=False) as saved:
-            result = {k: saved[k] for k in saved.files}
-        return dict(result, output=destination, **{k: meta[k] for k in
-                    (('Su',) if kind == 'adiabatic_reference' else ('mass_flux', 'inlet_velocity', 'heat_loss'))})
+            if not matching:
+                continue
+            shutil.copytree(source, destination)
+            with np.load(destination / 'flame.npz', allow_pickle=False) as saved:
+                result = {k: saved[k] for k in saved.files}
+            return dict(result, output=destination, **{k: meta[k] for k in
+                        (('Su',) if kind == 'adiabatic_reference' else ('mass_flux', 'inlet_velocity', 'heat_loss'))})
+        return None
     folder = _output(output, 'nonadiabatic_fgm')
     generation = dict(
         mechanism=mechanism, fuel=fuel, oxidizer=oxidizer, phis=phis,

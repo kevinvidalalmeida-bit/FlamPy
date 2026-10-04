@@ -65,12 +65,13 @@ def generate_adaptive_nonadiabatic_fgm(*, phis, mass_flux_fractions, output,
     if isinstance(progress_species, dict):
         progress_species = ','.join(f'{name}:{value}' for name, value in progress_species.items())
     phis = np.asarray(phis, dtype=float)
-    fractions = np.sort(np.asarray(mass_flux_fractions, dtype=float))[::-1]
+    fractions = np.asarray(mass_flux_fractions, dtype=float)
     if (phis.ndim != 1 or len(phis) < 3 or not np.isfinite(phis).all()
             or np.any(phis <= 0.) or np.any(np.diff(phis) <= 0.)
             or fractions.ndim != 1 or len(fractions) < 3 or not np.isfinite(fractions).all()
-            or np.any(fractions <= 0.) or np.any(fractions >= 1.) or np.any(np.diff(fractions) >= 0.)):
+            or np.any(fractions <= 0.) or np.any(fractions >= 1.) or np.unique(fractions).size != fractions.size):
         raise ValueError('Supply at least three distinct finite candidates per axis; phis must increase')
+    fractions = np.sort(fractions)[::-1]
     for name, value in [('max_flames', max_flames), ('max_iterations', max_iterations),
                         ('initial_phi_count', initial_phi_count), ('initial_loss_count', initial_loss_count)]:
         if not isinstance(value, int) or isinstance(value, bool) or value < 2:
@@ -101,7 +102,9 @@ def generate_adaptive_nonadiabatic_fgm(*, phis, mass_flux_fractions, output,
         (root/'adaptive_report.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8', newline='\n')
     mech = load_mechanism(flame_settings.get('mechanism', 'gri30.yaml'))
     thermo, kinetics = NativeThermo(mech), NativeKinetics(mech)
-    available = Path(reuse_from) if reuse_from else None
+    # Keep every earlier probe pool as well as the optional initial bank.
+    # A partial initial bank must not hide newly solved profiles in later rounds.
+    available = [Path(reuse_from)] if reuse_from is not None else []
     checkpoint('initialized')
     for iteration in range(max_iterations):
         mid_phi, mid_loss = midpoint_indices(phis, selected_phi), midpoint_indices(fractions, selected_loss)
@@ -118,12 +121,12 @@ def generate_adaptive_nonadiabatic_fgm(*, phis, mass_flux_fractions, output,
             pool = generate_nonadiabatic_fgm(phis=phis[probe_phi].tolist(),
                 mass_flux_fractions=fractions[probe_loss].tolist(), progress_species=progress_species,
                 progress_points=progress_points, max_energy_error=max_energy_error,
-                output=root/f'probes_{iteration:02d}', raw_only=True, reuse_from=available, **flame_settings)
+                output=root/f'probes_{iteration:02d}', raw_only=True, reuse_from=available or None, **flame_settings)
         except Exception as error:
             report['error'] = str(error)
             checkpoint('native_generation_failure')
             raise
-        available = Path(reuse_from) if reuse_from else pool
+        available.insert(0, pool)
         evaluated.update(requested)
         folder = root/f'table_{iteration:02d}'
         _subset_family(pool, folder, phis[sorted(selected_phi)].tolist(), fractions[sorted(selected_loss)].tolist())

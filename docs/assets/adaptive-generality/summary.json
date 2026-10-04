@@ -1,0 +1,143 @@
+{
+  "scope": "Cached controller indicators only; no new physical conditions or global error bound.",
+  "cases": [
+    {
+      "case": "lean_original",
+      "phi_bounds": [
+        0.7,
+        0.9
+      ],
+      "selected_flames": 90,
+      "evaluated_flames": 90,
+      "passed": false,
+      "reason": "candidate_resolution_exhausted_without_independent_probes",
+      "rounds": 14,
+      "tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      }
+    },
+    {
+      "case": "lean_looser_requested",
+      "phi_bounds": [
+        0.7,
+        0.9
+      ],
+      "selected_flames": 90,
+      "evaluated_flames": 90,
+      "passed": false,
+      "reason": "candidate_resolution_exhausted_without_independent_probes",
+      "rounds": 14,
+      "tolerances": {
+        "temperature_K": 50.0,
+        "species_absolute": 0.01,
+        "node_coverage_min": 0.8,
+        "source_peak_relative": {
+          "omega_C": 0.15,
+          "qdot": 0.15
+        },
+        "source_L1_relative": {
+          "omega_C": 0.15,
+          "qdot": 0.15
+        },
+        "source_integral_relative": {
+          "omega_C": 0.1,
+          "qdot": 0.1
+        },
+        "source_coverage_min": {
+          "omega_C": 0.97,
+          "qdot": 0.97
+        }
+      }
+    },
+    {
+      "case": "rich_original",
+      "phi_bounds": [
+        1.1166666666666667,
+        1.2166666666666666
+      ],
+      "selected_flames": 126,
+      "evaluated_flames": 126,
+      "passed": false,
+      "reason": "candidate_resolution_exhausted_without_independent_probes",
+      "rounds": 16,
+      "tolerances": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "node_coverage_min": 0.85,
+        "source_peak_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_L1_relative": {
+          "omega_C": 0.05,
+          "qdot": 0.05
+        },
+        "source_integral_relative": {
+          "omega_C": 0.03,
+          "qdot": 0.03
+        },
+        "source_coverage_min": {
+          "omega_C": 0.99,
+          "qdot": 0.99
+        }
+      }
+    },
+    {
+      "case": "rich_looser_requested",
+      "phi_bounds": [
+        1.1166666666666667,
+        1.2166666666666666
+      ],
+      "selected_flames": 54,
+      "evaluated_flames": 90,
+      "passed": true,
+      "reason": "all_candidate_midpoint_indicators_passed",
+      "rounds": 13,
+      "tolerances": {
+        "temperature_K": 50.0,
+        "species_absolute": 0.01,
+        "node_coverage_min": 0.8,
+        "source_peak_relative": {
+          "omega_C": 0.15,
+          "qdot": 0.15
+        },
+        "source_L1_relative": {
+          "omega_C": 0.15,
+          "qdot": 0.15
+        },
+        "source_integral_relative": {
+          "omega_C": 0.1,
+          "qdot": 0.1
+        },
+        "source_coverage_min": {
+          "omega_C": 0.97,
+          "qdot": 0.97
+        }
+      }
+    }
+  ],
+  "baseline_432_unchanged": true,
+  "initial_bank": "phi450",
+  "source_sha256": {
+    "src/kflame/api.py": "10d0c2153d927967bc21542a71c20607e55921d482050e6fb7a37365b1517d1a",
+    "src/kflame/fgm/adaptive_nonadiabatic.py": "3de4c9ee66d58af27b98b5a05af04d66fa37f09e4cc3fa1abd81dd3066f27520"
+  }
+}

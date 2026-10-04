@@ -80,15 +80,36 @@ python examples/adaptive_nonadiabatic_3d.py examples/adaptive_fgm_settings.json 
 `--reuse-from` admite una biblioteca nativa aceptada con las mismas
 condiciones y criterios del solver. No reduce el coste ya invertido en
 crear esa biblioteca. Los perfiles guardados evitan repetir simulaciones
-durante las rondas de refinamiento.
+durante las rondas de refinamiento. El controlador conserva todos los bancos
+de sondas anteriores: una biblioteca inicial parcial se complementa con los
+perfiles nuevos. Cada reutilización vuelve a comprobar mecanismo, corrientes,
+temperatura, presión, transporte y criterios del solver.
 
 ## Resultado de la evaluación
 
-La selección conservadora mantiene **432 llamas**: 24 composiciones,
+Para **este caso de CH₄–aire**, la selección conservadora mantiene
+**432 llamas**: 24 composiciones,
 17 caudales de quemador y una referencia adiabática por composición.
 Para decidir esa selección evaluó **450 llamas** en 32 rondas. La tabla
 se reduce un 4 %, pero este caso no demuestra ahorro de simulaciones;
 con estos límites conviene conservar la biblioteca completa como referencia.
+
+El recuento corresponde a GRI-Mech 3.0, 300 K, 101325 Pa, transporte
+promediado sin Soret, candidatos de φ entre 0,7 y 1,3 y fracciones de caudal
+entre 0,06 y 0,65, con las tolerancias publicadas. El controlador no contiene
+un objetivo de 432 llamas: otras condiciones, candidatos o tolerancias pueden
+producir otros recuentos o terminar sin certificar la precisión.
+
+Una [comprobación retrospectiva adicional](assets/adaptive-generality/summary.json)
+emplea perfiles de la misma biblioteca en dos subintervalos. En el intervalo
+rico, unas tolerancias solicitadas menos exigentes producen 54 llamas
+seleccionadas y 90 evaluadas; con las originales, los 126 candidatos se agotan
+sin sondas independientes suficientes. En el intervalo pobre, ambas
+configuraciones agotan los 90 candidatos sin certificar precisión. Estos
+fallos se conservan y no relajan el criterio. Esta prueba comprueba la respuesta
+del controlador; no valida nuevos combustibles ni garantiza ahorro de
+simulaciones. Las 432 llamas y las 17 comprobaciones del caso principal se
+conservan. Sus datos y huellas de código corresponden al commit `dd74eec`.
 
 Un primer ensayo, sin margen, seleccionó 414 llamas y pasó los doce casos
 anteriores. Un caso nuevo alcanzó 5,31 % de error L1 en `qdot`, superando
