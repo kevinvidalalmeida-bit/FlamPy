@@ -1,16 +1,18 @@
-"""Seven scientific diagnostic figures from published reduced-burner arrays.
+"""Twelve scientific diagnostic figures from published reduced-burner arrays.
 
 No flame is solved and no curve is aligned or shifted to improve agreement.
 PNG/SVG exports are independent of the optional multipage PDF.
 """
 import argparse
 import json
+import textwrap
 from pathlib import Path
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.patches import Rectangle
 import numpy as np
 
 from examples.validate_reduced_burner import distance
@@ -49,38 +51,38 @@ def figures(data, *, output, pdf=None, table=None):
     if book:
         fig=plt.figure(figsize=(11.69,8.27))
         fig.text(.08,.87,'FGM con pérdidas hacia un quemador',fontsize=23,weight='bold')
-        fig.text(.08,.81,'CH₄-aire · 432 llamas · controles físicos (Z, C, h)',fontsize=15,color='#335566')
+        fig.text(.08,.81,'CH₄-aire · 432 llamas · estado experimental en pérdidas pequeñas',fontsize=15,color='#335566')
         passed=sum(v['passed'] for v,p in records);converged=sum(v['accepted'] for v,p in records)
         worst_T=max(v['metrics']['temperature_K'] for v,p in records)
         worst_q=max(v['metrics']['wall_heat_flux_relative'] for v,p in records)*100
         worst_source=max(max(s.values()) for v,p in records for s in v['sources'].values())*100
         audit=json.loads((data/'parabolicity_audit.json').read_text(encoding='utf-8'))
-        a=next(v for v,p in records if v['phi']==.815 and v['fraction']==.575)
-        b=next(v for v,p in records if v['phi']==1.235 and v['fraction']==.575)
-        rows=[('Comprobaciones independientes',f'{converged}/{len(records)} casos convergen; {passed}/{len(records)} cumplen todas las tolerancias.\n'
-               f'Máximos: temperatura {worst_T:.2f} K; flujo térmico {worst_q:.2f} %; fuentes {worst_source:.2f} %.\n'
-               '13 casos de desarrollo y 4 condiciones nuevas de confirmación después de fijar el método.'),
-              ('Los tres casos pendientes se resuelven',
-               f"φ = 0.815, r = 0.575: flujo térmico 2.27 % → {a['metrics']['wall_heat_flux_relative']*100:.2f} %; "
-               f"L1 de q̇ 5.22 % → {a['sources']['qdot']['L1_relative']*100:.2f} %.\n"
-               f"φ = 1.235, r = 0.575: L1 de q̇ 5.47 % → {b['sources']['qdot']['L1_relative']*100:.2f} %.\n"
-               'φ = 1.235, r = 0.095: ahora converge y cumple todas las comprobaciones.'),
-              ('Tolerancias de comparación','Temperatura: 20 K; fracciones másicas: 0.005; flujo hacia el quemador: 2 %; δ: 20 µm.\n'
-               'Fuentes: error máximo / pico ≤ 5 %, error L1 ≤ 5 % y error integral ≤ 3 %.'),
-              ('Algoritmo y límites de validez',
-               'C = YCO₂ + YCO + YH₂O + 5 YH₂; cierre C1 acotado y continuación adaptativa entre cierres.\n'
-               f"La auditoría global detecta {audit['negative_samples']} de {audit['samples']} consultas no admisibles.\n"
-               'Se rechazan soluciones con difusión negativa interior; no se certifica todo el espacio de la tabla.')]
-        for (heading,paragraph),y in zip(rows,[.71,.54,.37,.23]):
+        summary=json.loads((data/'summary.json').read_text(encoding='utf-8'))
+        benchmark=json.loads((data/'benchmark.json').read_text(encoding='utf-8'))
+        rows=[('Comparaciones físicas',f'{converged}/{len(records)} convergen; {passed}/{len(records)} cumplen todos los límites.\n'
+               f'Máximos: temperatura {worst_T:.2f} K; calor hacia quemador {worst_q:.2f} %; fuentes {worst_source:.2f} %.\n'
+               f"{summary['development_case_count']} casos de desarrollo y {summary['reserved_case_count']} condiciones nuevas de confirmación."),
+              ('Tolerancias y referencias','Temperatura: 20 K; especies: 0.005; calor hacia quemador: 2 %; separación: 20 µm.\n'
+               'Fuentes: error / pico ≤ 5 %, L1 ≤ 5 % e integral ≤ 3 %. Perfiles sin desplazamiento.\n'
+               'Referencias nativa y Cantera verificadas; balances y refinamiento espacial separados.'),
+              ('Estabilidad e interpolación',f"{audit['samples']:,} consultas: {audit['negative_samples']} con difusión negativa y "
+               f"{audit['nonpositive_chart_samples']} con orientación no positiva.\n"
+               'Cierre C1 limitado; proyección adaptativa de fuente y transporte. Extensión propia.\n'
+               'Un muestreo finito no demuestra validez en cada punto de la tabla.'),
+              ('Rendimiento y alcance',f"Jacobiano idéntico: mejora conjunta {benchmark['combined_speedup']:.2f}×; "
+               f"lote grande, 4 hilos: {benchmark['large_batch_parallel_speedup']:.2f}×.\n"
+               'Quemador plano isotérmico, CH₄-aire; cola química restringida al tramo monótono.\n'
+               'Sin validación experimental, apagado transitorio, sólido conjugado ni H₂ con pérdidas.')]
+        for (heading,paragraph),y in zip(rows,[.71,.55,.39,.23]):
             fig.text(.08,y,heading,fontsize=13,weight='bold')
-            fig.text(.08,y-.035,paragraph,fontsize=11,va='top',linespacing=1.65)
-        fig.text(.08,.055,'Referencias: van Oijen y de Goey (2000), doi:10.1080/00102200008935814; Gövert et al. (2018),\n'
-                 'doi:10.1007/s10494-017-9848-4; Gupta et al. (2021), doi:10.1080/13647830.2021.1926544.\n'
-                 'Comparación numérica de un quemador plano isotérmico; sin validación experimental ni apagado transitorio.',fontsize=9)
+            fig.text(.08,y-.035,paragraph,fontsize=11,va='top',linespacing=1.55)
+        fig.text(.08,.04,'Referencias: Gövert et al. (2018), doi:10.1007/s10494-017-9848-4; Gupta et al. (2021),\n'
+                 'doi:10.1080/13647830.2021.1926544; Luo et al. (2023), arXiv:2308.07833.\n'
+                 'Los artículos motivan controles y diagnósticos; no reproducimos sus geometrías ni atribuimos garantías a nuestra extensión.',fontsize=9)
         book.savefig(fig);plt.close(fig)
     def save(fig, name, title, note):
         fig.suptitle(title, fontsize=15, y=.98)
-        fig.text(.5,.026,note,ha='center',va='bottom',fontsize=9)
+        fig.text(.5,.026,textwrap.fill(note,width=88 if fig.get_figwidth()<9 else 135),ha='center',va='bottom',fontsize=9)
         fig.subplots_adjust(top=.88,bottom=.16 if name=='07_errores_convergencia' else .13,
                             left=.14 if name=='07_errores_convergencia' else .09,right=.95,wspace=.30,hspace=.37)
         for ext in ['png','svg']:
@@ -167,7 +169,7 @@ def figures(data, *, output, pdf=None, table=None):
     for ax in axes:ax.set_xlabel(r'Caudal másico superficial, $\dot{m}$ (kg m$^{-2}$ s$^{-1}$)')
     axes[0].legend(loc='best',frameon=False);legend(fig,composition_colors=True)
     save(fig,'03_temperatura_separacion','Temperatura de salida y posición de la zona reactiva',
-         'δ: posición del máximo de |ΩC|. Puntos: r = 0.095, 0.285 y 0.575. Cruz roja: iteración FGM sin converger.')
+         'δ: posición del máximo de |ΩC|. r: caudal impuesto / caudal de la llama libre.')
 
     species=['H2','H','O','O2','OH','H2O','HO2','H2O2','C','CH','CH2','CH2(S)','CH3','CH4','CO']
     if (data/'manifest.json').exists():species=json.loads((data/'manifest.json').read_text(encoding='utf-8'))['species_names']
@@ -213,7 +215,7 @@ def figures(data, *, output, pdf=None, table=None):
     axes[1,1].text(.97,.97,'Continua: −qcond\nDiscontinua: ∑hk Jk',ha='right',va='top',transform=axes[1,1].transAxes,fontsize=9)
     legend(fig,composition_colors=True)
     save(fig,'05_flujos_balance','Flujos de calor y balance de entalpía total',
-         'q ≈ ṁΔh comprueba el balance discreto impuesto; la referencia verifica la precisión física. Cruz roja: sin converger.')
+         'q ≈ ṁΔh comprueba el balance discreto impuesto; la referencia verifica la precisión física.')
 
     fig,axes=plt.subplots(2,len(phis),figsize=(11.69,8.27))
     for j,phi in enumerate(phis):
@@ -227,8 +229,8 @@ def figures(data, *, output, pdf=None, table=None):
     save(fig,'06_fuentes','Fuentes químicas para r = 0.575',
          'Las fuentes del FGM se tabulan. La liberación química de calor no se añade de nuevo a la ecuación de entalpía total.')
 
-    fig=plt.figure(figsize=(11.69,8.27));layout=fig.add_gridspec(2,2,width_ratios=[1.4,1.],height_ratios=[1.,1.])
-    ax=fig.add_subplot(layout[:,0]);names=['T\n20 K','Y\n0.005','ΩC\n5/5/3 %','q̇\nquímica\n5/5/3 %','q\nquemador\n2 %','δ\n20 µm']
+    fig=plt.figure(figsize=(8.27,11.69));layout=fig.add_gridspec(2,2,width_ratios=[2.,1.],height_ratios=[1.,1.])
+    ax=fig.add_subplot(layout[:,0]);names=['T\n20 K','Y\n0.005',r'$\Omega_C$'+'\n5/5/3 %',r'$\dot{q}$'+'\n5/5/3 %','q pared\n2 %','δ\n20 µm']
     values=[];labels=[]
     for v,p in records:
         m=v['metrics'];s=v['sources']
@@ -238,35 +240,122 @@ def figures(data, *, output, pdf=None, table=None):
                       m['wall_heat_flux_relative']/limits['wall_heat_flux_relative'],m['stand_off_distance_m']/limits['stand_off_distance_m']])
         labels.append(f"{v['phi']:.3f} / {v['fraction']:.3f}"+(' *' if not v['accepted'] else ''))
     ratios=np.array(values);artist=ax.imshow(ratios,cmap='cividis',vmin=0,vmax=max(1.25,float(ratios.max())),aspect='auto')
-    ax.set_xticks(range(len(names)),names);ax.set_yticks(range(len(labels)),labels,fontsize=8);ax.grid(False)
+    ax.set_xticks(range(len(names)),names,fontsize=8);ax.set_yticks(range(len(labels)),labels,fontsize=7);ax.grid(False)
     ax.set_ylabel('φ / r');ax.set_title('Error / tolerancia (aceptable ≤ 1)')
     for i in range(len(labels)):
         for j in range(len(names)):
-            ax.text(j,i,f'{ratios[i,j]:.2f}',ha='center',va='center',fontsize=8,color='white' if ratios[i,j]<.55 else '#222222')
-            if ratios[i,j]>1:ax.plot(j,i,marker='s',ms=25,markerfacecolor='none',markeredgecolor='#D55E00',markeredgewidth=1.5)
+            rgba=artist.cmap(artist.norm(ratios[i,j]));luminance=np.dot(rgba[:3],[.2126,.7152,.0722])
+            ax.text(j,i,f'{ratios[i,j]:.2f}',ha='center',va='center',fontsize=7,color='white' if luminance<.5 else '#222222')
+            if ratios[i,j]>1:ax.add_patch(Rectangle((j-.5,i-.5),1,1,fill=False,edgecolor='#D55E00',linewidth=1.5))
     ax2=fig.add_subplot(layout[0,1]);ax3=fig.add_subplot(layout[1,1])
     convergence=data/'convergence.json'
     if convergence.exists():
         conv=json.loads(convergence.read_text(encoding='utf-8'))
         for label in dict.fromkeys(e['label'] for e in conv.get('grid',[])):
             group=[e for e in conv['grid'] if e['label']==label]
-            ax2.plot([e['nodes'] for e in group],[e['temperature_change_K'] for e in group],marker='o',label=label)
+            ax2.plot([e['nodes'] for e in group],[e['temperature_change_K'] for e in group],marker='o',label=label.replace('\u00cf\u2020','φ'))
         ax2.axhline(limits['grid_temperature_change_K'],color='#555555',ls=':',label='Límite: 5 K')
         ax2.set_xlabel('Nodos espaciales');ax2.set_ylabel('Cambio máximo de T (K)');ax2.set_title('Refinamiento espacial');ax2.legend(fontsize=8,frameon=False)
         for entry in conv.get('domain',[]):
-            ax3.plot(np.asarray(entry['widths_m'])*1000,entry['outlet_temperature_K'],marker='o',label=entry['label'])
+            x=np.asarray(entry['widths_m'])*1000;y=np.array(entry['outlet_temperature_K']);accepted=np.array(entry['accepted'])
+            ax3.plot(x,np.where(accepted,y,np.nan),marker='o',label=entry['label'])
+            ax3.plot(x[~accepted],y[~accepted],marker='x',color='#D55E00',ms=8,ls='none')
         ax3.set_xlabel('Longitud del dominio (mm)');ax3.set_ylabel('Temperatura de salida (K)');ax3.set_title('Extensión del dominio');ax3.legend(fontsize=8,frameon=False)
     else:
         for axis in [ax2,ax3]:axis.axis('off');axis.text(.5,.5,'Prueba pendiente',ha='center',transform=axis.transAxes)
     save(fig,'07_errores_convergencia','Errores, criterios de aceptación y comprobaciones espaciales',
-         'Fuentes: máximo de los cocientes de error pico, L1 e integral. Recuadro: excede tolerancia. *: solver sin converger.')
+         'Fuentes: máximo de errores pico, L1 e integral / límite. Recuadro: excede tolerancia. Cruz en dominio: FGM rechazado a 90 mm.')
+    additional_figures(data, records, save)
     if book:book.close()
     return saved
 
 
+def additional_figures(data,records,save):
+    audit=json.loads((data/'parabolicity_audit.json').read_text(encoding='utf-8'))
+    guard=audit['chart_guard']['chart_guard']
+    fig,axes=plt.subplots(1,2,figsize=(11.69,8.27))
+    axes[0].plot([e['iteration'] for e in guard['history']],
+        [e['bad_samples'] for e in guard['history']],marker='o',color=COLORS[0])
+    axes[0].set_xlabel('Iteración de preparación del cierre')
+    axes[0].set_ylabel('Consultas con orientación no admisible')
+    axes[0].set_title('Control de geometría antes de resolver')
+    total=audit['samples'];active=audit['projected_samples']
+    axes[1].bar(['Cierre conservativo','Proyección activada'],[total-active,active],color=[COLORS[0],COLORS[1]])
+    axes[1].set_yscale('log');axes[1].set_ylabel('Número de consultas (escala logarítmica)')
+    axes[1].set_title(f"{audit['negative_samples']} difusiones negativas tras la corrección")
+    axes[1].text(.5,.93,f'{active/total*100:.3f} % requieren proyección',ha='center',transform=axes[1].transAxes)
+    save(fig,'08_estabilidad','Geometría del cierre y auditoría de difusión',
+        f"{total:,} puntos: centro y ocho puntos de Gauss por celda. Auditoría finita; controles adicionales en nodos y caras.")
+
+    bench=json.loads((data/'benchmark.json').read_text(encoding='utf-8'))
+    fig,axes=plt.subplots(1,2,figsize=(11.69,8.27))
+    keys=['numpy_full','full','temperature_cache','cached']
+    labels=['NumPy','Numba','Numba +\ncaché T','Numba +\ncachés T y P']
+    times=[bench['timings'][k]['median_seconds']*1000 for k in keys]
+    axes[0].bar(labels,times,color=[COLORS[1],COLORS[0],COLORS[2],'#56B4E9'])
+    for i,v in enumerate(times):axes[0].text(i,v,f'{v:.1f}',ha='center',va='bottom',fontsize=10)
+    axes[0].set_ylabel('Nueve residuos del Jacobiano (ms)');axes[0].set_ylim(0,max(times)*1.2)
+    axes[0].set_title(f"Mismo problema: mejora {bench['combined_speedup']:.2f}×")
+    times=[bench['large_batch'][k]['median_seconds']*1000 for k in ['serial','parallel']]
+    axes[1].bar(['1 hilo','4 hilos'],times,color=[COLORS[1],COLORS[0]])
+    for i,v in enumerate(times):axes[1].text(i,v,f'{v:.1f}',ha='center',va='bottom',fontsize=10)
+    axes[1].set_ylabel('Consulta de 76 636 estados (ms)');axes[1].set_ylim(0,max(times)*1.2)
+    axes[1].set_title(f"Lote grande: mejora {bench['large_batch_parallel_speedup']:.2f}×")
+    save(fig,'09_rendimiento','Rendimiento medido sobre entradas idénticas',
+        'Medianas de 9 repeticiones del Jacobiano y 7 del lote. P: multiplicadores de proyección; carga y preparación excluidas.')
+
+    near=sorted([(v,p) for v,p in records if v['phi']==.985],key=lambda vp:vp[0]['fraction'])
+    fig,axes=plt.subplots(1,3,figsize=(11.69,8.27))
+    for prefix,style in STYLES.items():
+        fractions=[v['fraction'] for v,p in near]
+        axes[0].plot(fractions,[p[prefix+'_T'][-1] for v,p in near],marker='o',**style)
+        axes[1].plot(fractions,[(v['solver']['diagnostics']['burner_heat_loss_W_m2'] if prefix=='reduced'
+            else float(p[prefix+'_wall_heat_flux_W_m2']))/1000 for v,p in near],marker='o',**style)
+        axes[2].plot(fractions,[(v['solver']['diagnostics']['outlet_enthalpy_loss_W_m2'] if prefix=='reduced'
+            else float(p[prefix+'_outlet_heat_flux_W_m2']))/1000 for v,p in near],marker='o',**style)
+    for ax,label in zip(axes,['T de salida (K)','Calor hacia quemador (kW m⁻²)','ṁ Δh (kW m⁻²)']):
+        ax.set_xlabel('r = ṁ / ṁ de la llama libre');ax.set_ylabel(label)
+    axes[0].legend(frameon=False,fontsize=8)
+    save(fig,'10_limite_adiabatico','Reducción de pérdidas al aproximarse al caudal adiabático',
+        'φ = 0.985; r llega a 0.95. Tendencia en ese intervalo; no demuestra convergencia matemática cuando r → 1.')
+
+    tail=read(data/'reactor_tail.npz');meta=json.loads((data/'extended_metadata.json').read_text(encoding='utf-8'))
+    species=json.loads((data/'manifest.json').read_text(encoding='utf-8'))['species_names']
+    weights=np.array([meta['progress_species'].get(k,0.) for k in species])
+    audits=json.loads(str(tail['audit_json']));index=max(range(len(audits)),key=lambda n:audits[n]['endpoint_species_gap'])
+    row=sorted(meta['rows'],key=lambda r:(r['composition_index'],r['loss_index']))[index]
+    C=tail['Y'][index]@weights;HP_C=float(tail['HP_Y'][index]@weights)
+    fig,axes=plt.subplots(1,2,figsize=(11.69,8.27));steps=np.arange(1,len(C)+1)
+    axes[0].plot(steps,C,marker='o',color=COLORS[0],label='Estados del reactor tabulados')
+    axes[0].plot(len(C)+2,HP_C,marker='x',ms=9,color=COLORS[1],ls='none',label='Equilibrio HP de referencia')
+    axes[0].set_ylabel('Progreso físico C');axes[0].set_xlabel('Estado químico posterior a la llama');axes[0].legend(frameon=False,fontsize=8)
+    n=species.index('NO');axes[1].plot(steps,tail['Y'][index,:,n],marker='o',color=COLORS[0])
+    axes[1].plot(len(C)+2,tail['HP_Y'][index,n],marker='x',ms=9,color=COLORS[1],ls='none')
+    axes[1].set_ylabel('Fracción másica Y(NO)');axes[1].set_xlabel('Estado químico posterior a la llama')
+    save(fig,'11_cola_quimica','Alcance de la continuación química monótona',
+        f"φ = {row['phi']:.3f}; r = {row.get('fraction',1.):.3f}. HP es una referencia separada; no se inserta como último estado.")
+
+    sensitivity=json.loads((data/'sensitivity.json').read_text(encoding='utf-8'))
+    fig,axes=plt.subplots(1,2,figsize=(11.69,8.27))
+    for color,(phi,r) in zip(COLORS,[(.735,.925),(1.295,.925),(.985,.95)]):
+        label=f'case_{phi:.6f}_{r:.6f}';baseline=next(v for v,p in records if v['case_label']==label)
+        refinements=sorted([d for d in sensitivity['weak_grid'] if d['case'].startswith(label)],key=lambda d:d['case'])
+        levels=[0]+[int(d['case'][-1]) for d in refinements]
+        metrics=[baseline['metrics']]+[d['metrics'] for d in refinements]
+        axes[0].plot(levels,[d['wall_heat_flux_relative']*100 for d in metrics],marker='o',color=color,label=f'φ={phi:.3f}, r={r:.3f}')
+        axes[1].plot(levels,[d['temperature_K'] for d in metrics],marker='o',color=color)
+    axes[0].axhline(2.,color='#555555',ls=':',label='Límite: 2 %')
+    axes[1].axhline(20.,color='#555555',ls=':')
+    axes[0].set_ylabel('Error de calor hacia quemador (%)');axes[1].set_ylabel('Error máximo de temperatura (K)')
+    for ax in axes:ax.set_xlabel('Refinamientos sucesivos de la malla');ax.set_xticks([0,1,2])
+    axes[0].legend(frameon=False,fontsize=9)
+    save(fig,'12_sensibilidad','El refinamiento espacial no elimina los fallos de calor',
+        'Cada nivel biseca los intervalos anteriores. El fallo físico permanece aunque el residuo y la estabilidad numérica pasen.')
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--data',type=Path,default=Path('docs/assets/reduced-burner'))
+    parser.add_argument('--data',type=Path,default=Path('docs/assets/reduced-burner-hpc'))
     parser.add_argument('--output',type=Path,default=Path('output/figures/reduced-burner'))
     parser.add_argument('--pdf',type=Path)
     parser.add_argument('--table',type=Path)

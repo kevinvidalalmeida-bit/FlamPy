@@ -285,8 +285,20 @@ class NonAdiabaticFGM:
             raise ValueError('Mechanism and table species differ')
         self.thermo = NativeThermo(mech)
         self.max_temperature = 2. * mech.max_temperature
-        self.mesh = SimplexMesh(self.table['controls'], self.table['cells'])
-        self.reference_mesh = SimplexMesh(self.table['reference_points'], self.table['reference_cells'])
+        self._mesh = self._reference_mesh = None
+
+    @property
+    def mesh(self):
+        """Construct physical search geometry only when lookup needs it."""
+        if self._mesh is None:
+            self._mesh = SimplexMesh(self.table['controls'], self.table['cells'])
+        return self._mesh
+
+    @property
+    def reference_mesh(self):
+        if self._reference_mesh is None:
+            self._reference_mesh = SimplexMesh(self.table['reference_points'], self.table['reference_cells'])
+        return self._reference_mesh
 
     def reference_enthalpy(self, *, Z, C):
         nodes, barycentric = self.reference_mesh.locate([Z, C])

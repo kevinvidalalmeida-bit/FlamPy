@@ -1,0 +1,145 @@
+{
+  "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+  "grid": [
+    {
+      "label": "Ï†=0.815, r=0.575",
+      "level": 1,
+      "nodes": 907,
+      "accepted": true,
+      "temperature_change_K": 0.6040523338065213,
+      "wall_heat_flux_change_relative": 7.480508620178607e-05,
+      "passed": true
+    },
+    {
+      "label": "Ï†=0.815, r=0.575",
+      "level": 2,
+      "nodes": 1813,
+      "accepted": true,
+      "temperature_change_K": 0.21637028134159664,
+      "wall_heat_flux_change_relative": 1.4448044469985335e-05,
+      "passed": true
+    },
+    {
+      "label": "Ï†=1.235, r=0.575",
+      "level": 1,
+      "nodes": 967,
+      "accepted": true,
+      "temperature_change_K": 0.28820901884705563,
+      "wall_heat_flux_change_relative": 1.559449220337986e-05,
+      "passed": true
+    },
+    {
+      "label": "Ï†=1.235, r=0.575",
+      "level": 2,
+      "nodes": 1933,
+      "accepted": true,
+      "temperature_change_K": 0.0442821724618625,
+      "wall_heat_flux_change_relative": 3.084916037488425e-06,
+      "passed": true
+    },
+    {
+      "label": "Ï†=0.985, r=0.285",
+      "level": 1,
+      "nodes": 971,
+      "accepted": true,
+      "temperature_change_K": 0.18411510026913902,
+      "wall_heat_flux_change_relative": 1.4095418414031603e-05,
+      "passed": true
+    },
+    {
+      "label": "Ï†=0.985, r=0.285",
+      "level": 2,
+      "nodes": 1941,
+      "accepted": true,
+      "temperature_change_K": 0.056878279852810465,
+      "wall_heat_flux_change_relative": 8.372235616454984e-07,
+      "passed": true
+    }
+  ],
+  "domain": [
+    {
+      "label": "FGM reducido",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1912.353086823483,
+        1914.9312041781702,
+        1914.9519098991398
+      ],
+      "wall_heat_flux_W_m2": [
+        67044.3214448286,
+        67044.32144489752,
+        67044.32144494781
+      ],
+      "accepted": [
+        true,
+        true,
+        false
+      ],
+      "last_temperature_change_K": 0.020705720969544927,
+      "last_wall_heat_flux_change_relative": 7.501219781986968e-13,
+      "passed": false
+    },
+    {
+      "label": "Detallado nativo",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1912.9488432777932,
+        1914.8148892984586,
+        1914.9083520318393
+      ],
+      "wall_heat_flux_W_m2": [
+        67323.35046290452,
+        67325.73939221645,
+        67325.73939221635
+      ],
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "last_temperature_change_K": 0.09346273338064748,
+      "last_wall_heat_flux_change_relative": 1.5129935076560693e-15,
+      "passed": true
+    },
+    {
+      "label": "Cantera",
+      "widths_m": [
+        0.03,
+        0.06,
+        0.09
+      ],
+      "outlet_temperature_K": [
+        1912.8224358398447,
+        1914.8973815674192,
+        1915.1523597567366
+      ],
+      "wall_heat_flux_W_m2": [
+        67264.60419982875,
+        67264.59921350048,
+        67260.09770183206
+      ],
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "last_temperature_change_K": 0.2549781893173986,
+      "last_wall_heat_flux_change_relative": 6.692244837636858e-05,
+      "passed": true
+    }
+  ],
+  "domain_failure_diagnostic": {
+    "width_m": 0.09,
+    "reason": "stagnated_reduced_residual",
+    "maximum_progress_coordinate": 0.9999999999999938,
+    "interpretation": "The iterate reaches the finite progress domain. The residual does not pass 1e-7; the 90 mm FGM comparison is rejected. This is not demonstrated domain independence."
+  }
+}

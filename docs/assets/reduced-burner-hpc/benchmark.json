@@ -1,0 +1,138 @@
+{
+  "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+  "python": "3.11.0",
+  "platform": "Windows",
+  "nodes": 486,
+  "colors": 9,
+  "dense_finite_difference_columns": 1458,
+  "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+  "table_loading_seconds": 0.585154300002614,
+  "closure_construction_seconds": 3.3717214000062086,
+  "numba_threads": 4,
+  "cache_maximum_residual_difference": 0.0,
+  "timings": {
+    "numpy_full": {
+      "median_seconds": 0.15520359997753985,
+      "samples_seconds": [
+        0.16800730000250041,
+        0.1548021000053268,
+        0.15520359997753985,
+        0.15458520001266152,
+        0.15443309998954646,
+        0.1607713999983389,
+        0.16951010000775568,
+        0.1613410000281874,
+        0.15487960001337342
+      ],
+      "maximum_residual_difference": 4.62566433995313e-13
+    },
+    "numpy_cached": {
+      "median_seconds": 0.0825683000148274,
+      "samples_seconds": [
+        0.08668310000211932,
+        0.08131680000224151,
+        0.0825683000148274,
+        0.08249889998114668,
+        0.08411019999766722,
+        0.08170490001793951,
+        0.08424930000910535,
+        0.08999109998694621,
+        0.07994850000250153
+      ],
+      "maximum_residual_difference": 4.663843096441855e-13
+    },
+    "full": {
+      "median_seconds": 0.14804550001281314,
+      "samples_seconds": [
+        0.14637169998604804,
+        0.14557649998459965,
+        0.1430226000084076,
+        0.14968219998991117,
+        0.15699710001354106,
+        0.1416501999774482,
+        0.14804550001281314,
+        0.15261789999203756,
+        0.15665230000740848
+      ],
+      "maximum_residual_difference": 0.0
+    },
+    "temperature_cache": {
+      "median_seconds": 0.12365740002132952,
+      "samples_seconds": [
+        0.1113286999752745,
+        0.12609279999742284,
+        0.12022670000442304,
+        0.11488499998813495,
+        0.12365740002132952,
+        0.11685779999243096,
+        0.15861319997929968,
+        0.1570802000060212,
+        0.16091669999877922
+      ],
+      "maximum_residual_difference": 0.0
+    },
+    "cached": {
+      "median_seconds": 0.09948160001658835,
+      "samples_seconds": [
+        0.09894479997456074,
+        0.09948160001658835,
+        0.09528469998622313,
+        0.116358900006162,
+        0.11088520000339486,
+        0.09761850000359118,
+        0.09610110000357963,
+        0.10023599999840371,
+        0.10723540000617504
+      ],
+      "maximum_residual_difference": 0.0
+    }
+  },
+  "cache_speedup": 1.4881696714581074,
+  "compiled_kernel_speedup": 0.8299856455973699,
+  "combined_speedup": 1.5601236806772305,
+  "large_batch": {
+    "serial": {
+      "median_seconds": 0.19543609998072498,
+      "samples_seconds": [
+        0.1885132000024896,
+        0.2017391000117641,
+        0.2225085999816656,
+        0.19543609998072498,
+        0.17637040000408888,
+        0.1630377000255976,
+        0.22466929999063723
+      ]
+    },
+    "parallel": {
+      "median_seconds": 0.06558910000603646,
+      "samples_seconds": [
+        0.07406909999554045,
+        0.07115370000246912,
+        0.0648771999985911,
+        0.06544040000881068,
+        0.06558910000603646,
+        0.06446160000632517,
+        0.06800790000124834
+      ]
+    }
+  },
+  "large_batch_points": 76636,
+  "large_batch_parallel_speedup": 2.9797039441422144,
+  "accepted_case_count": 36,
+  "failed_case_count": 0,
+  "solve_median_seconds": 4.046188900014386,
+  "solve_range_seconds": [
+    1.1081931000226177,
+    22.05581940000411
+  ],
+  "total_solve_median_seconds": 9.427853949993732,
+  "total_solve_range_seconds": [
+    3.5524898000003304,
+    26.295514299999923
+  ],
+  "detailed_kinetics_evaluations_in_reduced_production": 0,
+  "note": "Accepted counts mean numerical convergence. Case times include concurrent four-process validation; matched microbenchmarks use identical inputs and ran separately. Total solve includes guide and continuation; loading and construction are separate.",
+  "case_timing_context": "Case times were recorded during four-process development validation; matched microbenchmarks ran separately without competing task processes.",
+  "logical_processors": 24,
+  "physical_passed_case_count": 31
+}

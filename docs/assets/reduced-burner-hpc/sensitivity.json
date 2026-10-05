@@ -1,0 +1,361 @@
+{
+  "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+  "weak_grid": [
+    {
+      "case": "case_0.735000_0.925000_1",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 4.847829304820607,
+        "species_absolute": 0.00047629688881675736,
+        "wall_heat_flux_relative": 0.04735543754418058,
+        "stand_off_distance_m": 2.0611932644779138e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.01616148303304754,
+          "L1_relative": 0.01797780621868619,
+          "integral_relative": 8.778558512779599e-05
+        },
+        "qdot": {
+          "peak_relative": 0.015025658472217946,
+          "L1_relative": 0.01594224257477757,
+          "integral_relative": 0.001313441094584211
+        }
+      },
+      "nodes": 2249
+    },
+    {
+      "case": "case_0.735000_0.925000_2",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 4.966402176066367,
+        "species_absolute": 0.0004901802039538466,
+        "wall_heat_flux_relative": 0.047345791877469214,
+        "stand_off_distance_m": 2.1102245005669455e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.016502672818924605,
+          "L1_relative": 0.018372636063868686,
+          "integral_relative": 8.77866822022087e-05
+        },
+        "qdot": {
+          "peak_relative": 0.01533613955010258,
+          "L1_relative": 0.01626359273813666,
+          "integral_relative": 0.0013137693923672125
+        }
+      },
+      "nodes": 4497
+    },
+    {
+      "case": "case_0.985000_0.950000_1",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 33.340598571582404,
+        "species_absolute": 0.004264520153990356,
+        "wall_heat_flux_relative": 0.03400238042165183,
+        "stand_off_distance_m": 7.573600537816392e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.06681059386592876,
+          "L1_relative": 0.07707672852992356,
+          "integral_relative": 0.0011893822803705554
+        },
+        "qdot": {
+          "peak_relative": 0.0652677856050831,
+          "L1_relative": 0.05989895545942017,
+          "integral_relative": 0.0007112594060814253
+        }
+      },
+      "nodes": 4187
+    },
+    {
+      "case": "case_0.985000_0.950000_2",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 35.36717317183138,
+        "species_absolute": 0.004520449565848836,
+        "wall_heat_flux_relative": 0.03399111631111349,
+        "stand_off_distance_m": 8.047549494594316e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.0709570116810572,
+          "L1_relative": 0.08182204118925776,
+          "integral_relative": 0.0011893592627441768
+        },
+        "qdot": {
+          "peak_relative": 0.06931346797695861,
+          "L1_relative": 0.0635829798362767,
+          "integral_relative": 0.0007113030073118734
+        }
+      },
+      "nodes": 8373
+    },
+    {
+      "case": "case_1.295000_0.925000_1",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 11.44804905403771,
+        "species_absolute": 0.0016543323215196942,
+        "wall_heat_flux_relative": 0.0493272626208516,
+        "stand_off_distance_m": 3.716826684158482e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.02168741021507752,
+          "L1_relative": 0.02589324453615298,
+          "integral_relative": 0.00037406696499309584
+        },
+        "qdot": {
+          "peak_relative": 0.018458003673171217,
+          "L1_relative": 0.02359908729627963,
+          "integral_relative": 0.00029077986510486856
+        }
+      },
+      "nodes": 1493
+    },
+    {
+      "case": "case_1.295000_0.925000_2",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "accepted": true,
+      "passed": false,
+      "metrics": {
+        "temperature_K": 11.558568502566459,
+        "species_absolute": 0.0016700280621390062,
+        "wall_heat_flux_relative": 0.04934471356408084,
+        "stand_off_distance_m": 3.75726775165338e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.021927064875751835,
+          "L1_relative": 0.02617374128338295,
+          "integral_relative": 0.00037391170746382623
+        },
+        "qdot": {
+          "peak_relative": 0.018666462917095214,
+          "L1_relative": 0.023843515157882845,
+          "integral_relative": 0.0002938915398483492
+        }
+      },
+      "nodes": 2985
+    }
+  ],
+  "bilinear_closure": [
+    {
+      "case": "case_0.725000_0.625000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": true,
+      "metrics": {
+        "temperature_K": 9.966505752227931,
+        "species_absolute": 0.0011601219295569315,
+        "wall_heat_flux_relative": 0.0021455398976427745,
+        "stand_off_distance_m": 6.125136436458648e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.03750561862606944,
+          "L1_relative": 0.04289102265420326,
+          "integral_relative": 0.0004864204619654585
+        },
+        "qdot": {
+          "peak_relative": 0.034891248652611964,
+          "L1_relative": 0.03645217937335289,
+          "integral_relative": 0.0007722001358391814
+        }
+      },
+      "solver_accepted": true
+    },
+    {
+      "case": "case_0.735000_0.925000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": false,
+      "metrics": {
+        "temperature_K": 12.835380709200308,
+        "species_absolute": 0.0014758263595117393,
+        "wall_heat_flux_relative": 0.02167112131794645,
+        "stand_off_distance_m": 5.572480178072888e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.040302201728862355,
+          "L1_relative": 0.04609915781036868,
+          "integral_relative": 9.915433337090996e-05
+        },
+        "qdot": {
+          "peak_relative": 0.036838846527376755,
+          "L1_relative": 0.0390976301680276,
+          "integral_relative": 0.0015057048835960222
+        }
+      },
+      "solver_accepted": true
+    },
+    {
+      "case": "case_0.815000_0.575000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": true,
+      "metrics": {
+        "temperature_K": 5.193413225998256,
+        "species_absolute": 0.000657869987348153,
+        "wall_heat_flux_relative": 0.0025842517028349236,
+        "stand_off_distance_m": 3.2443909537647076e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.02228098104799674,
+          "L1_relative": 0.025448529681862425,
+          "integral_relative": 0.0013025743919860813
+        },
+        "qdot": {
+          "peak_relative": 0.0210803336128135,
+          "L1_relative": 0.02201726634326207,
+          "integral_relative": 0.0019117976725158167
+        }
+      },
+      "solver_accepted": true
+    },
+    {
+      "case": "case_0.985000_0.950000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": false,
+      "metrics": {
+        "temperature_K": 9.027169314722642,
+        "species_absolute": 0.0012247301613767664,
+        "wall_heat_flux_relative": 0.04557697961321984,
+        "stand_off_distance_m": 1.8821244159885047e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.016910627621704612,
+          "L1_relative": 0.02021002478208405,
+          "integral_relative": 0.0012120235323774577
+        },
+        "qdot": {
+          "peak_relative": 0.016622245148096054,
+          "L1_relative": 0.01633496188635012,
+          "integral_relative": 0.001239940561568015
+        }
+      },
+      "solver_accepted": true
+    },
+    {
+      "case": "case_1.235000_0.575000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": true,
+      "metrics": {
+        "temperature_K": 5.703100241238644,
+        "species_absolute": 0.0008727742366764768,
+        "wall_heat_flux_relative": 0.0026997157298513015,
+        "stand_off_distance_m": 3.288361816986365e-06
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.0180013307895344,
+          "L1_relative": 0.022059908230450054,
+          "integral_relative": 0.0006840557955344512
+        },
+        "qdot": {
+          "peak_relative": 0.01589897987956721,
+          "L1_relative": 0.024091065763546655,
+          "integral_relative": 0.002854827152452553
+        }
+      },
+      "solver_accepted": true
+    },
+    {
+      "case": "case_1.295000_0.925000",
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "passed": false,
+      "metrics": {
+        "temperature_K": 3.6087826025201366,
+        "species_absolute": 0.0004941839597232545,
+        "wall_heat_flux_relative": 0.039508854642583004,
+        "stand_off_distance_m": 6.018119497461834e-07
+      },
+      "sources": {
+        "omega_C": {
+          "peak_relative": 0.0034396773830508718,
+          "L1_relative": 0.004612983864666005,
+          "integral_relative": 0.0003443727145918904
+        },
+        "qdot": {
+          "peak_relative": 0.00327511036483069,
+          "L1_relative": 0.005055410875473439,
+          "integral_relative": 0.00019355673528317473
+        }
+      },
+      "solver_accepted": true
+    }
+  ],
+  "explanation": "Refinement does not remove the weak-loss heat-flux errors. Alternative interpolation also fails those limits; no threshold was relaxed.",
+  "metric_floor_audits": [
+    {
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "interpolation": "bounded_tensor",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "progress_equation": "adaptive_projection",
+      "metric_floor": 1e-09,
+      "curvature_limit": 1.0,
+      "samples": 76636,
+      "logical_cells": 76636,
+      "sample_definition": "centre",
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 4.7045711575944334e-08,
+      "negative_samples": 0,
+      "nonpositive_chart_samples": 0,
+      "projected_samples": 357,
+      "limitation": "Finite sample audit; does not prove positivity inside every cell."
+    },
+    {
+      "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+      "interpolation": "bounded_tensor",
+      "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+      "progress_equation": "adaptive_projection",
+      "metric_floor": 1e-15,
+      "curvature_limit": 1.0,
+      "samples": 76636,
+      "logical_cells": 76636,
+      "sample_definition": "centre",
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 4.7045711576052755e-08,
+      "negative_samples": 0,
+      "nonpositive_chart_samples": 0,
+      "projected_samples": 357,
+      "limitation": "Finite sample audit; does not prove positivity inside every cell."
+    }
+  ],
+  "conservative_comparison": {
+    "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+    "interpolation": "bounded_tensor",
+    "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+    "progress_equation": "conservative",
+    "metric_floor": 1e-30,
+    "curvature_limit": 1.0,
+    "samples": 76636,
+    "logical_cells": 76636,
+    "sample_definition": "centre",
+    "passed": false,
+    "minimum_real_eigenvalue_kg_m_s": -0.0004887522308774377,
+    "negative_samples": 355,
+    "nonpositive_chart_samples": 0,
+    "projected_samples": 0,
+    "limitation": "Finite sample audit; does not prove positivity inside every cell."
+  }
+}

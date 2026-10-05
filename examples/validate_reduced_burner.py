@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 
@@ -17,8 +18,9 @@ from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.transport import NativeTransport
 from kflame.flame.equations import _corrected_flux_frozen
+from kflame.flame.burner_grid import refine_burner_boundary_grid
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM
-from kflame.fgm.reduced_burner import solve_reduced_burner_fgm, ReducedConvergenceError
+from kflame.fgm.reduced_burner import solve_reduced_burner_fgm, ReducedConvergenceError, _SOURCE_SHA256
 from examples.validate_nonadiabatic_3d import read_profile, cantera_reference, reference_input_hash
 from examples.audit_nonadiabatic_sources import detailed_sources
 
@@ -85,17 +87,22 @@ def comparisons(model, reduced, detailed, reference, mdot, feed, limits):
                    stand_off_distance_m=abs(distance(z, reduced['omega_C'])-distance(detailed['z'], detailed['omega_C'])))
     reference_errors = dict(temperature_K=float(np.max(abs(detailed['T']-np.interp(detailed['z'], reference['z'], reference['T'])))),
                             wall_heat_flux_relative=abs(native_flux['wall_heat_flux_W_m2']-reference_flux['wall_heat_flux_W_m2'])/abs(reference_flux['wall_heat_flux_W_m2']))
+    reference_errors.update(native_energy_closure_relative=native_flux['energy_closure_relative'],cantera_energy_closure_relative=reference_flux['energy_closure_relative'])
     checks = {k: value <= limits[k] for k, value in metrics.items()}
     for name, source in sources.items():
         for norm, value in source.items():
             checks[name+'_'+norm] = value <= limits['source_'+norm]
+    checks.update(native_reference_temperature=reference_errors['temperature_K']<=limits.get('reference_temperature_K',5.),
+        native_reference_wall_heat=reference_errors['wall_heat_flux_relative']<=limits.get('reference_wall_heat_relative',.02),
+        native_energy=reference_errors['native_energy_closure_relative']<=limits['energy_closure_relative'],
+        cantera_energy=reference_errors['cantera_energy_closure_relative']<=limits['energy_closure_relative'])
     return dict(metrics=metrics, sources=sources, checks=checks,
                 passed=all(checks.values()), native_cantera=reference_errors,
                 q_native_W_m2=native_flux['wall_heat_flux_W_m2'],
                 q_reference_W_m2=reference_flux['wall_heat_flux_W_m2'])
 
 
-def run(table, profiles, output, settings, *, only_phi=None):
+def run(table, profiles, output, settings, *, only_phi=None, jobs=1):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     model = NonAdiabaticFGM(table)
@@ -103,13 +110,21 @@ def run(table, profiles, output, settings, *, only_phi=None):
     plan = dict(settings=settings, table_sha256=digest, table_flames=len(model.metadata['rows']),
                 status=settings.get('role', 'development_cases'), comparison='a_posteriori_unshifted_spatial_profiles',
                 seed='fingerprinted_training_profiles_only',
-                solver_source_sha256=hashlib.sha256(Path('src/kflame/fgm/reduced_burner.py').read_bytes()).hexdigest())
+                solver_source_sha256=_SOURCE_SHA256)
     plan_path = output/'plan.json'
     if plan_path.exists():
         if json.loads(plan_path.read_text(encoding='utf-8')) != plan:
             raise ValueError('Output plan differs from the frozen settings or table')
     else:
         write_json(plan_path, plan)
+    if jobs > 1 and only_phi is None:
+        # Each process owns one composition family and its continuation chain.
+        # No Cantera object or mutable Newton/transport cache is shared.
+        with ProcessPoolExecutor(max_workers=min(jobs,len(settings['phis']))) as pool:
+            futures=[pool.submit(run,table,profiles,output,settings,only_phi=phi) for phi in settings['phis']]
+            reports=[case for future in futures for case in future.result()]
+        write_json(output/'summary.json',dict(cases=reports,all_passed=all(r['passed'] for r in reports),table_sha256=digest))
+        return reports
     mech = load_mechanism(model.metadata['mechanism'])
     reports = []
     for phi in settings['phis']:
@@ -143,7 +158,12 @@ def run(table, profiles, output, settings, *, only_phi=None):
         previous = warm
         fractions = (settings['mass_flux_fractions'] if 'case_pairs' not in settings else
                      [r for p, r in settings['case_pairs'] if abs(p-phi) < 1e-12])
-        fractions = sorted(fractions, reverse=True)
+        standard=sorted([r for r in fractions if r<=.65],reverse=True)
+        weak=sorted([r for r in fractions if r>.65])
+        fractions=standard+weak
+        previous_reference=None
+        strong_reference=None
+        strong_native=None
         for fraction in fractions:
             label = f'case_{phi:.6f}_{fraction:.6f}'
             case_folder = output/label
@@ -151,10 +171,34 @@ def run(table, profiles, output, settings, *, only_phi=None):
             print(f'{label}: independent detailed and reduced solves', flush=True)
             mdot = fraction*ad_flux
             native_path = case_folder/'native'
+            if weak and fraction==weak[0] and strong_native is not None:
+                previous=strong_native
             if not native_path.exists():
                 solve_burner_flame(phi=phi, mass_flux=mdot, initial_solution=previous, output=native_path, **native_settings)
             previous = native_path
             native_meta = json.loads((native_path/'metadata.json').read_text(encoding='utf-8'))
+            for refinement in range(1,4):
+                if native_meta['heat_loss']['relative_energy_closure_error']<=settings['limits']['energy_closure_relative']:
+                    break
+                target=case_folder/f'native_energy_refined_{refinement}'
+                if not target.exists():
+                    options=dict(native_settings,slope=settings['native_slope']/2**refinement,
+                        curve=settings['native_curve']/2**refinement,max_points=6000,prune=.001)
+                    with np.load(native_path/'flame.npz',allow_pickle=False) as cached:
+                        options['grid']=refine_burner_boundary_grid(cached['z'],cached['T'],cached['Y'],mdot,
+                            model.metadata['pressure_Pa'],model.thermo,NativeTransport(mech))
+                    solve_burner_flame(phi=phi,mass_flux=mdot,initial_solution=native_path,output=target,**options)
+                native_path=target
+                native_meta=json.loads((native_path/'metadata.json').read_text(encoding='utf-8'))
+            if native_path!=case_folder/'native':
+                original=case_folder/'native'
+                if not (case_folder/'native_before_energy_refinement').exists():
+                    shutil.copytree(original,case_folder/'native_before_energy_refinement')
+                shutil.copyfile(native_path/'flame.npz',original/'flame.npz')
+                write_json(original/'metadata.json',native_meta)
+                native_path=original
+            previous=native_path
+            if standard and fraction==standard[0]:strong_native=native_path
             if not native_meta['accepted']:
                 raise RuntimeError('Independent native burner did not pass acceptance')
             if (abs(native_meta['mass_flux']-mdot) > 1e-12
@@ -173,10 +217,23 @@ def run(table, profiles, output, settings, *, only_phi=None):
             weight_digest = hashlib.sha256(model.table['progress_weights'].tobytes()).hexdigest()
             if (str(reference.get('input_digest', '')) != reference_input_hash(native_meta, mdot)
                     or str(reference.get('progress_weights_sha256', '')) != weight_digest):
-                reference = cantera_reference(native_meta, mdot, model.table['progress_weights'])
+                if weak and fraction==weak[0] and strong_reference is not None:
+                    previous_reference=strong_reference
+                reference = cantera_reference(native_meta, mdot, model.table['progress_weights'],
+                    initial_reference=previous_reference)
                 reference['progress_weights_sha256'] = np.array(weight_digest)
                 np.savez_compressed(reference_path, **reference)
             reference = read_profile(reference_path)
+            for refinement in range(3):
+                error=flux_diagnostics(model,reference,mdot,feed)['energy_closure_relative']
+                if error<=settings['limits']['energy_closure_relative']:break
+                reference=cantera_reference(native_meta,mdot,model.table['progress_weights'],
+                    initial_reference=reference,boundary_pe_limit=.02/2**refinement)
+                reference.update(progress_weights_sha256=np.array(weight_digest),
+                    boundary_pe_limit=np.array(.02/2**refinement))
+                np.savez_compressed(reference_path,**reference)
+            previous_reference=reference
+            if standard and fraction==standard[0]:strong_reference=reference
             phis = np.asarray(model.metadata['phis'])
             i = int(np.argmin(abs(phis-phi)))
             j = 1+int(np.argmin(abs(np.asarray(model.metadata['mass_flux_fractions'])-fraction)))
@@ -186,16 +243,21 @@ def run(table, profiles, output, settings, *, only_phi=None):
             if reduced_path.exists():
                 reduced, report = read_profile(reduced_path), json.loads(report_path.read_text(encoding='utf-8'))
                 if (report['solver_source_sha256'] != plan['solver_source_sha256']
+                        or str(reduced['table_sha256']) != digest
                         or report['residual_tolerance'] != settings['residual_tolerance']
                         or abs(report['mass_flux_kg_m2_s']-mdot) > 1e-12
                         or abs(report['phi']-phi) > 1e-12):
                     raise ValueError('Cached reduced result has different solver settings or source')
+                for key,value in settings.get('solver_options',{}).items():
+                    if report.get(key)!=value:
+                        raise ValueError(f'Cached reduced result has different {key}')
             else:
                 try:
                     reduced, report = solve_reduced_burner_fgm(model, phi=phi, mass_flux=mdot,
                         seed_profile=seed_path, seed_row=row['output'], width=settings['width_m'],
                         max_spacing=settings['max_spacing_m'], residual_tolerance=settings['residual_tolerance'],
-                        max_iterations=settings['max_iterations'], max_energy_error=settings['limits']['energy_closure_relative'], verbose=True)
+                        max_iterations=settings['max_iterations'], max_energy_error=settings['limits']['energy_closure_relative'],
+                        **settings.get('solver_options',{}), verbose=True)
                 except ReducedConvergenceError as error:
                     reduced, report = error.profile, error.report
                 np.savez_compressed(reduced_path, **reduced)
@@ -229,8 +291,9 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--settings', type=Path, default=Path('examples/reduced_burner_settings.json'))
     parser.add_argument('--only-phi', type=float)
+    parser.add_argument('--jobs',type=int,default=1,help='Independent composition processes; each uses configured Numba threads')
     args = parser.parse_args()
-    run(args.table, args.profiles, args.output, json.loads(args.settings.read_text(encoding='utf-8')), only_phi=args.only_phi)
+    run(args.table, args.profiles, args.output, json.loads(args.settings.read_text(encoding='utf-8')), only_phi=args.only_phi,jobs=args.jobs)
 
 
 if __name__ == '__main__':

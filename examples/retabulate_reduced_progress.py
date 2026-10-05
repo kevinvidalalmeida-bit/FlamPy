@@ -31,7 +31,8 @@ def retabulate(source, output, weights):
     rates = NativeKinetics(mech).net_production_rates(T,
         rho[None, :]*Y*mech.inv_molecular_weights[:, None], model.thermo.g_RT(T))
     payload = {k: v.copy() for k, v in table.items()}
-    payload.update(C=w@Y, omega_C=w@(rates*mech.molecular_weights[:, None]), progress_weights=w)
+    mass_sources = rates*mech.molecular_weights[:, None]
+    payload.update(C=w@Y, omega_C=w@mass_sources, omega_Y=mass_sources.T, progress_weights=w)
     shape = tuple(table['structured_shape'])
     minimum_growth = float(np.diff(payload['C'].reshape(shape), axis=2).min())
     if minimum_growth <= 0.:
@@ -44,7 +45,7 @@ def retabulate(source, output, weights):
         reference_points=np.column_stack([payload[q].reshape(shape)[:, 0].ravel() for q in ('Z', 'C')]))
     audit = dict(source_table_sha256=model.table_sha256, minimum_progress_increment=minimum_growth,
                  additional_flames=0, preserved_fields=['Y','T','h','Z','qdot','rho','cp_mass','conductivity'],
-                 source_recomputed_offline=True,
+                 source_recomputed_offline=True, full_species_sources_stored=True,
                  builder_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     meta = dict(model.metadata, progress_species=weights, mesh=statistics, progress_retabulation=audit)
     output.mkdir(parents=True)

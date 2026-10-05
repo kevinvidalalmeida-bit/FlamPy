@@ -22,8 +22,12 @@ from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.transport import NativeTransport
 from kflame.flame.equations import _corrected_flux_frozen
+from kflame.fgm.tensor_kernels import evaluate_tensor, evaluate_progress
+from kflame.fgm.projection import progress_projection, stable_blend, stable_matrix
+from kflame.fgm.chart_guard import guard_chart
 
-_SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+_SOURCE_SHA256 = hashlib.sha256(b''.join(Path(__file__).with_name(q).read_bytes()
+    for q in ('reduced_burner.py','tensor_kernels.py','projection.py','chart_guard.py','nonadiabatic3d.py'))).hexdigest()
 
 
 class ReducedConvergenceError(RuntimeError):
@@ -42,7 +46,8 @@ class ReducedBurnerProblem:
     temperature is recovered from physical total h. Barycentric interpolation
     of the original connected mesh remains available as a comparison option.
     """
-    def __init__(self, model, z, mass_flux, inlet_Y, *, interpolation='bounded_tensor', curvature_limit=.75):
+    def __init__(self, model, z, mass_flux, inlet_Y, *, interpolation='bounded_tensor', curvature_limit=.75,
+                 kernel_backend='compiled', progress_equation='conservative', metric_floor=1e-30):
         meta, table = model.metadata, model.table
         if meta.get('transport') != 'mixture-averaged' or meta.get('soret', False):
             raise ValueError('Reduced burner currently supports mixture-averaged transport without Soret')
@@ -65,6 +70,16 @@ class ReducedBurnerProblem:
         if interpolation == 'quadratic_progress' and self.shape[2] < 3:
             raise ValueError('Quadratic approximation needs at least three progress samples')
         self.interpolation = interpolation
+        if progress_equation not in ('conservative', 'entropy_projection', 'adaptive_projection'):
+            raise ValueError('Unknown progress equation')
+        if progress_equation != 'conservative' and (interpolation == 'barycentric' or 'omega_Y' not in table):
+            raise ValueError('Entropy projection requires a differentiable closure and frozen full species sources')
+        if not np.isfinite(metric_floor) or metric_floor <= 0.:
+            raise ValueError('Metric floor must be finite and positive')
+        self.progress_equation, self.metric_floor = progress_equation, float(metric_floor)
+        if kernel_backend not in ('compiled', 'numpy'):
+            raise ValueError('Kernel backend must be compiled or numpy')
+        self.kernel_backend = kernel_backend
         self.corners = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         self.knots = np.r_[np.zeros(3), np.arange(1, self.shape[2]-2),
                            np.full(3, self.shape[2]-2)]
@@ -79,8 +94,8 @@ class ReducedBurnerProblem:
             cache = caches.get(self.curvature_limit)
             if cache is None:
                 shape = tuple(self.shape)
-                fields = {q: table[q].reshape((*shape, -1)).copy()
-                          for q in ('Y', 'h', 'T', 'omega_C', 'qdot')}
+                names = ['Y', 'h', 'T', 'omega_C', 'qdot']+(['omega_Y'] if 'omega_Y' in table else [])
+                fields = {q: table[q].reshape((*shape, -1)).copy() for q in names}
                 knots, statistics = [], []
                 for axis in (0, 1):
                     u = np.linspace(0., 1., shape[axis])
@@ -126,12 +141,25 @@ class ReducedBurnerProblem:
                     statistics.append(dict(axis=axis, limited_coefficients=int(np.sum(alpha < 1.)),
                         minimum_progress_increment=float(np.diff(fields['Y']@table['progress_weights'],axis=2).min())))
                 knots.append(self.knots/(shape[2]-2))
+                fields, guard = guard_chart(fields, table, shape, knots, self.strides,
+                    table['bilger_weights'],table['progress_weights'])
+                statistics.append(dict(chart_guard=guard))
                 cache = dict(fields={q: v.reshape(-1, v.shape[-1]) for q, v in fields.items()},
                              knots=knots, limiter=statistics)
                 caches[self.curvature_limit] = cache
                 model._reduced_tensor_caches = caches
             self.fields, self.axis_knots = cache['fields'], cache['knots']
+            if 'packed' not in cache:
+                cache['packed'] = np.column_stack([self.fields['Y'],
+                    *[self.fields[q].ravel() for q in ('h','T','omega_C','qdot')]])
+                cache['progress_coefficients'] = (self.fields['Y']@table['progress_weights']).reshape(tuple(self.shape))
+            self.packed_fields = cache['packed']
+            self.progress_coefficients = cache['progress_coefficients']
             self.limiter_statistics = cache['limiter']
+        if not hasattr(model, '_reduced_raw_fields'):
+            model._reduced_raw_fields = np.column_stack([table['Y'],
+                *[table[q].ravel() for q in ('h','T','omega_C','qdot')]])
+        self.raw_fields = model._reduced_raw_fields
         self.residual_evaluations = 0
         self.mech = load_mechanism(meta['mechanism'])
         self.transport = NativeTransport(self.mech)
@@ -152,17 +180,21 @@ class ReducedBurnerProblem:
         if np.max(abs(surface-self.T_burner)) > 1e-6:
             raise ValueError('All surface samples must have the imposed burner temperature')
 
-    def state(self, x, *, geometry=None, temperature_cache=None, changed_nodes=None):
+    def state(self, x, *, geometry=None, temperature_cache=None, changed_nodes=None, require_grid=True):
         guide_geometry = None
         if isinstance(geometry, tuple) and len(geometry) == 3 and geometry[0] == 'closure_blend':
             geometry, guide_geometry = geometry[1:]
         x = np.asarray(x).reshape(-1, 3)
-        if len(x) != len(self.z) or not np.isfinite(x).all():
+        if (require_grid and len(x) != len(self.z)) or not np.isfinite(x).all():
             raise ValueError('Three finite logical coordinates per spatial node are required')
         if geometry is None and (np.any(x < 0.) or np.any(x > 1.)):
             raise ValueError('Trial state outside the resolved logical mesh')
         logical = x * (self.shape-1)
-        if self.interpolation == 'bounded_tensor':
+        values = None
+        if self.interpolation == 'bounded_tensor' and self.kernel_backend == 'compiled':
+            values, _ = evaluate_tensor(x, self.axis_knots, self.strides, self.packed_fields)
+            active_geometry = True
+        elif self.interpolation == 'bounded_tensor':
             parts = []
             for k in range(3):
                 basis = BSpline.design_matrix(x[:, k], self.axis_knots[k], 2,
@@ -177,6 +209,9 @@ class ReducedBurnerProblem:
         elif self.interpolation == 'quadratic_progress':
             base = (np.minimum(np.floor(logical[:, :2]).astype(int), self.shape[:2]-2)
                     if geometry is None else geometry)
+            if self.kernel_backend == 'compiled':
+                values, _ = evaluate_progress(x, base, self.knots/(self.shape[2]-2),
+                    self.shape, self.strides, self.raw_fields)
             f = logical[:, :2]-base
             bilinear = np.prod(np.where(self.corners[None, :, :],
                                f[:, None, :], 1.-f[:, None, :]), axis=2)
@@ -203,11 +238,15 @@ class ReducedBurnerProblem:
             active_geometry = (base, order)
         t = self.model.table
         fields = self.fields if self.fields is not None else t
-        Y = np.einsum('ni,nij->nj', bary, fields['Y'][nodes])
-        h = np.einsum('ni,ni->n', bary, np.asarray(fields['h']).reshape(-1)[nodes])
-        guess = np.einsum('ni,ni->n', bary, np.asarray(fields['T']).reshape(-1)[nodes])
-        omega = np.einsum('ni,ni->n', bary, np.asarray(fields['omega_C']).reshape(-1)[nodes])
-        heat = np.einsum('ni,ni->n', bary, np.asarray(fields['qdot']).reshape(-1)[nodes])
+        if values is not None:
+            Y = values[:, :self.mech.n_species]
+            h, guess, omega, heat = values[:, self.mech.n_species:self.mech.n_species+4].T
+        else:
+            Y = np.einsum('ni,nij->nj', bary, fields['Y'][nodes])
+            h = np.einsum('ni,ni->n', bary, np.asarray(fields['h']).reshape(-1)[nodes])
+            guess = np.einsum('ni,ni->n', bary, np.asarray(fields['T']).reshape(-1)[nodes])
+            omega = np.einsum('ni,ni->n', bary, np.asarray(fields['omega_C']).reshape(-1)[nodes])
+            heat = np.einsum('ni,ni->n', bary, np.asarray(fields['qdot']).reshape(-1)[nodes])
         blend = getattr(self, 'closure_blend', 1.)
         if blend < 1.:
             guide = self.initialization_problem.state(x, geometry=guide_geometry)
@@ -226,11 +265,92 @@ class ReducedBurnerProblem:
             T = np.asarray(temperature_cache).copy()
             T[changed_nodes] = self.model._recover_temperature(
                 h[changed_nodes], Y[changed_nodes].T, guess[changed_nodes])
-        return dict(Y=Y.T, T=T, h=h,
+        result = dict(Y=Y.T, T=T, h=h,
                     Z=t['bilger_weights'] @ Y.T + float(t['bilger_offset']),
                     C=t['progress_weights'] @ Y.T,
                     omega_C=omega, qdot=heat,
                     geometry=active_geometry)
+        return result
+
+    def state_derivatives(self, x):
+        """Analytic species/enthalpy chart tangents, including continuation."""
+        x = np.asarray(x).reshape(-1, 3)
+        if self.interpolation == 'bounded_tensor':
+            _, gradient = evaluate_tensor(x, self.axis_knots, self.strides, self.packed_fields,
+                                           differentiated=self.mech.n_species+1)
+        elif self.interpolation == 'quadratic_progress':
+            base = np.minimum(np.floor(x[:,:2]*(self.shape[:2]-1)).astype(int), self.shape[:2]-2)
+            _, gradient = evaluate_progress(x, base, self.knots/(self.shape[2]-2),
+                self.shape, self.strides, self.raw_fields, differentiated=self.mech.n_species+1)
+        else:
+            raise ValueError('Analytic tangents require a differentiable closure')
+        blend = getattr(self, 'closure_blend', 1.)
+        dY, dh = gradient[:,:,:self.mech.n_species].transpose(0,2,1), gradient[:,:,-1]
+        if blend < 1.:
+            guide_Y, guide_h = self.initialization_problem.state_derivatives(x)
+            dY, dh = blend*dY+(1.-blend)*guide_Y, blend*dh+(1.-blend)*guide_h
+        return dY, dh
+
+    def species_sources(self, x):
+        """Query full frozen kinetics only where the progress projection needs it."""
+        x = np.asarray(x).reshape(-1,3)
+        if self.interpolation == 'bounded_tensor':
+            values,_ = evaluate_tensor(x,self.axis_knots,self.strides,self.fields['omega_Y'])
+        else:
+            base=np.minimum(np.floor(x[:,:2]*(self.shape[:2]-1)).astype(int),self.shape[:2]-2)
+            values,_ = evaluate_progress(x,base,self.knots/(self.shape[2]-2),self.shape,self.strides,self.model.table['omega_Y'])
+        blend=getattr(self,'closure_blend',1.)
+        if blend<1.:
+            values=blend*values+(1.-blend)*self.initialization_problem.species_sources(x).T
+        return values.T
+
+    def principal_data(self, x, state):
+        dY, dh = self.state_derivatives(x)
+        T,Y,mw=state['T'],state['Y'],self.mech.molecular_weights
+        hk = self.model.thermo.partial_molar_enthalpies(T)/mw[:,None]
+        cp = self.model.thermo.cp_mass(T,Y)
+        rho,D,lam,W=self.transport.eval_faces_poly_fast(T,self.pressure,Y,1./mw)
+        dT=(dh-np.einsum('nj,njk->nk',hk.T,dY))/cp[:,None]
+        dW=-W[:,None]**2*np.einsum('j,njk->nk',1./mw,dY)
+        dX=(W[:,None,None]*dY+Y.T[:,:,None]*dW[:,None,:])/mw[None,:,None]
+        J=-rho[:,None,None]*(mw[None,:,None]/W[:,None,None])*D.T[:,:,None]*dX
+        J-=Y.T[:,:,None]*J.sum(axis=1)[:,None,:]
+        table=self.model.table
+        M=np.stack([np.einsum('j,njk->nk',table['bilger_weights'],dY),
+                    np.einsum('j,njk->nk',table['progress_weights'],dY),dh],axis=1)
+        B=np.stack([np.einsum('j,njk->nk',table['bilger_weights'],J),
+                    np.einsum('j,njk->nk',table['progress_weights'],J),
+                    -lam[:,None]*dT+np.einsum('nj,njk->nk',hk.T,J)],axis=1)
+        margin=1e-3*np.minimum((rho[None,:]*D).min(axis=0),lam/cp)
+        return dY,dh,hk,cp,J,M,B,margin
+
+    def projection_multipliers(self, x, state, *, cache=None, changed_nodes=None):
+        x=np.asarray(x).reshape(-1,3)
+        if cache is not None:
+            alpha,beta,gamma=[v.copy() for v in cache]
+            subset=np.asarray(changed_nodes,dtype=int)
+            selected_state=dict(Y=state['Y'][:,subset],T=state['T'][subset])
+            a,b,g=self.projection_multipliers(x[subset],selected_state)
+            alpha[:,subset],beta[subset],gamma[subset]=a,b,g
+            return alpha,beta,gamma
+        dY,dh,hk,cp,J,M,B,margin=self.principal_data(x,state)
+        metric=self.scales/self.mass_flux
+        base=np.linalg.solve(M/metric[None,:,None],-B/metric[None,:,None])
+        active=(~stable_matrix(base,margin) if self.progress_equation=='adaptive_projection' else np.ones(len(x),dtype=bool))
+        alpha=np.broadcast_to(self.model.table['progress_weights'][:,None],state['Y'].shape).copy()
+        beta=np.zeros(len(x));gamma=np.zeros(len(x))
+        if active.any():
+            a,b=progress_projection(state['Y'][:,active],state['T'][active],dY[active],dh[active],hk[:,active],cp[active],
+                self.mech.molecular_weights,self.model.table['bilger_weights'],self.model.table['progress_weights'],metric_floor=self.metric_floor)
+            Mp,Bp=M[active].copy(),B[active].copy()
+            Mp[:,1]=np.einsum('nj,njk->nk',a.T,dY[active])+b[:,None]*dh[active]
+            Bp[:,1]=np.einsum('nj,njk->nk',a.T,J[active])+b[:,None]*Bp[:,2]
+            end=np.linalg.solve(Mp/metric[None,:,None],-Bp/metric[None,:,None])
+            chosen=(stable_blend(base[active],end,margin[active]) if self.progress_equation=='adaptive_projection' else np.ones(active.sum()))
+            alpha[:,active]=(1.-chosen)[None,:]*alpha[:,active]+chosen[None,:]*a
+            beta[active]=chosen*b;gamma[active]=chosen
+        blend = getattr(self, 'closure_blend', 1.)
+        return blend*alpha+(1.-blend)*self.model.table['progress_weights'][:,None], blend*beta,blend*gamma
 
     def initial_progress(self, target, row, *, composition_index=None, loss_index=None):
         """Invert the strictly monotone row C for the chosen approximation."""
@@ -239,8 +359,7 @@ class ReducedBurnerProblem:
         if self.interpolation == 'bounded_tensor':
             if composition_index is None or loss_index is None:
                 raise ValueError('Tensor progress inversion requires the training row indices')
-            coefficients = self.fields['Y'].reshape((*tuple(self.shape), -1)) @ self.model.table['progress_weights']
-            partial = coefficients
+            partial = self.progress_coefficients
             for axis, index in enumerate((composition_index, loss_index)):
                 u = index/(self.shape[axis]-1)
                 partial = BSpline(self.axis_knots[axis], partial, 2, axis=0)(u)
@@ -285,16 +404,27 @@ class ReducedBurnerProblem:
         # for every species in a reduced manifold. Use the physical inlet
         # energy flux explicitly, retaining the computed conductive loss.
         F[0, 2] = self.mass_flux*self.h_feed+conduction[0]
-        return dict(total=F, species=J, conduction=conduction,
+        species_total = self.mass_flux*((1.-weight)[None,:]*Y[:,:-1]+weight[None,:]*Y[:,1:])+J
+        return dict(total=F, species=J, species_total=species_total, conduction=conduction,
                     enthalpy_diffusion=enthalpy_diffusion, conductivity=conductivity)
 
-    def residual(self, x, *, geometry=None, temperature_cache=None, changed_nodes=None):
+    def residual(self, x, *, geometry=None, temperature_cache=None, changed_nodes=None, evaluated_state=None, projection_cache=None):
         self.residual_evaluations += 1
-        state = self.state(x, geometry=geometry, temperature_cache=temperature_cache, changed_nodes=changed_nodes)
+        state = (self.state(x, geometry=geometry, temperature_cache=temperature_cache, changed_nodes=changed_nodes)
+                 if evaluated_state is None else evaluated_state)
         flux = self.fluxes(state)
         out = np.empty((len(self.z), 3))
         out[1:-1] = np.diff(flux['total'], axis=0)
         out[1:-1, 1] -= state['omega_C'][1:-1]*self.volumes
+        self._last_projection_coefficients = None
+        if self.progress_equation != 'conservative' and getattr(self, 'closure_blend', 1.) > 0.:
+            alpha,beta,gamma=self.projection_multipliers(x,state,cache=projection_cache,changed_nodes=changed_nodes)
+            self._last_projection_coefficients=(alpha,beta,gamma)
+            active=np.flatnonzero(gamma[1:-1]>0.)+1
+            if len(active):
+                species_residual=flux['species_total'][:,active]-flux['species_total'][:,active-1]
+                species_residual-=self.species_sources(np.asarray(x).reshape(-1,3)[active])*self.volumes[active-1][None,:]
+                out[active,1]=np.sum(alpha[:,active]*species_residual,axis=0)+beta[active]*out[active,2]
         out[0, 0] = flux['total'][0, 0]-self.mass_flux*self.Z_feed
         out[0, 1] = flux['total'][0, 1]-self.mass_flux*self.C_feed
         out /= self.scales
@@ -304,7 +434,8 @@ class ReducedBurnerProblem:
         return out.ravel()
 
     def diagnostics(self, x):
-        state, flux = self.state(x), self.fluxes(self.state(x))
+        state = self.state(x)
+        flux = self.fluxes(state)
         q_wall = float(-flux['conduction'][0])
         q_deficit = self.mass_flux*(self.h_feed-state['h'][-1])
         energy_scale = max(abs(q_wall), abs(q_deficit), 1.)
@@ -317,7 +448,7 @@ class ReducedBurnerProblem:
         return dict(burner_heat_loss_W_m2=q_wall, outlet_enthalpy_loss_W_m2=float(q_deficit),
                     relative_energy_closure_error=abs(q_wall-q_deficit)/energy_scale,
                     relative_total_enthalpy_flux_spread=float(np.ptp(flux['total'][:, 2])/energy_scale),
-                    projected_progress_balance_error=abs(progress_integral-progress_out)/max(abs(progress_out), 1e-12),
+                    physical_progress_integral_balance_error=abs(progress_integral-progress_out)/max(abs(progress_out), 1e-12),
                     inlet_species_flux_error_over_mdot=float(np.max(abs(inlet_species))/self.mass_flux),
                     inlet_enthalpy_flux_error_W_m2=float(inlet_energy-self.mass_flux*self.h_feed),
                     sum_Y_error=float(np.max(abs(state['Y'].sum(axis=0)-1.))),
@@ -333,14 +464,19 @@ class ReducedBurnerProblem:
         This numerical diagnostic is at the solved nodes, not a global proof.
         """
         x = np.asarray(x).reshape(-1, 3)
-        state = self.state(x)
+        state = self.state(x,require_grid=False)
         Y, T, mw = state['Y'], state['T'], self.mech.molecular_weights
         rho, D, lam, W = self.transport.eval_faces_poly_fast(T, self.pressure, Y, 1./mw)
         coeff = rho[None, :]*(mw[:, None]/W[None, :])*D
         hk = self.model.thermo.partial_molar_enthalpies(T)/mw[:, None]
-        controls, diffusion = [], []
-        analytic = self.interpolation == 'bounded_tensor' and getattr(self, 'closure_blend', 1.) == 1.
-        if analytic:
+        controls, diffusion, species_derivatives, species_diffusion, enthalpy_derivatives = [], [], [], [], []
+        analytic = self.interpolation in ('bounded_tensor','quadratic_progress') and getattr(self, 'closure_blend', 1.) == 1.
+        derivatives = None
+        if analytic and (self.kernel_backend == 'compiled' or self.interpolation == 'quadratic_progress'):
+            dYs, dhs = self.state_derivatives(x)
+            derivatives = np.concatenate([dYs.transpose(0,2,1),dhs[:,:,None]],axis=2)
+            cp = self.model.thermo.cp_mass(T, Y)
+        elif analytic:
             parts = []
             for k in range(3):
                 basis = BSpline.design_matrix(x[:,k], self.axis_knots[k], 2).tocsr()
@@ -354,11 +490,15 @@ class ReducedBurnerProblem:
             cp = self.model.thermo.cp_mass(T, Y)
         for k in range(3):
             if analytic:
-                weights = [parts[j][2 if j == k else 0] for j in range(3)]
-                weights = (weights[0][:,:,None,None]*weights[1][:,None,:,None]
-                           *weights[2][:,None,None,:]).reshape(-1, 27)
-                dY = np.einsum('ni,nij->nj', weights, self.fields['Y'][nodes]).T
-                dh = np.einsum('ni,ni->n', weights, self.fields['h'].ravel()[nodes])
+                if derivatives is not None:
+                    dY = derivatives[:, k, :self.mech.n_species].T
+                    dh = derivatives[:, k, self.mech.n_species]
+                else:
+                    weights = [parts[j][2 if j == k else 0] for j in range(3)]
+                    weights = (weights[0][:,:,None,None]*weights[1][:,None,:,None]
+                               *weights[2][:,None,None,:]).reshape(-1, 27)
+                    dY = np.einsum('ni,nij->nj', weights, self.fields['Y'][nodes]).T
+                    dh = np.einsum('ni,ni->n', weights, self.fields['h'].ravel()[nodes])
                 dT = (dh-np.sum(hk*dY, axis=0))/cp
                 dW = -W**2*np.sum(dY/mw[:,None], axis=0)
                 dX = (W[None,:]*dY+Y*dW[None,:])/mw[:,None]
@@ -369,26 +509,46 @@ class ReducedBurnerProblem:
             else:
                 trial = x.copy()
                 trial[:, k] += 1e-7
-                other = self.state(trial, geometry=state['geometry'])
+                other = self.state(trial, geometry=state['geometry'],require_grid=False)
                 controls.append(np.column_stack([(other[q]-state[q])/1e-7 for q in ('Z','C','h')]))
                 J = _corrected_flux_frozen(Y, other['Y'], coeff, np.ones(len(T)), mw, 'molar')/1e-7
                 dT = (other['T']-T)/1e-7
             diffusion.append(np.column_stack([self.model.table['bilger_weights']@J,
                 self.model.table['progress_weights']@J, -lam*dT+np.sum(hk*J, axis=0)]))
+            species_derivatives.append(dY.T if analytic else ((other['Y']-Y)/1e-7).T)
+            species_diffusion.append(J.T)
+            enthalpy_derivatives.append(dh if analytic else (other['h']-state['h'])/1e-7)
         try:
             metric = self.scales/self.mass_flux
-            eigenvalues = np.linalg.eigvals(-(np.stack(diffusion, axis=-1)/metric[None,:,None])
-                        @ np.linalg.inv(np.stack(controls, axis=-1)/metric[None,:,None]))
+            physical_controls = np.stack(controls, axis=-1)
+            orientation = np.linalg.det(physical_controls/metric[None,:,None])
+            principal_controls = physical_controls.copy()
+            principal_diffusion = np.stack(diffusion, axis=-1)
+            gamma = np.zeros(len(x))
+            if self.progress_equation != 'conservative':
+                dYs = np.stack(species_derivatives, axis=-1)
+                dhs = np.stack(enthalpy_derivatives, axis=-1)
+                alpha, beta, gamma = self.projection_multipliers(x,state)
+                principal_controls[:,1] = np.einsum('nj,njk->nk',alpha.T,dYs)+beta[:,None]*dhs
+                principal_diffusion[:,1] = np.einsum('nj,njk->nk',alpha.T,np.stack(species_diffusion,axis=-1))+beta[:,None]*principal_diffusion[:,2]
+            eigenvalues = np.linalg.eigvals(-(principal_diffusion/metric[None,:,None])
+                        @ np.linalg.inv(principal_controls/metric[None,:,None]))
         except np.linalg.LinAlgError:
             return dict(passed=False, reason='singular_control_tangent')
         tested = eigenvalues[1:-1] if interior_only else eigenvalues
+        tested_orientation = orientation[1:-1] if interior_only else orientation
         minimum = float(np.min(tested.real))
-        return dict(passed=bool(np.isfinite(eigenvalues).all() and minimum >= -1e-10),
+        return dict(passed=bool(np.isfinite(eigenvalues).all() and minimum >= -1e-10
+                                and np.all(tested_orientation > 0.)),
                     minimum_real_eigenvalue_kg_m_s=minimum,
                     negative_nodes=int(np.sum(tested.real.min(axis=1) < -1e-10)),
                     negative_node_indices=(np.flatnonzero(tested.real.min(axis=1) < -1e-10)
                                            +int(interior_only)).tolist(),
                     boundary_nodes_excluded=bool(interior_only),
+                    progress_equation=self.progress_equation,
+                    projected_nodes=int(np.count_nonzero(gamma)), maximum_projection_blend=float(gamma.max()),
+                    nonpositive_chart_nodes=int(np.count_nonzero(tested_orientation <= 0.)),
+                    minimum_scaled_chart_determinant=float(tested_orientation.min()),
                     diagnostic='nodal_principal_diffusion_matrix',
                     derivatives='analytic_spline_and_enthalpy' if analytic else 'finite_difference',
                     finite_difference_step=None if analytic else 1e-7)
@@ -402,9 +562,13 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
     for i in range(n):
         pattern[3*i:3*i+3, max(0, 3*(i-1)):min(3*n, 3*(i+2))] = 1
     pattern = pattern.tocsc()
+    columns = np.repeat(np.arange(3*n), np.diff(pattern.indptr))
+    color_entries = [np.flatnonzero(columns % 9 == color) for color in range(9)]
     history, reason = [], 'iteration_budget_exhausted'
     for iteration in range(max_iterations+1):
-        f = problem.residual(x)
+        base_state = problem.state(x)
+        f = problem.residual(x, evaluated_state=base_state)
+        projection_cache = problem._last_projection_coefficients
         maximum, norm = float(np.max(abs(f))), float(np.linalg.norm(f))
         history.append(dict(iteration=iteration, maximum_scaled_residual=maximum, norm=norm))
         if verbose and (iteration % 10 == 0 or maximum <= residual_tolerance):
@@ -417,7 +581,6 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
             break
         if iteration == max_iterations:
             break
-        base_state = problem.state(x)
         geometry = base_state['geometry']
         data = np.empty_like(pattern.data, dtype=float)
         for color in range(9):
@@ -426,10 +589,9 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
             plus = x.copy()
             plus[selected] += steps
             difference = problem.residual(plus, geometry=geometry,
-                temperature_cache=base_state['T'], changed_nodes=selected//3)-f
-            for column, step in zip(selected, steps):
-                a, b = pattern.indptr[column:column+2]
-                data[a:b] = difference[pattern.indices[a:b]]/step
+                temperature_cache=base_state['T'], changed_nodes=selected//3, projection_cache=projection_cache)-f
+            entries = color_entries[color]
+            data[entries] = difference[pattern.indices[entries]]/1e-7
         jacobian = csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
         with warnings.catch_warnings():
             warnings.simplefilter('error', MatrixRankWarning)
@@ -469,10 +631,9 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
                 steps = np.where(x[selected] > 1.-1e-7, -1e-7, 1e-7)
                 perturbed = x.copy()
                 perturbed[selected] += steps
-                difference = problem.residual(perturbed, temperature_cache=base_state['T'], changed_nodes=selected//3)-f
-                for column, delta in zip(selected, steps):
-                    a, b = pattern.indptr[column:column+2]
-                    data[a:b] = difference[pattern.indices[a:b]]/delta
+                difference = problem.residual(perturbed, temperature_cache=base_state['T'], changed_nodes=selected//3, projection_cache=projection_cache)-f
+                entries = color_entries[color]
+                data[entries] = difference[pattern.indices[entries]]/steps[(columns[entries]-color)//9]
             actual = csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
             normal = actual.T @ actual
             gradient = actual.T @ f
@@ -551,7 +712,9 @@ def solve_reduced_burner_fgm(model, *, phi, mass_flux, seed_profile, seed_row,
                              width=None, grid=None, max_spacing=1.25e-4,
                              initial_solution=None, residual_tolerance=1e-7,
                              max_iterations=180, max_energy_error=.02,
-                             interpolation='bounded_tensor', curvature_limit=.75, verbose=False):
+                             interpolation='bounded_tensor', curvature_limit=.75,
+                             progress_equation='conservative', metric_floor=1e-30,
+                             kernel_backend='compiled', verbose=False):
     """Solve a burner using a frozen FGM and a verified training warm start.
 
     ``seed_row`` is an output name from the table metadata. A detailed withheld
@@ -595,7 +758,8 @@ def solve_reduced_burner_fgm(model, *, phi, mass_flux, seed_profile, seed_row,
     mech = load_mechanism(model.metadata['mechanism'])
     feed = fresh_mixture(mech, phi, model.metadata['fuel'], model.metadata['oxidizer'])
     problem = ReducedBurnerProblem(model, grid, mass_flux, feed, interpolation=interpolation,
-                                    curvature_limit=curvature_limit)
+                                    curvature_limit=curvature_limit, progress_equation=progress_equation,
+                                    metric_floor=metric_floor,kernel_backend=kernel_backend)
     i, j = record['composition_index'], record['loss_index']
     C_seed = model.table['progress_weights'] @ seed['Y']
     C_row = model.table['C'].reshape(tuple(problem.shape))[i, j]
@@ -618,8 +782,9 @@ def solve_reduced_burner_fgm(model, *, phi, mass_flux, seed_profile, seed_row,
                                np.full(len(problem.z), initial_loss), progress])
     initialization_started = time.perf_counter()
     guide_report = None
-    if initial_solution is None and interpolation == 'bounded_tensor':
-        guide = ReducedBurnerProblem(model, problem.z, mass_flux, feed, interpolation='quadratic_progress')
+    if initial_solution is None and (interpolation == 'bounded_tensor' or progress_equation != 'conservative'):
+        guide = ReducedBurnerProblem(model, problem.z, mass_flux, feed, interpolation='quadratic_progress',
+                                     kernel_backend=kernel_backend)
         guide_initial = initial.copy()
         guide_initial[:, 2] = np.minimum(.985, guide.initial_progress(
             np.interp(problem.z, seed['z'], C_seed), C_row))
@@ -659,12 +824,15 @@ def solve_reduced_burner_fgm(model, *, phi, mass_flux, seed_profile, seed_row,
     else:
         x, history, reason = _newton(problem, initial, residual_tolerance=residual_tolerance,
                                      max_iterations=max(0,remaining), verbose=verbose)
-    state, flux = problem.state(x), problem.fluxes(problem.state(x))
+    state = problem.state(x)
+    flux = problem.fluxes(state)
     diagnostics = problem.diagnostics(x)
     parabolicity = problem.diffusion_diagnostics(x)
+    face_x = .5*(x.reshape(-1,3)[:-1]+x.reshape(-1,3)[1:])
+    face_parabolicity = problem.diffusion_diagnostics(face_x,interior_only=False)
     accepted = (reason == 'converged' and diagnostics['relative_energy_closure_error'] <= max_energy_error
                 and np.max(state['T'])-problem.T_burner > 50.
-                and diagnostics['sum_Y_error'] < 1e-10 and parabolicity['passed'])
+                and diagnostics['sum_Y_error'] < 1e-10 and parabolicity['passed'] and face_parabolicity['passed'])
     if reason == 'converged' and not accepted:
         reason = 'physical_acceptance_failed'
     profile = {k: v for k, v in state.items() if k != 'geometry'}
@@ -688,10 +856,12 @@ def solve_reduced_burner_fgm(model, *, phi, mass_flux, seed_profile, seed_row,
                   backend='reduced_FGM_native_transport', controls=['Z', 'C', 'h'],
                   source='frozen_table', interpolation=interpolation,
                   curvature_limit=curvature_limit,
+                  progress_equation=progress_equation,metric_floor=metric_floor,kernel_backend=kernel_backend,
                   detailed_source_evaluations=0, residual_evaluations=problem.residual_evaluations,
                   jacobian_colors=9, advection='Peclet_fitted_finite_volume',
                   solver_source_sha256=_SOURCE_SHA256,
                   parabolicity=parabolicity,
+                  face_parabolicity=face_parabolicity,limiter_statistics=problem.limiter_statistics if interpolation=='bounded_tensor' else None,
                   table_sha256=model.table_sha256,
                   diagnostics=diagnostics, history=history)
     if not accepted:

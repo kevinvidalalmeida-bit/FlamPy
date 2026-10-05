@@ -47,6 +47,13 @@ def test_compiled_progress_polygon_is_strictly_monotone_for_all_training_rows(pr
     assert np.diff(controls, axis=2).min() > 0.
 
 
+def test_diffusion_audit_accepts_face_batches_independent_of_spatial_node_count(problem):
+    x=np.tile([.45,.35,.45],(4,1))
+    report=problem.diffusion_diagnostics(x,interior_only=False)
+    assert np.isfinite(report['minimum_real_eigenvalue_kg_m_s'])
+    assert report['boundary_nodes_excluded'] is False
+
+
 def test_closure_continuation_preserves_mass_and_recovers_guide_end(problem):
     guide = ReducedBurnerProblem(problem.model, problem.z, problem.mass_flux,
                                  problem.inlet_Y, interpolation='quadratic_progress')

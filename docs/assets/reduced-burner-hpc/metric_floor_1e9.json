@@ -1,0 +1,863 @@
+{
+  "table_sha256": "c879027d67e697d938c256fe0f078ce0e98d7c5a7a9de833310a95c31068103e",
+  "interpolation": "bounded_tensor",
+  "solver_source_sha256": "097d6b00962fed308996dd8ecf15fa48d69f1daa4d8940963c4c9072915c5458",
+  "progress_equation": "adaptive_projection",
+  "metric_floor": 1e-09,
+  "curvature_limit": 1.0,
+  "samples": 76636,
+  "logical_cells": 76636,
+  "sample_definition": "centre",
+  "passed": true,
+  "minimum_real_eigenvalue_kg_m_s": 4.7045711575944334e-08,
+  "negative_samples": 0,
+  "batches": [
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.305557428126948e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 3.4612284519153504e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 0,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 3.454915206780652e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 5,
+      "maximum_projection_blend": 0.4316757230274509,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 3.603785776076878e-06,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 2048,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.0473711123626583e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 23,
+      "maximum_projection_blend": 0.49477265659612646,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 4.222245499650597e-06,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 4096,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.4018748666314164e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 18,
+      "maximum_projection_blend": 0.7683753824132746,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 2.702812648258398e-06,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 6144,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 1.1664870806514017e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 71,
+      "maximum_projection_blend": 0.8574741850186046,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 7.0754088251965135e-06,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 8192,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 4.7045711575944334e-08,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 18,
+      "maximum_projection_blend": 0.38268436575675857,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00012303286471679675,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 10240,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 5.114669887847144e-08,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 73,
+      "maximum_projection_blend": 0.8877489251215765,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 8.48900132354048e-06,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 12288,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 6.662833476989789e-08,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 71,
+      "maximum_projection_blend": 0.8042943377674564,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 3.195141405956306e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 14336,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 1.5007794760933e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 37,
+      "maximum_projection_blend": 0.897633646153839,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 1.305709502766817e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 16384,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3017659643426972e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 32,
+      "maximum_projection_blend": 0.8288026697557569,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 5.652256427735997e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 18432,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 8.084169634135405e-08,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 5,
+      "maximum_projection_blend": 0.5110176522698932,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00011126035607591393,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 20480,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.603442962364836e-07,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 4,
+      "maximum_projection_blend": 0.49541754602887533,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00012917369759666834,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 22528,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.177962142222222e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.002527314748067399,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 24576,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3034455027365274e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.0006229102460921958,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 26624,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 1.7927312002304607e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.0004940618835928451,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 28672,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.24345341883139e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.000440854184654585,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 30720,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.230228301560934e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00017885825632048404,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 32768,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.234669257398749e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00016448310513977787,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 34816,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3146736453218333e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.0007878731699681718,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 36864,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.2673042491300678e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 9.252520372497275e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 38912,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.299190861953841e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00025383267763687565,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 40960,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.316800735899817e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00012975536308503557,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 43008,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3319504028512308e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 1.4034146364157286e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 45056,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3654544834272005e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 3.7432267755125035e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 47104,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3785921244394954e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 5.0817916126894044e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 49152,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.372106154573076e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00021435421267119417,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 51200,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.4175659159336185e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 7.260495764072235e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 53248,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3716175569615667e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 9.058451067083063e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 55296,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3919087744900907e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00023861253706393385,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 57344,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3734161491636243e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 9.4489526088099e-05,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 59392,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3744573427640785e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00024485355582310007,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 61440,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.4621831490125247e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.000104244897173045,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 63488,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3749539727397513e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00010782727410050208,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 65536,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.380995525885946e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00033484293960106076,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 67584,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3749048470708254e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00010444801290912735,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 69632,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3744763777563976e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00010000196572269304,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 71680,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.4344698782809983e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.00013271745616008174,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 73728,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "passed": true,
+      "minimum_real_eigenvalue_kg_m_s": 2.3719090986199905e-05,
+      "negative_nodes": 0,
+      "negative_node_indices": [],
+      "boundary_nodes_excluded": false,
+      "progress_equation": "adaptive_projection",
+      "projected_nodes": 0,
+      "maximum_projection_blend": 0.0,
+      "nonpositive_chart_nodes": 0,
+      "minimum_scaled_chart_determinant": 0.008592172365104917,
+      "diagnostic": "nodal_principal_diffusion_matrix",
+      "derivatives": "analytic_spline_and_enthalpy",
+      "finite_difference_step": null,
+      "first_sample": 75776,
+      "probe_offset": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "nonpositive_chart_samples": 0,
+  "projected_samples": 357,
+  "chart_guard": {
+    "chart_guard": {
+      "samples_per_cell": 9,
+      "sample_definition": "centre_and_eight_Gauss_points",
+      "limited_coefficients": 2307,
+      "minimum_coefficient": 1.0822098663568626e-06,
+      "history": [
+        {
+          "iteration": 0,
+          "bad_samples": 527,
+          "minimum_scaled_determinant": -0.005916977199785168
+        },
+        {
+          "iteration": 1,
+          "bad_samples": 520,
+          "minimum_scaled_determinant": -0.029896467313699382
+        },
+        {
+          "iteration": 2,
+          "bad_samples": 274,
+          "minimum_scaled_determinant": -0.013163251494909968
+        },
+        {
+          "iteration": 3,
+          "bad_samples": 107,
+          "minimum_scaled_determinant": -0.00488984593974635
+        },
+        {
+          "iteration": 4,
+          "bad_samples": 56,
+          "minimum_scaled_determinant": -0.00441775810050005
+        },
+        {
+          "iteration": 5,
+          "bad_samples": 1,
+          "minimum_scaled_determinant": -6.5381822371035635e-06
+        },
+        {
+          "iteration": 6,
+          "bad_samples": 0,
+          "minimum_scaled_determinant": 1.4153533217304632e-06
+        }
+      ],
+      "limitation": "Finite sample check; runtime nodes and faces must also be checked."
+    }
+  },
+  "limitation": "Finite sample audit; does not prove positivity inside every cell."
+}

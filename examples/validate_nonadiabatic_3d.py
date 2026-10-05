@@ -49,7 +49,7 @@ def reference_input_hash(meta, flux):
     return hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()
 
 
-def cantera_reference(meta, flux, weights):
+def cantera_reference(meta, flux, weights, initial_reference=None, boundary_pe_limit=None):
     import cantera as ct
     from kflame.chemistry.mechanism import resolve_mechanism
     gas = ct.Solution(resolve_mechanism(meta['mechanism']))
@@ -60,7 +60,21 @@ def cantera_reference(meta, flux, weights):
     flame.transport_model = meta['transport']
     flame.soret_enabled = meta['soret']
     flame.set_refine_criteria(**{k: meta['refinement'][k] for k in ('ratio', 'slope', 'curve', 'prune')})
-    flame.solve(loglevel=0, auto=True)
+    if initial_reference is not None:
+        # Restart only from Cantera's own independently converged solution.
+        grid=initial_reference['z']
+        if boundary_pe_limit is not None:
+            gas.TPY=initial_reference['T'][0],meta['pressure'],initial_reference['Y'][:,0]
+            spacing=boundary_pe_limit*gas.thermal_conductivity/(flux*gas.cp_mass)
+            count=min(3,len(grid)-1)
+            grid=np.r_[np.concatenate([np.linspace(a,b,max(1,int(np.ceil((b-a)/spacing)))+1)[:-1]
+                for a,b in zip(grid[:count],grid[1:count+1])]),grid[count:]]
+        restart=ct.SolutionArray(gas,len(grid),extra={'grid':grid,
+            'velocity':np.interp(grid,initial_reference['z'],initial_reference['u'])})
+        restart.TPY=np.interp(grid,initial_reference['z'],initial_reference['T']),meta['pressure'],np.array([
+            np.interp(grid,initial_reference['z'],y) for y in initial_reference['Y']]).T
+        flame.set_initial_guess(data=restart)
+    flame.solve(loglevel=0, auto=initial_reference is None)
     gas.TPY = flame.T[-1], meta['pressure'], flame.Y[:, -1]
     return dict(z=flame.grid, T=flame.T, Y=flame.Y, u=flame.velocity,
                 omega_C=weights @ (flame.net_production_rates * gas.molecular_weights[:, None]),

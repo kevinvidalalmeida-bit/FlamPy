@@ -14,10 +14,13 @@ físicos `(Z,C,h)` con composición variable.
 La biblioteca publicada de CH₄-aire incluye 450 llamas y comprobaciones
 separadas de las fuentes químicas, la convergencia espacial y la interpolación.
 [Tolerancias editables, refinamiento y consulta acelerada](docs/adaptive-fgm.md).
-[Transporte reducido, rendimiento y siete figuras de validación](docs/reduced-burner.md):
-se mantienen 432 llamas; 17 de 17 comparaciones cumplen todos los límites,
-incluidas cuatro condiciones nuevas de confirmación. El solver comprueba
-monotonicidad y difusión; la validez de todo el espacio de la tabla sigue sin certificarse.
+[Transporte reducido, HPC y doce figuras de validación](docs/reduced-burner.md):
+se mantienen 432 llamas; 44 condiciones convergen y 35 cumplen todos los límites.
+Pasan las 33 condiciones ensayadas con r ≤ 0.65; nueve con pérdidas pequeñas
+requieren revisar el cierre físico. La auditoría de 689 724 puntos no encuentra
+difusión negativa tras la corrección adaptativa. Los residuos del Jacobiano
+mejoran 1.56× y las consultas grandes 2.98× con cuatro hilos, en la máquina medida.
+La rama sigue siendo experimental fuera de las condiciones verificadas.
 
 El núcleo de resolución funciona en CPU con NumPy, SciPy y Numba.
 Cantera es una dependencia opcional para comparaciones de referencia.

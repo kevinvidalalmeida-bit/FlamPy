@@ -13,7 +13,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--table',type=Path,required=True)
     parser.add_argument('--case',default='case_0.985000_0.285000')
-    parser.add_argument('--data',type=Path,default=Path('docs/assets/reduced-burner'))
+    parser.add_argument('--data',type=Path,default=Path('docs/assets/reduced-burner-hpc'))
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     settings=json.loads((args.data/'plan.json').read_text(encoding='utf-8'))['settings']
@@ -24,7 +24,7 @@ def main():
             seed_profile=args.data/'seeds'/record['seed_row']/'flame.npz',seed_row=record['seed_row'],
             width=settings['width_m'],max_spacing=settings['max_spacing_m'],
             residual_tolerance=settings['residual_tolerance'],max_iterations=settings['max_iterations'],
-            max_energy_error=settings['limits']['energy_closure_relative'])
+            max_energy_error=settings['limits']['energy_closure_relative'],**settings.get('solver_options',{}))
     except ReducedConvergenceError as error:
         profile,report=error.profile,error.report
     args.output.mkdir(parents=True,exist_ok=True)

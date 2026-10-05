@@ -29,7 +29,7 @@ def run(table, validation, profiles):
             try:
                 profile,rpt=solve_reduced_burner_fgm(model,phi=phi,mass_flux=report['mass_flux_kg_m2_s'],
                     seed_profile=profiles/report['seed_row']/'flame.npz',seed_row=report['seed_row'],
-                    width=settings['width_m'],grid=grid,initial_solution=initial,max_iterations=80)
+                    width=settings['width_m'],grid=grid,initial_solution=initial,max_iterations=80,**settings.get('solver_options',{}))
             except ReducedConvergenceError as e:profile,rpt=e.profile,e.report
             entry=dict(label=label,level=level,nodes=len(grid),accepted=rpt['accepted'],
                 temperature_change_K=float(np.max(abs(profile['T']-np.interp(grid,initial['z'],initial['T'])))),
@@ -65,7 +65,7 @@ def run(table, validation, profiles):
         try:
             profile,rpt=solve_reduced_burner_fgm(model,phi=phi,mass_flux=report['mass_flux_kg_m2_s'],
                 seed_profile=profiles/report['seed_row']/'flame.npz',seed_row=report['seed_row'],width=width,
-                initial_solution=baseline,max_iterations=80)
+                initial_solution=baseline,max_iterations=80,**settings.get('solver_options',{}))
         except ReducedConvergenceError as e:profile,rpt=e.profile,e.report
         np.savez_compressed(folder/f'domain_reduced_{int(width*1000)}.npz',**profile)
         write_json(folder/f'domain_reduced_{int(width*1000)}.json',rpt)
