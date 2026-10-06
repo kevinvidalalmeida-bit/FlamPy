@@ -566,6 +566,51 @@ class ReducedBurnerProblem:
                     finite_difference_step=None if analytic else 1e-7)
 
 
+def _colored_jacobian(problem, x, f, sparsity, **residual_options):
+    """Nine-colour one-sided differences of the block-tridiagonal residual."""
+    pattern, columns, color_entries = sparsity
+    data = np.empty_like(pattern.data, dtype=float)
+    for color in range(9):
+        selected = np.arange(color, len(x), 9)
+        steps = np.where(x[selected] > 1.-1e-7, -1e-7, 1e-7)
+        plus = x.copy()
+        plus[selected] += steps
+        difference = problem.residual(plus, changed_nodes=selected//3, **residual_options)-f
+        entries = color_entries[color]
+        data[entries] = difference[pattern.indices[entries]]/steps[(columns[entries]-color)//9]
+    return csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
+
+
+def _bounded_line_search(problem, x, step, norm, record, *, attempts):
+    """Armijo backtracking inside the logical box; returns (trial, alpha) or None."""
+    step[2] = 0.
+    # A bound-active variable must not throttle every other spatial node.
+    # Project the search direction only; never change a physical state.
+    active_bounds = ((x < 1e-10) & (step < 0.)) | ((x > 1.-1e-10) & (step > 0.))
+    step[active_bounds] = 0.
+    record['projected_bound_directions'] = int(np.count_nonzero(active_bounds))
+    positive, negative = step > 0., step < 0.
+    alpha = 1.
+    if positive.any():
+        alpha = min(alpha, .995*float(np.min((1.-x[positive])/step[positive])))
+    if negative.any():
+        alpha = min(alpha, .995*float(np.min(-x[negative]/step[negative])))
+    for _ in range(attempts):
+        if alpha < 1e-11:
+            break
+        trial = x+alpha*step
+        trial[2] = 0.
+        try:
+            trial_norm = np.linalg.norm(problem.residual(trial))
+        except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
+            trial_norm = np.inf
+            record['last_rejected_trial'] = str(error)
+        if trial_norm <= norm*(1.-1e-4*alpha):
+            return trial, alpha
+        alpha *= .5
+    return None
+
+
 def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
     x = np.asarray(initial, dtype=float).ravel().copy()
     if not np.isfinite(x).all() or np.any(x < 0.) or np.any(x > 1.):
@@ -577,7 +622,7 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
         pattern[3*i:3*i+3, max(0, 3*(i-1)):min(3*n, 3*(i+2))] = 1
     pattern = pattern.tocsc()
     columns = np.repeat(np.arange(3*n), np.diff(pattern.indptr))
-    color_entries = [np.flatnonzero(columns % 9 == color) for color in range(9)]
+    sparsity = (pattern, columns, [np.flatnonzero(columns % 9 == color) for color in range(9)])
     history, reason = [], 'iteration_budget_exhausted'
     for iteration in range(max_iterations+1):
         base_state = problem.state(x)
@@ -598,18 +643,8 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
             break
         if iteration == max_iterations:
             break
-        geometry = base_state['geometry']
-        data = np.empty_like(pattern.data, dtype=float)
-        for color in range(9):
-            selected = np.arange(color, len(x), 9)
-            steps = np.where(x[selected] > 1.-1e-7, -1e-7, 1e-7)
-            plus = x.copy()
-            plus[selected] += steps
-            difference = problem.residual(plus, geometry=geometry,
-                temperature_cache=base_state['T'], changed_nodes=selected//3, projection_cache=projection_cache)-f
-            entries = color_entries[color]
-            data[entries] = difference[pattern.indices[entries]]/steps[(columns[entries]-color)//9]
-        jacobian = csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
+        cached = dict(temperature_cache=base_state['T'], projection_cache=projection_cache)
+        jacobian = _colored_jacobian(problem, x, f, sparsity, geometry=base_state['geometry'], **cached)
         with warnings.catch_warnings():
             warnings.simplefilter('error', MatrixRankWarning)
             try:
@@ -621,83 +656,26 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
         if not np.isfinite(step).all():
             reason = 'nonfinite_newton_step'
             break
-        # A bound-active variable must not throttle every other spatial node.
-        # Project the search direction only; never change a physical state.
-        active_bounds = ((x < 1e-10) & (step < 0.)) | ((x > 1.-1e-10) & (step > 0.))
-        step[active_bounds] = 0.
-        history[-1]['projected_bound_directions'] = int(np.count_nonzero(active_bounds))
-        positive, negative = step > 0., step < 0.
-        alpha = 1.
-        if positive.any():
-            alpha = min(alpha, .995*float(np.min((1.-x[positive])/step[positive])))
-        if negative.any():
-            alpha = min(alpha, .995*float(np.min(-x[negative]/step[negative])))
-        accepted = False
-        for _ in range(32):
-            if alpha < 1e-11:
-                break
-            trial = x+alpha*step
-            trial[2] = 0.
-            try:
-                trial_norm = np.linalg.norm(problem.residual(trial))
-            except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
-                trial_norm = np.inf
-                history[-1]['last_rejected_trial'] = str(error)
-            if trial_norm <= norm*(1.-1e-4*alpha):
-                accepted = True
-                break
-            alpha *= .5
-        if not accepted:
+        result = _bounded_line_search(problem, x, step, norm, history[-1], attempts=32)
+        if result is None:
             # A simplex facet can change the directional derivative. Rebuild
             # one-sided physical trial derivatives and regularize the sparse
             # least-squares model instead of spending hundreds of iterations
             # on an ill-conditioned Newton direction.
-            for color in range(9):
-                selected = np.arange(color, len(x), 9)
-                steps = np.where(x[selected] > 1.-1e-7, -1e-7, 1e-7)
-                perturbed = x.copy()
-                perturbed[selected] += steps
-                difference = problem.residual(perturbed, temperature_cache=base_state['T'], changed_nodes=selected//3, projection_cache=projection_cache)-f
-                entries = color_entries[color]
-                data[entries] = difference[pattern.indices[entries]]/steps[(columns[entries]-color)//9]
-            actual = csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
+            actual = _colored_jacobian(problem, x, f, sparsity, **cached)
             normal = actual.T @ actual
             gradient = actual.T @ f
             diagonal = np.maximum(normal.diagonal(), 1e-12)
             for damping in (1e-8, 1e-6, 1e-4, 1e-2, 1., 100.):
                 step = spsolve(normal+diags(damping*diagonal), -gradient)
-                step[2] = 0.
-                # Project only an outward numerical search direction at an
-                # active bound; production physical states are never clipped.
-                step[(x < 1e-10) & (step < 0.)] = 0.
-                step[(x > 1.-1e-10) & (step > 0.)] = 0.
-                alpha = 1.
-                positive, negative = step > 0., step < 0.
-                if positive.any():
-                    alpha = min(alpha, .995*float(np.min((1.-x[positive])/step[positive])))
-                if negative.any():
-                    alpha = min(alpha, .995*float(np.min(-x[negative]/step[negative])))
-                for _ in range(24):
-                    if alpha < 1e-11:
-                        break
-                    trial = x+alpha*step
-                    trial[2] = 0.
-                    try:
-                        trial_norm = np.linalg.norm(problem.residual(trial))
-                    except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
-                        trial_norm = np.inf
-                        history[-1]['last_rejected_trial'] = str(error)
-                    if trial_norm <= norm*(1.-1e-4*alpha):
-                        accepted = True
-                        history[-1]['regularization'] = damping
-                        break
-                    alpha *= .5
-                if accepted:
+                result = _bounded_line_search(problem, x, step, norm, history[-1], attempts=24)
+                if result is not None:
+                    history[-1]['regularization'] = damping
                     break
-            if not accepted:
+            if result is None:
                 reason = 'bounded_newton_step_failed'
                 break
-        x = trial
+        x, alpha = result
         history[-1]['step_length'] = float(alpha)
     return x, history, reason
 
