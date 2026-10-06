@@ -65,8 +65,8 @@ def test_scheme_option_changes_the_residual_and_is_validated():
         assert problem.last_residual_error is None  # compiled path, no silent fallback
     difference = abs(results['upwind']-results['exponential'])
     assert np.max(difference) > 0.
-    nv = 2+problem.n_species
-    np.testing.assert_array_equal(difference[:nv], 0.)  # boundary rows unchanged
+    np.testing.assert_array_equal(difference[:2], 0.)  # inlet continuity and temperature rows
+    assert np.max(difference[2:2+problem.n_species]) > 0.  # second-order inlet species balance
 
 
 def test_cold_start_uses_upwind_then_solves_the_requested_scheme(monkeypatch):

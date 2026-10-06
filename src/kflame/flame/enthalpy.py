@@ -63,13 +63,23 @@ def enthalpy_diagnostics(problem, state):
                   z_face=.5 * (problem.z[:-1] + problem.z[1:]),
                   conductive_heat_flux=q_conduction, diffusive_enthalpy_flux=q_diffusion,
                   total_enthalpy_flux=enthalpy_flux)
-    wall_flux = float(-q_conduction[0])
+    face_wall_flux = float(-q_conduction[0])
+    if int(getattr(problem, 'convection_code', 0)):
+        # Second-order inlet balance over [0, dz0/2]: total h is conserved, so
+        # the wall loss is the feed h flux minus the total flux leaving the
+        # half cell. First-face conduction alone also heats that half cell.
+        wall_flux = float(mdot[0] * h_feed - enthalpy_flux[0])
+        wall_definition = 'half_cell_total_enthalpy_balance'
+    else:
+        wall_flux = face_wall_flux
+        wall_definition = 'first_face_conduction'
     deficit = float(h_feed - h[-1])
     flux_outlet = float(mdot[-1] * deficit)
     closure = abs(wall_flux - flux_outlet) / max(abs(wall_flux), abs(flux_outlet), 1.0)
     diagnostics = dict(
         enthalpy_definition='total_sensible_plus_formation', h_feed_J_kg=h_feed,
         burned_enthalpy_deficit_J_kg=deficit, burner_heat_loss_W_m2=wall_flux,
+        burner_heat_loss_definition=wall_definition, first_face_conductive_heat_flux_W_m2=face_wall_flux,
         outlet_enthalpy_loss_W_m2=flux_outlet, relative_energy_closure_error=closure,
         mass_flux_relative_spread=float(np.ptp(mdot) / max(abs(mdot[0]), 1e-300)),
         outlet_gradient_T_K_m=float((T[-1] - T[-2]) / dz[-1]),

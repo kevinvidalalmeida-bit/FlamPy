@@ -189,7 +189,11 @@ if _NUMBA_AVAILABLE:
             if yk > y_max:
                 y_max = yk
                 k_exc = k
-            F[C_Y + k] = -(flux[k, 0] + mdot_in * yk) + mdot_in * Y_in[k]
+            if convection == 0:
+                F[C_Y + k] = -(flux[k, 0] + mdot_in * yk) + mdot_in * Y_in[k]
+            else:
+                F[C_Y + k] = (-(flux[k, 0] + mdot_in * 0.5 * (yk + Y[k, 1]) - omega[k, 0] * 0.5 * dz0)
+                              + mdot_in * Y_in[k])
         F[C_Y + k_exc] = 1.0 - y_sum
 
         for j in range(1, n_pts - 1):
@@ -513,7 +517,7 @@ def residual(
     F = np.empty(x.size)
 
     # --- j=0 (inlet / left boundary) ---
-    _left_bc(F, u, T, Y, rho, flux[:, 0], problem, nv, n_sp)
+    _left_bc(F, u, T, Y, rho, flux[:, 0], problem, nv, n_sp, omega=omega, convection=convection)
 
     # --- j=1 .. N-2 (interior) ---
     for j in range(1, n_pts - 1):
@@ -577,10 +581,13 @@ def residual(
 # ---------------------------------------------------------------------------
 #  Condiciones de frontera
 # ---------------------------------------------------------------------------
-def _left_bc(F: np.ndarray, u, T, Y, rho, flux0, problem, nv, n_sp):
+def _left_bc(F: np.ndarray, u, T, Y, rho, flux0, problem, nv, n_sp, omega=None, convection=0):
     """
     j=0 : inlet de gas fresco.
     Reproduce Flow1D::evalContinuity + evalEnergy + evalSpecies en jmin=0.
+    With exponential convection the species condition is the second-order
+    balance of the half control volume [0, dz0/2]: feed flux equals the
+    face-centred convective plus diffusive flux minus the half-cell source.
     """
     b = 0
     dz0 = problem.z[1] - problem.z[0]
@@ -601,8 +608,12 @@ def _left_bc(F: np.ndarray, u, T, Y, rho, flux0, problem, nv, n_sp):
     # Species: inlet condition with excess-species normalisation
     mdot_in = rho[0] * u[0]
     Y_in = problem.Y_in
-    F[b + C_Y:b + C_Y + n_sp] = (-(flux0 + mdot_in * Y[:, 0])
-                                 + mdot_in * Y_in)
+    if convection == 0:
+        F[b + C_Y:b + C_Y + n_sp] = (-(flux0 + mdot_in * Y[:, 0])
+                                     + mdot_in * Y_in)
+    else:
+        F[b + C_Y:b + C_Y + n_sp] = (-(flux0 + mdot_in * 0.5 * (Y[:, 0] + Y[:, 1])
+                                       - omega[:, 0] * 0.5 * dz0) + mdot_in * Y_in)
     k_exc = int(np.argmax(Y[:, 0]))
     F[b + C_Y + k_exc] = 1.0 - float(Y[:, 0].sum())
 
@@ -1032,7 +1043,11 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
 
             mdot_in = rho0 * u[0]
             flux0 = flux_local[:, 0 - f0]
-            block[C_Y:C_Y + n_sp] = (-(flux0 + mdot_in * Y[:, 0]) + mdot_in * Y_in)
+            if int(cache.get("convection", 0)) == 0:
+                block[C_Y:C_Y + n_sp] = (-(flux0 + mdot_in * Y[:, 0]) + mdot_in * Y_in)
+            else:
+                block[C_Y:C_Y + n_sp] = (-(flux0 + mdot_in * 0.5 * (Y[:, 0] + Y[:, 1])
+                                           - omega_local[:, 0 + off] * 0.5 * dz0) + mdot_in * Y_in)
             k_exc = int(np.argmax(Y[:, 0]))
             block[C_Y + k_exc] = 1.0 - float(Y[:, 0].sum())
 
@@ -1319,7 +1334,12 @@ if _NUMBA_AVAILABLE:
                             y_max = yk
                             k_exc = k
                         flux0 = flux_local[ib, k, 0 - f0]
-                        vals_out[ib, base + C_Y + k] = -(flux0 + mdot_in * yk) + mdot_in * Y_in[k]
+                        if convection == 0:
+                            vals_out[ib, base + C_Y + k] = -(flux0 + mdot_in * yk) + mdot_in * Y_in[k]
+                        else:
+                            vals_out[ib, base + C_Y + k] = (
+                                -(flux0 + mdot_in * 0.5 * (yk + Y[ib, k, 1 - n0])
+                                  - omega_local[ib, k, 0 - n0] * 0.5 * dz0) + mdot_in * Y_in[k])
                     vals_out[ib, base + C_Y + k_exc] = 1.0 - y_sum
 
                 elif j == n_pts - 1:
@@ -1774,7 +1794,11 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
 
             mdot_in = rho0 * u[:, 0]
             flux0 = flux_local[:, :, 0 - f0]
-            left_species = (-(flux0 + mdot_in[:, None] * Y[:, :, 0]) + mdot_in[:, None] * Y_in[None, :])
+            if int(cache.get("convection", 0)) == 0:
+                left_species = (-(flux0 + mdot_in[:, None] * Y[:, :, 0]) + mdot_in[:, None] * Y_in[None, :])
+            else:
+                left_species = (-(flux0 + mdot_in[:, None] * 0.5 * (Y[:, :, 0] + Y[:, :, 1])
+                                  - omega_local[:, :, 0 + off] * 0.5 * dz0) + mdot_in[:, None] * Y_in[None, :])
             block[:, C_Y:C_Y + n_sp] = left_species
             k_exc = np.argmax(Y[:, :, 0], axis=1)
             block[batch_idx, C_Y + k_exc] = 1.0 - np.sum(Y[:, :, 0], axis=1)

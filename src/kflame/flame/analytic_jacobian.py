@@ -107,9 +107,15 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                         dy = _delta(j, col, v, k+2)
                         if k == close:
                             val = -1.0 if col == j and v >= 2 else 0.0
-                        elif j == 0:
+                        elif j == 0 and convection == 0:
                             val = (-_dflux(df, 0, col, k, v)
                                    + dm*(yin[k]-x[j, k+2])-rho[j]*u*dy)
+                        elif j == 0:
+                            dy1 = _delta(1, col, v, k+2)
+                            dw0 = domega[0, k, v] if col == 0 else 0.0
+                            val = (-_dflux(df, 0, col, k, v)
+                                   + dm*(yin[k]-0.5*(x[0, k+2]+x[1, k+2]))-rho[j]*u*0.5*(dy+dy1)
+                                   + dw0*0.5*(z[1]-z[0]))
                         elif outlet_flux:
                             val = _dflux(df, j-1, col, k, v)+dm*x[j, k+2]+rho[j]*u*dy
                         else:
