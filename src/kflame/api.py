@@ -44,6 +44,32 @@ def _settings(mechanism, temperature, pressure, width, transport, soret,
     ]
 
 
+def _burner_guess_from_free_flame(seed, temperature, width, preheat_fraction=0.02):
+    """Translate a free flame so its preheat zone starts at the burner surface.
+
+    A free flame sits wherever its anchor placed it; a weak-loss burner flame
+    stands close to the surface. Only the initial guess moves: the burner is
+    then solved and certified with its own boundary conditions and mass flux.
+    """
+    z, T, Y = seed['z'], seed['T'], seed['Y']
+    target = temperature + preheat_fraction * (float(T.max()) - temperature)
+    rising = np.flatnonzero(T >= target)
+    if not rising.size or rising[0] == 0:
+        return seed
+    k = int(rising[0])
+    z0 = float(np.interp(target, T[k-1:k+1], z[k-1:k+1]))
+    shifted = np.r_[0., z[z > z0] - z0]
+    if shifted[-1] < width:
+        tail = max(float(z[-1] - z[-2]), 1e-12)
+        count = max(1, int(np.ceil((width - shifted[-1]) / tail)))
+        shifted = np.r_[shifted, np.linspace(shifted[-1], width, count + 1)[1:]]
+    shifted = shifted[shifted <= width]
+    shifted[-1] = width
+    source = shifted + z0
+    return dict(seed, z=shifted, T=np.interp(source, z, T),
+                Y=np.array([np.interp(source, z, row) for row in Y]))
+
+
 def _output(path, label):
     folder = Path(path) if path is not None else Path('runs') / label / datetime.now().strftime('%Y%m%d_%H%M%S_%f')
     folder.mkdir(parents=True, exist_ok=False)
@@ -57,7 +83,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
                 species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None,
-                initial_solution=None, convection='upwind'):
+                initial_solution=None, convection='upwind', time_step_ladder=None):
     """Solve an adiabatic premixed free flame on the native CPU backend.
 
     All arguments are keyword-only. Temperature, pressure and width use SI
@@ -81,8 +107,9 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
     solve_burner_flame provides the explicit entry point for that mode.
     initial_solution may reference an accepted native flame output directory
-    of the same flow type, feed, mechanism, pressure and inlet temperature. The state
-    is a continuation guess; the new flame is always solved and certified.
+    with the same feed, mechanism, pressure and inlet temperature: a free flame,
+    or for a burner either a burner or a free flame. The state is a continuation
+    guess; the new flame is always solved and certified.
     """
     from kflame.chemistry.backend import NativeSpeciesBackend
     from kflame.fgm.generate import build_argparser, make_solve_options, tabulated_properties
@@ -93,6 +120,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
 
     if mass_flux is not None and (not np.isfinite(mass_flux) or mass_flux <= 0):
         raise ValueError('mass_flux must be finite and positive [kg/(m^2 s)]')
+    if time_step_ladder is not None and not (np.isfinite(time_step_ladder) and time_step_ladder > 1.):
+        raise ValueError('time_step_ladder must be None or a finite ratio > 1')
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
                      initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
                      convection)
@@ -124,10 +153,14 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         seed_path = Path(initial_solution)
         seed_meta = json.loads((seed_path / 'metadata.json').read_text(encoding='utf-8'))
         flow_type = 'free_flame' if mass_flux is None else 'isothermal_burner'
+        # A free flame of the same feed is a valid burner guess: only T and Y
+        # are reused, and the burner mass flux is imposed.
+        allowed = (flow_type,) if mass_flux is None else (flow_type, 'free_flame')
         if (not seed_meta.get('accepted') or seed_meta.get('backend') != 'native_cpu'
-                or seed_meta.get('flow_type') != flow_type
+                or seed_meta.get('flow_type') not in allowed
                 or not seed_meta.get('report', {}).get('grid_converged')):
-            raise ValueError('initial_solution must be an accepted native flame of the same flow type on a converged grid')
+            raise ValueError('initial_solution must be an accepted native flame on a converged grid: '
+                             'a free flame, or for a burner a burner or free flame')
         if Path(resolve_mechanism(seed_meta['mechanism'])).read_bytes() != Path(args.mech).read_bytes():
             raise ValueError('Continuation requires the same mechanism')
         current_inlet = inlet if inlet is not None else fresh_mixture(mech, 1. if phi is None else phi, _stream(fuel), _stream(oxidizer))
@@ -150,6 +183,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 or seed['Y'].shape != (mech.n_species, len(seed['z']))
                 or any(not np.isfinite(seed[k]).all() for k in ('z', 'T', 'Y'))):
             raise ValueError('Continuation profile must contain consistent finite T,Y and increasing z')
+        if mass_flux is not None and seed_meta.get('flow_type') == 'free_flame':
+            seed = _burner_guess_from_free_flame(seed, temperature, width)
         if grid is None and np.isclose(seed['z'][-1], width, rtol=1e-12):
             grid = seed['z']
     if grid is not None:
@@ -179,7 +214,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     problem.assume_finite_y = True
     problem.backend_factory = NativeSpeciesBackend
     options = replace(make_solve_options(args), refine_ratio=ratio, refine_slope=slope,
-                      refine_curve=curve, refine_prune=prune, refine_max_points=max_points)
+                      refine_curve=curve, refine_prune=prune, refine_max_points=max_points,
+                      time_step_ladder=time_step_ladder)
     initial_state = None
     if seed is not None:
         from kflame.flame.state import pack_state
@@ -217,6 +253,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech,
                     species_names=problem.species_names, temperature=temperature,
                     pressure=pressure, transport=transport, soret=soret, convection=convection,
+                    time_step_ladder=time_step_ladder,
                     inlet_Y=problem.Y_in,
                     initial_grid=case.initial_grid, initial_points=initial_points,
                     refinement=dict(ratio=ratio, slope=slope, curve=curve, prune=prune, max_points=max_points),
@@ -441,11 +478,110 @@ def generate_burner_fgm(*, mass_fluxes=(.12, .08, .04),
     return folder
 
 
+def _reuse_profile(kind, phi, fraction, destination, *, reuse_sources, flame_settings,
+                   mechanism, mech, fuel, oxidizer):
+    """Copy a matching accepted profile from an earlier family, or return None."""
+    import inspect
+    import shutil
+    if flame_settings.get('grid') is not None:
+        return None
+    defaults = {name: parameter.default for name, parameter in inspect.signature(solve_flame).parameters.items()}
+    target = lambda k: flame_settings.get(k, defaults[k])
+    for reusable, saved_generation in reuse_sources:
+        matches = [r for r in saved_generation['rows'] if r['kind'] == kind and r['phi'] == phi
+                   and (kind == 'adiabatic_reference' or r['fraction'] == fraction)]
+        if len(matches) != 1:
+            continue
+        source = Path(reusable) / matches[0]['output']
+        meta = json.loads((source / 'metadata.json').read_text(encoding='utf-8'))
+        matching = (meta.get('accepted') and meta.get('backend') == 'native_cpu'
+                and meta.get('flow_type') == ('free_flame' if kind == 'adiabatic_reference' else 'isothermal_burner')
+                and meta['report'].get('grid_converged')
+                and Path(meta['mechanism']).read_bytes() == Path(resolve_mechanism(mechanism)).read_bytes()
+                and list(meta['species_names']) == list(mech.species_names)
+                and np.allclose(meta['inlet_Y'], fresh_mixture(mech, phi, fuel, oxidizer), rtol=1e-12, atol=1e-15)
+                and meta['temperature'] == target('temperature') and meta['pressure'] == target('pressure')
+                and meta['initial_width'] == target('width') and meta['transport'] == target('transport')
+                and meta['soret'] == target('soret')
+                and meta.get('convection', 'upwind') == target('convection')
+                and all(v == target(k) for k, v in meta['refinement'].items())
+                and all(v == target(k) for k, v in meta['tolerances'].items()))
+        if not matching:
+            continue
+        shutil.copytree(source, destination)
+        with np.load(destination / 'flame.npz', allow_pickle=False) as saved:
+            result = {k: saved[k] for k in saved.files}
+        return dict(result, output=destination, **{k: meta[k] for k in
+                    (('Su',) if kind == 'adiabatic_reference' else ('mass_flux', 'inlet_velocity', 'heat_loss'))})
+    return None
+
+
+def _generate_family(task):
+    """Solve one composition family: adiabatic reference, then its burners.
+
+    Top-level so worker processes can import it. Returns rows in loss order,
+    the number of reused profiles and, on failure, the failure record.
+    """
+    (i, phi, fractions, folder, flame_settings, reuse_sources, mechanism, fuel, oxidizer,
+     temperature, pressure, max_energy_error) = task
+    from kflame.chemistry.thermo import NativeThermo
+    mech = load_mechanism(resolve_mechanism(mechanism))
+    folder = Path(folder)
+
+    def reuse(kind, fraction, destination):
+        return _reuse_profile(kind, phi, fraction, destination, reuse_sources=reuse_sources,
+                              flame_settings=flame_settings, mechanism=mechanism, mech=mech,
+                              fuel=fuel, oxidizer=oxidizer)
+
+    rows, reused = [], 0
+    print(f'phi={phi:g}: adiabatic reference', flush=True)
+    destination = folder / f'phi_{i:03d}_adiabatic'
+    reference = reuse('adiabatic_reference', None, destination)
+    if reference is None:
+        reference = solve_flame(phi=phi, output=destination, **flame_settings)
+    else:
+        reused += 1
+    meta = json.loads((reference['output'] / 'metadata.json').read_text(encoding='utf-8'))
+    inlet_Y = np.array(meta['inlet_Y'])
+    mdot_ad = float(NativeThermo(mech).density(temperature, pressure, inlet_Y)) * reference['Su']
+    rows.append(dict(composition_index=i, loss_index=0, phi=phi, kind='adiabatic_reference',
+                     output=reference['output'].name, inlet_Y=inlet_Y, adiabatic_mass_flux=mdot_ad,
+                     Su=reference['Su']))
+    # The weakest-loss burner is closest to the adiabatic flame; seeding it
+    # from that profile avoids a cold start for every family.
+    previous_burner = reference['output']
+    for j, fraction in enumerate(fractions, start=1):
+        flux = float(fraction * mdot_ad)
+        print(f'phi={phi:g}: burner fraction={fraction:g}, mdot={flux:.6g}', flush=True)
+        try:
+            destination = folder / f'phi_{i:03d}_loss_{j:03d}'
+            result = reuse('isothermal_burner', float(fraction), destination)
+            if result is not None and not np.isclose(result['mass_flux'], flux, rtol=1e-12):
+                raise ValueError('Reused burner mass flux differs from the new family')
+            if result is None:
+                result = solve_burner_flame(phi=phi, mass_flux=flux, output=destination,
+                                            initial_solution=previous_burner, **flame_settings)
+            else:
+                reused += 1
+            if result['heat_loss']['relative_energy_closure_error'] > max_energy_error:
+                raise RuntimeError('Boundary energy closure exceeds the requested tolerance; refine the spatial mesh')
+        except RuntimeError as error:
+            failure = dict(phi=phi, fraction=float(fraction),
+                           classification='numerical_failure_not_physical_extinction', reason=str(error))
+            return dict(rows=rows, reused=reused, failure=failure)
+        rows.append(dict(composition_index=i, loss_index=j, phi=phi, kind='isothermal_burner',
+                         output=result['output'].name, inlet_Y=inlet_Y, fraction=float(fraction),
+                         mass_flux=flux, adiabatic_mass_flux=mdot_ad,
+                         inlet_velocity=result['inlet_velocity'], heat_loss=result['heat_loss']))
+        previous_burner = result['output']
+    return dict(rows=rows, reused=reused, failure=None)
+
+
 def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 1.3),
                              mass_flux_fractions=(.65, .45, .25, .20, .16, .12, .10, .08, .06),
                              progress_species='CO2:1,H2O:1,CO:1,H2:0.5',
                              progress_points=181, max_energy_error=.02,
-                             output=None, raw_only=False, reuse_from=None, **flame_settings):
+                             output=None, raw_only=False, reuse_from=None, jobs=1, **flame_settings):
     """Generate physical (Z,C,h) flamelets over inlet composition and heat loss.
 
     Fractions multiply the adiabatic rho_feed*Su at each phi. Solve an adiabatic
@@ -459,14 +595,14 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
     reuse_from optionally copies matching accepted native profiles from an
     earlier family, or a sequence of families searched in order; chemistry,
     feed, transport and refinement must agree for each reused profile.
+    jobs>1 solves independent composition families in separate processes;
+    every flame and the row order are the same as with jobs=1.
     The default also builds a connected tetrahedral table; import the loader
     from kflame.fgm.nonadiabatic3d.NonAdiabaticFGM.
     """
     from kflame.fgm.common import parse_progress_weights
     from kflame.fgm.nonadiabatic3d import build_nonadiabatic_table
     from kflame.serialization import json_safe
-    import inspect
-    import shutil
 
     phis = np.asarray(phis, dtype=float)
     fractions = np.asarray(mass_flux_fractions, dtype=float)
@@ -480,6 +616,8 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
         raise ValueError('progress_points must be an integer >= 3')
     if not np.isfinite(max_energy_error) or not 0. < max_energy_error < 1.:
         raise ValueError('max_energy_error must lie between zero and one')
+    if not isinstance(jobs, int) or isinstance(jobs, bool) or jobs < 1:
+        raise ValueError('jobs must be a positive integer')
     if any(key in flame_settings for key in ('phi', 'X', 'Y', 'mass_flux', 'diluent', 'dilution')):
         raise ValueError('Use phis and explicit fuel/oxidizer streams for variable-composition generation')
     mechanism = str(flame_settings.get('mechanism', 'gri30.yaml'))
@@ -499,39 +637,7 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
             saved_generation = json.loads((reusable / 'generation.json').read_text(encoding='utf-8'))
             if not saved_generation.get('all_final_accepted'):
                 raise ValueError('reuse_from must contain complete accepted native families')
-            reuse_sources.append((reusable, saved_generation))
-    defaults = {name: parameter.default for name, parameter in inspect.signature(solve_flame).parameters.items()}
-    def reuse(kind, phi, fraction, destination):
-        if flame_settings.get('grid') is not None:
-            return None
-        for reusable, saved_generation in reuse_sources:
-            matches = [r for r in saved_generation['rows'] if r['kind'] == kind and r['phi'] == phi
-                       and (kind == 'adiabatic_reference' or r['fraction'] == fraction)]
-            if len(matches) != 1:
-                continue
-            source = reusable / matches[0]['output']
-            meta = json.loads((source / 'metadata.json').read_text(encoding='utf-8'))
-            target = lambda k: flame_settings.get(k, defaults[k])
-            matching = (meta.get('accepted') and meta.get('backend') == 'native_cpu'
-                    and meta.get('flow_type') == ('free_flame' if kind == 'adiabatic_reference' else 'isothermal_burner')
-                    and meta['report'].get('grid_converged')
-                    and Path(meta['mechanism']).read_bytes() == Path(resolve_mechanism(mechanism)).read_bytes()
-                    and list(meta['species_names']) == list(mech.species_names)
-                    and np.allclose(meta['inlet_Y'], fresh_mixture(mech, phi, fuel, oxidizer), rtol=1e-12, atol=1e-15)
-                    and meta['temperature'] == target('temperature') and meta['pressure'] == target('pressure')
-                    and meta['initial_width'] == target('width') and meta['transport'] == target('transport')
-                    and meta['soret'] == target('soret')
-                    and meta.get('convection', 'upwind') == target('convection')
-                    and all(v == target(k) for k, v in meta['refinement'].items())
-                    and all(v == target(k) for k, v in meta['tolerances'].items()))
-            if not matching:
-                continue
-            shutil.copytree(source, destination)
-            with np.load(destination / 'flame.npz', allow_pickle=False) as saved:
-                result = {k: saved[k] for k in saved.files}
-            return dict(result, output=destination, **{k: meta[k] for k in
-                        (('Su',) if kind == 'adiabatic_reference' else ('mass_flux', 'inlet_velocity', 'heat_loss'))})
-        return None
+            reuse_sources.append((str(reusable), saved_generation))
     folder = _output(output, 'nonadiabatic_fgm')
     generation = dict(
         mechanism=mechanism, fuel=fuel, oxidizer=oxidizer, phis=phis,
@@ -542,52 +648,34 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
         soret=flame_settings.get('soret', False), max_energy_error=max_energy_error,
         flame_settings=flame_settings,
         all_final_accepted=False, rows=[], failures=[], backend='native_cpu', reused_profiles=0)
+
     def checkpoint():
         (folder / 'generation.json').write_text(json.dumps(json_safe(generation), indent=2) + '\n', encoding='utf-8')
     checkpoint()
-    for i, phi in enumerate(phis):
-        print(f'phi={phi:g}: adiabatic reference', flush=True)
-        destination = folder / f'phi_{i:03d}_adiabatic'
-        reference = reuse('adiabatic_reference', float(phi), None, destination)
-        if reference is None:
-            reference = solve_flame(phi=float(phi), output=destination, **flame_settings)
-        else:
-            generation['reused_profiles'] += 1
-        meta = json.loads((reference['output'] / 'metadata.json').read_text(encoding='utf-8'))
-        inlet_Y = np.array(meta['inlet_Y'])
-        from kflame.chemistry.thermo import NativeThermo
-        mdot_ad = float(NativeThermo(mech).density(generation['temperature_K'], generation['pressure_Pa'], inlet_Y)) * reference['Su']
-        generation['rows'].append(dict(composition_index=i, loss_index=0, phi=float(phi),
-                                       kind='adiabatic_reference', output=reference['output'].name,
-                                       inlet_Y=inlet_Y, adiabatic_mass_flux=mdot_ad, Su=reference['Su']))
-        checkpoint()
-        previous_burner = None
-        for j, fraction in enumerate(fractions, start=1):
-            flux = float(fraction * mdot_ad)
-            print(f'phi={phi:g}: burner fraction={fraction:g}, mdot={flux:.6g}', flush=True)
-            try:
-                destination = folder / f'phi_{i:03d}_loss_{j:03d}'
-                result = reuse('isothermal_burner', float(phi), float(fraction), destination)
-                if result is not None and not np.isclose(result['mass_flux'], flux, rtol=1e-12):
-                    raise ValueError('Reused burner mass flux differs from the new family')
-                if result is None:
-                    result = solve_burner_flame(phi=float(phi), mass_flux=flux,
-                        output=destination, initial_solution=previous_burner, **flame_settings)
-                else:
-                    generation['reused_profiles'] += 1
-                if result['heat_loss']['relative_energy_closure_error'] > max_energy_error:
-                    raise RuntimeError('Boundary energy closure exceeds the requested tolerance; refine the spatial mesh')
-            except RuntimeError as error:
-                generation['failures'].append(dict(phi=float(phi), fraction=float(fraction),
-                    classification='numerical_failure_not_physical_extinction', reason=str(error)))
-                checkpoint()
-                raise
-            generation['rows'].append(dict(composition_index=i, loss_index=j, phi=float(phi),
-                kind='isothermal_burner', output=result['output'].name, inlet_Y=inlet_Y,
-                fraction=float(fraction), mass_flux=flux, adiabatic_mass_flux=mdot_ad,
-                inlet_velocity=result['inlet_velocity'], heat_loss=result['heat_loss']))
-            previous_burner = result['output']
+    tasks = [(i, float(phi), fractions.tolist(), str(folder), dict(flame_settings), reuse_sources, mechanism,
+              fuel, oxidizer, generation['temperature_K'], generation['pressure_Pa'], max_energy_error)
+             for i, phi in enumerate(phis)]
+    results = []
+    if jobs == 1:
+        for task in tasks:
+            results.append(_generate_family(task))
+            generation['rows'].extend(results[-1]['rows'])
             checkpoint()
+            if results[-1]['failure'] is not None:
+                break
+        generation['rows'] = []
+    else:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=min(jobs, len(tasks))) as pool:
+            results = list(pool.map(_generate_family, tasks))
+    for result in results:
+        generation['rows'].extend(result['rows'])
+        generation['reused_profiles'] += result['reused']
+        if result['failure'] is not None:
+            generation['failures'].append(result['failure'])
+    checkpoint()
+    if generation['failures']:
+        raise RuntimeError(generation['failures'][0]['reason'])
     generation['all_final_accepted'] = True
     checkpoint()
     return folder if raw_only else build_nonadiabatic_table(folder, progress_points=progress_points)

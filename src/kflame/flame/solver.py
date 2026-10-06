@@ -109,9 +109,81 @@ if _NUMBA_AVAILABLE:
         if fbound < 0.0:
             fbound = 0.0
         return fbound, reason_var, reason_side, reason_xv, reason_sv
+
+    @njit(cache=True)
+    def _refine_analyze_numba_core(z, values, ratio, slope, curve, prune,
+                                   grid_min, thresh, min_range, j_fixed):
+        """Compiled Refiner.analyze; same sequential keep/remove semantics."""
+        n = z.shape[0]
+        dz = np.empty(n - 1)
+        for j in range(n - 1):
+            dz[j] = z[j + 1] - z[j]
+        insert = np.zeros(n, dtype=np.bool_)
+        keep = np.zeros(n, dtype=np.int64)
+        keep[0] = 1
+        keep[n - 1] = 1
+        if 0 <= j_fixed < n:
+            keep[j_fixed] = 1
+        pruning = prune > 0.0
+        slope_arr = np.empty(n - 1)
+        for p in range(values.shape[0]):
+            vals = values[p]
+            for j in range(n - 1):
+                slope_arr[j] = (vals[j + 1] - vals[j]) / dz[j]
+            val_min = np.min(vals)
+            val_max = np.max(vals)
+            slp_min = np.min(slope_arr)
+            slp_max = np.max(slope_arr)
+            val_mag = max(abs(val_max), abs(val_min))
+            slp_mag = max(abs(slp_max), abs(slp_min))
+            if (val_max - val_min) > min_range * val_mag:
+                max_change = slope * (val_max - val_min)
+                for j in range(n - 1):
+                    r = abs(vals[j + 1] - vals[j]) / (max_change + thresh)
+                    if r > 1.0 and dz[j] >= 2.0 * grid_min:
+                        insert[j] = True
+                    if pruning:
+                        if r >= prune:
+                            keep[j] = 1
+                            keep[j + 1] = 1
+                        elif keep[j] == 0:
+                            keep[j] = -1
+            if (slp_max - slp_min) > min_range * slp_mag:
+                max_change = curve * (slp_max - slp_min)
+                for j in range(n - 2):
+                    r = abs(slope_arr[j + 1] - slope_arr[j]) / (max_change + thresh / dz[j])
+                    if r > 1.0 and dz[j] >= 2.0 * grid_min and dz[j + 1] >= 2.0 * grid_min:
+                        insert[j] = True
+                        insert[j + 1] = True
+                    if pruning:
+                        if r >= prune:
+                            keep[j + 1] = 1
+                        elif keep[j + 1] == 0:
+                            keep[j + 1] = -1
+        for j in range(1, n - 1):
+            if dz[j] > ratio * dz[j - 1]:
+                insert[j] = True
+                for jj in (j - 1, j, j + 1, j + 2):
+                    if 0 <= jj < n:
+                        keep[jj] = 1
+            if dz[j - 1] > ratio * dz[j]:
+                insert[j - 1] = True
+                for jj in (j - 2, j - 1, j, j + 1):
+                    if 0 <= jj < n:
+                        keep[jj] = 1
+            if j > 1 and (z[j + 1] - z[j - 1]) > ratio * dz[j - 2]:
+                keep[j] = 1
+            if j < n - 2 and (z[j + 1] - z[j - 1]) > ratio * dz[j + 1]:
+                keep[j] = 1
+        if pruning:
+            for j in range(2, n - 1):
+                if keep[j] == -1 and keep[j - 1] == -1:
+                    keep[j] = 1
+        return insert, keep
 else:
     _weighted_norm_numba_core = None
     _bound_step_limit_numba_core = None
+    _refine_analyze_numba_core = None
 
 
 def _profile_snapshot(profile: dict[str, dict[str, float | int]]) -> dict[str, dict[str, float | int]]:
@@ -334,6 +406,16 @@ class AdaptiveRefiner:
             keep[j_fixed] = self._KEEP
 
         pruning_enabled = self.prune > 0.0
+        if _refine_analyze_numba_core is not None and n >= 3:
+            rows = [np.asarray(v, dtype=float) for v in profiles.values()]
+            rows = [v for v in rows if v.shape == (n,)]
+            values = np.ascontiguousarray(np.stack(rows)) if rows else np.empty((0, n))
+            insert, keep = _refine_analyze_numba_core(
+                z, values, self.ratio, self.slope, self.curve, self.prune, self.grid_min,
+                self._thresh, self._min_range, -1 if j_fixed is None else int(j_fixed))
+            remove = ({int(j) for j in np.flatnonzero(keep[1:n - 1] == self._REMOVE) + 1}
+                      if pruning_enabled else set())
+            return {int(j) for j in np.flatnonzero(insert)}, remove
 
         for _name, vals in profiles.items():
             vals = np.asarray(vals, dtype=float)
@@ -1208,6 +1290,11 @@ class SolveOptions:
     time_step_factor: float | None = None
     min_time_step: float = 1e-16
     max_time_step: float = 1e8
+    # Optional geometric ladder ratio (>1) for PTC-SER time steps. SER keeps
+    # its continuous ideal step; the step used is that value rounded down to a
+    # power of the ratio, so the transient matrix is refactorized only when a
+    # rung changes. None reproduces the continuous Cantera-style update.
+    time_step_ladder: float | None = None
     transient_steps_per_cycle: int = 10 # compatibilidad
     time_step_sequence: tuple[int, ...] = (20,)
     transient_max_iter: int = 50
@@ -1395,6 +1482,19 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
     ser_residual_growth_limit = 10.0
 
     attempt = 0
+    ladder = getattr(opts, "time_step_ladder", None)
+    if ladder is not None and not (np.isfinite(ladder) and ladder > 1.0):
+        raise ValueError("time_step_ladder must be None or a finite ratio > 1")
+    log_ladder = float(np.log(ladder)) if ladder is not None else 0.0
+
+    def rung(step: float) -> float:
+        # Round down; the relative guard maps an exact rung to itself.
+        if ladder is None or not (np.isfinite(step) and step > 0.0):
+            return step
+        return float(np.exp(np.floor(np.log(step) / log_ladder + 1e-9) * log_ladder))
+
+    dt_ideal = dt
+    dt = rung(dt)
 
     if opts.verbose:
         print(f"\n{'-'*60}\n{label or 'Newton hibrido'}\n{'-'*60}")
@@ -1636,11 +1736,17 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
                             ser_max_factor,
                         )
                     )
-                    dt = dt_try * ser_factor
+                    if ladder is None:
+                        dt = dt_try * ser_factor
+                    else:
+                        dt_ideal = min(opts.max_time_step, max(opts.min_time_step, dt_ideal * ser_factor))
+                        dt = rung(dt_ideal)
                 elif jac_evals_after == jac_evals_before:
                     dt = dt_try * opts.time_step_grow
+                    dt_ideal = dt
                 else:
                     dt = dt_try
+                    dt_ideal = dt
                 dt = min(opts.max_time_step, max(opts.min_time_step, dt))
 
 
@@ -1697,6 +1803,7 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
                         jac.age = 10000
                 else:
                     dt = dt_try * tfactor
+                    dt_ideal = dt
 
                 if opts.verbose:
                     if reset_bad:

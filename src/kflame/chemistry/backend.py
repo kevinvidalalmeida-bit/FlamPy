@@ -11,6 +11,8 @@ ZERO Cantera dependency. CPU backend via NumPy and Numba.
 """
 from __future__ import annotations
 import math
+import copy
+
 import numpy as np
 
 from kflame.chemistry.mechanism import MechanismData, load_mechanism, R_UNIV
@@ -244,7 +246,13 @@ class NativeSpeciesBackend:
                 mechanism_path=problem.case.mech,
                 base_transport=self.transport,
             )
-        self.kinetics  = NativeKinetics(mech_data, xp=self.xp)
+        # Grid refinement rebuilds the backend; the reaction arrays depend only on
+        # the mechanism, and NativeKinetics never mutates them after __init__.
+        template = getattr(mech_data, "_native_kinetics_template", None)
+        if template is None or template.xp is not self.xp:
+            template = NativeKinetics(mech_data, xp=self.xp)
+            mech_data._native_kinetics_template = template
+        self.kinetics = copy.copy(template)
         if getattr(self.kinetics, "_numba_available", False):
             self.kinetics._use_numba = bool(getattr(problem, "use_numba_kinetics", False))
         if getattr(self.kinetics, "_sparse_numba_available", False):

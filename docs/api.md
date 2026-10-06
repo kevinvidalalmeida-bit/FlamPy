@@ -26,6 +26,13 @@ resuelve una familia con composición y entalpía variables y guarda la tabla
 mezcla. `raw_only=True` permite guardar las llamas antes de tabular;
 `reuse_from` reutiliza únicamente perfiles nativos aceptados con química,
 alimentación, transporte, tolerancias y refinamiento coincidentes.
+`jobs=N` resuelve las familias de cada `phi` en `N` procesos; las llamas y el
+orden de las filas son idénticos a `jobs=1`. En Windows el script que lo llame
+debe proteger su código con `if __name__ == "__main__":`. El primer quemador
+de cada familia parte de la llama adiabática, trasladada para que su
+precalentamiento empiece en el quemador; después cada quemador continúa al
+siguiente. Configuración rápida recomendada:
+`convection="exponential", time_step_ladder=2**0.5, jobs=N`.
 [Definiciones, consulta y reproducción](nonadiabatic-fgm.md).
 
 La tabulación comprueba también que el defecto de entalpía de salida de cada
@@ -209,6 +216,7 @@ las corrientes `fuel` u `oxidizer`.
 | `initial_points` | `8` | Número de nodos iniciales, al menos 3 |
 | `transport` | `"mixture-averaged"` | `"mixture-averaged"` o `"multicomponent"` |
 | `soret` | `False` | Termodifusión; disponible con los dos modelos de transporte |
+| `time_step_ladder` | `None` | Solo `solve_flame`/`solve_burner_flame`. Razón > 1 (p. ej. `2**0.5`) que redondea hacia abajo el paso de pseudo-tiempo PTC-SER a una escalera geométrica; evita refactorizar el Jacobiano por cambios pequeños de Δt. Cambia la trayectoria, no la solución convergida (diferencias medidas ≤ 1,5e-4 en q) |
 | `convection` | `"upwind"` | Solo `solve_flame`/`solve_burner_flame`. `"upwind"`: primer orden, como Cantera. `"exponential"`: Il'in–Allen–Southwell, segundo orden donde la difusión resuelve el perfil; recomendado para el calor al quemador cerca del límite adiabático |
 | `ratio` | `2.5` | Criterio de relación entre tamaños de intervalos, al menos 2 |
 | `slope` | `0.04` | Umbral normalizado de variación, en `(0, 1]` |

@@ -103,7 +103,8 @@ def test_lookup_preserves_local_Z_progress_and_total_enthalpy(tmp_path):
 
 @pytest.mark.parametrize('kwargs', [dict(phis=[1.]), dict(phis=[1., .8]),
                                  dict(mass_flux_fractions=[0.]), dict(mass_flux_fractions=[1.]),
-                                 dict(mass_flux_fractions=[.2, .2])])
+                                 dict(mass_flux_fractions=[.2, .2]), dict(jobs=0), dict(jobs=1.5),
+                                 dict(jobs=True)])
 def test_invalid_variable_family_creates_no_output(tmp_path, kwargs):
     output = tmp_path / 'invalid'
     with pytest.raises(ValueError):
@@ -130,18 +131,27 @@ def test_continuation_rejects_unaccepted_or_different_feed_before_output(tmp_pat
     assert not output.exists()
 
 
-@pytest.mark.parametrize('seed_flow_type', ['free_flame', 'isothermal_burner'])
-def test_continuation_rejects_a_different_flow_type_before_output(tmp_path, seed_flow_type):
+def test_continuation_rejects_a_burner_seed_for_a_free_flame_before_output(tmp_path):
     seed = tmp_path/'seed'
     seed.mkdir()
-    meta = dict(accepted=True, backend='native_cpu', flow_type=seed_flow_type,
+    meta = dict(accepted=True, backend='native_cpu', flow_type='isothermal_burner',
                 report={'grid_converged':True})
     (seed/'metadata.json').write_text(json.dumps(meta))
-    options = dict(initial_solution=seed, output=tmp_path/'new')
-    if seed_flow_type == 'free_flame':
-        options['mass_flux'] = .1
-    with pytest.raises(ValueError, match='same flow type'):
-        solve_flame(**options)
+    with pytest.raises(ValueError, match='for a burner a burner or free flame'):
+        solve_flame(initial_solution=seed, output=tmp_path/'new')
+    assert not (tmp_path/'new').exists()
+
+
+def test_burner_accepts_a_free_flame_seed_and_still_checks_its_feed(tmp_path):
+    seed = tmp_path/'seed'
+    seed.mkdir()
+    mech = load_mechanism('gri30.yaml')
+    meta = dict(accepted=True, backend='native_cpu', flow_type='free_flame', mechanism='gri30.yaml',
+                temperature=300., pressure=101325., report={'grid_converged': True},
+                inlet_Y=fresh_mixture(mech, .8, 'CH4', 'O2:1,N2:3.76').tolist())
+    (seed/'metadata.json').write_text(json.dumps(meta))
+    with pytest.raises(ValueError, match='same feed'):  # passed the flow-type check
+        solve_burner_flame(phi=1., mass_flux=.1, initial_solution=seed, output=tmp_path/'new')
     assert not (tmp_path/'new').exists()
 
 
