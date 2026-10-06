@@ -3,6 +3,7 @@
 The derivative follows the same fixed upwind/closure branches as the local
 residual. Transport coefficients are frozen, including multicomponent/Soret;
 their explicit dependence on gradients and composition is differentiated.
+With exponential convection the Peclet blending weights are frozen as well.
 """
 import numpy as np
 from numba import njit, prange
@@ -72,7 +73,8 @@ def _dflux(df, face, col, k, v):
 @njit(cache=True, parallel=True)
 def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     flux, df, lam, invW, yin, energy, has_profile, fixed,
-                    outlet_flux, threshold, active_columns, inlet_mass_flux):
+                    outlet_flux, threshold, active_columns, inlet_mass_flux,
+                    convection, conv_w):
     nodes, nv = x.shape
     ns = nv-2
     blocks = np.zeros((nodes, 3, nv, nv))
@@ -129,8 +131,13 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                 up = j if u > 0.0 else j+1
                 down = up-1
                 dzup = z[up]-z[down]
-                gradT = (x[up, 1]-x[down, 1])/dzup
-                dgradT = (_delta(up, col, v, 1)-_delta(down, col, v, 1))/dzup
+                wm, wp, hm, hp = conv_w[j, 0], conv_w[j, 1], conv_w[j, 2], conv_w[j, 3]
+                if convection == 0:
+                    gradT = (x[up, 1]-x[down, 1])/dzup
+                    dgradT = (_delta(up, col, v, 1)-_delta(down, col, v, 1))/dzup
+                else:
+                    gradT = wp*(x[j+1, 1]-x[j, 1])+wm*(x[j, 1]-x[j-1, 1])
+                    dgradT = wp*(_delta(j+1, col, v, 1)-dt)+wm*(dt-_delta(j-1, col, v, 1))
                 cond = -2*(lam[j]*(x[j+1, 1]-x[j, 1])/dzp
                            -lam[j-1]*(x[j, 1]-x[j-1, 1])/dzm)/dz2
                 dcond = -2*(lam[j]*(_delta(j+1, col, v, 1)-dt)/dzp
@@ -142,14 +149,24 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     dfm = _dflux(df, j-1, col, k, v)
                     dfp = _dflux(df, j, col, k, v)
                     dh = cp_molar[k, j]*dt
-                    gradh = (h[k, up]-h[k, down])/dzup
-                    dgradh = (cp_molar[k, up]*_delta(up, col, v, 1)
-                              -cp_molar[k, down]*_delta(down, col, v, 1))/dzup
+                    if convection == 0:
+                        gradh = (h[k, up]-h[k, down])/dzup
+                        dgradh = (cp_molar[k, up]*_delta(up, col, v, 1)
+                                  -cp_molar[k, down]*_delta(down, col, v, 1))/dzup
+                    else:
+                        gradh = hp*(h[k, j+1]-h[k, j])+hm*(h[k, j]-h[k, j-1])
+                        dgradh = (hp*(cp_molar[k, j+1]*_delta(j+1, col, v, 1)-cp_molar[k, j]*dt)
+                                  +hm*(cp_molar[k, j]*dt-cp_molar[k, j-1]*_delta(j-1, col, v, 1)))
                     en += (h[k, j]*omega[k, j]+.5*(fm+fp)*gradh)*invW[k]
                     den += (dh*omega[k, j]+h[k, j]*dw
                             +.5*(dfm+dfp)*gradh+.5*(fm+fp)*dgradh)*invW[k]
-                    gradY = (x[up, k+2]-x[down, k+2])/dzup
-                    dgradY = (_delta(up, col, v, k+2)-_delta(down, col, v, k+2))/dzup
+                    if convection == 0:
+                        gradY = (x[up, k+2]-x[down, k+2])/dzup
+                        dgradY = (_delta(up, col, v, k+2)-_delta(down, col, v, k+2))/dzup
+                    else:
+                        dy = _delta(j, col, v, k+2)
+                        gradY = wp*(x[j+1, k+2]-x[j, k+2])+wm*(x[j, k+2]-x[j-1, k+2])
+                        dgradY = wp*(_delta(j+1, col, v, k+2)-dy)+wm*(dy-_delta(j-1, col, v, k+2))
                     diff = 2*(fp-fm)/dz2
                     ddiff = 2*(dfp-dfm)/dz2
                     blocks[j, side, k+2, v] = (-du*gradY-u*dgradY+(dw-ddiff)/rho[j]
@@ -203,7 +220,7 @@ def build_analytic_blocks(x, problem, column_nodes=None):
         cache['hk_n'], drho, dcp, domega, cp_molar, flux, df, cache['lam_face'], b.invW,
         cache['Y_in'], cache['solve_energy'], cache['has_T_prof'], cache['j_fixed'],
         _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active,
-        float(getattr(problem, 'inlet_mass_flux', -1.0)))
+        float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']), cache['conv_w'])
     result = BlockTridiagJacobian(np.ascontiguousarray(blocks[1:, 0]),
         np.ascontiguousarray(blocks[:, 1]), np.ascontiguousarray(blocks[:-1, 2]))
     result.use_compiled_substitution = bool(getattr(problem, 'use_compiled_block_substitution', True))

@@ -29,6 +29,9 @@ class FlameCase:
     # Discretizacion convectiva:
     # 1.0 = upwind puro (robusto, default actual), 0.0 = central.
     upwind_factor: float = 1.0
+    # "upwind" (primer orden, Cantera) | "exponential" (Il'in-Allen-Southwell,
+    # segundo orden donde la difusion resuelve el perfil). Ver flame/convection.py.
+    convection_scheme: str = "upwind"
 
     # Malla inicial
     cantera_seed_grid: bool = True

@@ -9,6 +9,7 @@ from scipy import sparse
 from scipy.linalg import get_lapack_funcs, lu_solve
 from scipy.sparse.linalg import splu
 
+from kflame.flame.convection import exponential_weights
 from kflame.flame.state import C_T, C_U, C_Y, build_transient_mask
 
 # Cache LAPACK dispatch outside the per-block factorization loop.
@@ -61,6 +62,14 @@ def _jacobian_backend(problem):
 # ---------------------------------------------------------------------------
 #  Helpers de flujo difusivo
 # ---------------------------------------------------------------------------
+def _convection_weights(problem, u, rho, cp, lam_face, z):
+    """Scheme code and per-node convective weights (zeros for upwind)."""
+    convection = int(getattr(problem, "convection_code", 0))
+    if convection == 0:
+        return 0, np.zeros((len(z), 4))
+    return convection, exponential_weights(u, rho, cp, lam_face, z)
+
+
 def _corrected_flux(Y_L: np.ndarray, Y_R: np.ndarray,
                     rho_f: float, D_f: np.ndarray, dz: float,
                     W: np.ndarray, W_mix_f: float,
@@ -153,7 +162,7 @@ if _NUMBA_AVAILABLE:
     def _assemble_residual_numba_core(
         F, u, T, Y, z, rho, cp_n, omega, hk_n, lam_face, flux,
         invW, Y_in, T_prof, has_T_prof, solve_energy, j_fixed,
-        T_fixed, T_in, outlet_species_flux, inlet_mass_flux,
+        T_fixed, T_in, outlet_species_flux, inlet_mass_flux, convection, conv_w,
     ):
         n_pts = z.shape[0]
         n_sp = Y.shape[0]
@@ -203,10 +212,14 @@ if _NUMBA_AVAILABLE:
             rho_u_j = rho_j * u[j]
             jloc = j if u[j] > 0.0 else j + 1
             dz_up = z[jloc] - z[jloc - 1]
+            wm, wp, hm, hp = conv_w[j, 0], conv_w[j, 1], conv_w[j, 2], conv_w[j, 3]
 
             if solve_energy:
-                dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
-                dTdz = dTdz_up
+                if convection == 0:
+                    dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
+                    dTdz = dTdz_up
+                else:
+                    dTdz = wp * (T[j + 1] - T[j]) + wm * (T[j] - T[j - 1])
                 cond = -2.0 * (
                     lam_face[j] * (T[j + 1] - T[j]) / dzp
                     - lam_face[j - 1] * (T[j] - T[j - 1]) / dzm
@@ -214,7 +227,10 @@ if _NUMBA_AVAILABLE:
 
                 en_sum = 0.0
                 for k in range(n_sp):
-                    dhk_dz = (hk_n[k, jloc] - hk_n[k, jloc - 1]) / dz_up
+                    if convection == 0:
+                        dhk_dz = (hk_n[k, jloc] - hk_n[k, jloc - 1]) / dz_up
+                    else:
+                        dhk_dz = hp * (hk_n[k, j + 1] - hk_n[k, j]) + hm * (hk_n[k, j] - hk_n[k, j - 1])
                     flx = 0.5 * (flux[k, j - 1] + flux[k, j])
                     en_sum += hk_n[k, j] * omega[k, j] * invW[k]
                     en_sum += flx * dhk_dz * invW[k]
@@ -225,8 +241,11 @@ if _NUMBA_AVAILABLE:
                 F[b + C_T] = T[j] - (T_prof[j] if has_T_prof else T_in)
 
             for k in range(n_sp):
-                dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
-                dYdz = dYdz_up
+                if convection == 0:
+                    dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
+                    dYdz = dYdz_up
+                else:
+                    dYdz = wp * (Y[k, j + 1] - Y[k, j]) + wm * (Y[k, j] - Y[k, j - 1])
                 conv = rho_u_j * dYdz
                 diff = 2.0 * (flux[k, j] - flux[k, j - 1]) / dz2
                 F[b + C_Y + k] = (omega[k, j] - conv - diff) / rho_j
@@ -434,6 +453,7 @@ def residual(
         return _profile_return(problem, "residual_full", t_profile, np.full(x.size, 1.0e20))
 
     _profile_record(problem, "residual_face_transport_and_flux", t_faces)
+    convection, conv_w = _convection_weights(problem, u, rho, cp_n, lam_face, z)
     # OPT-3: Cache nodal properties for the Jacobian cache builder.
     # build_local_jacobian_cache() evaluates the exact same thermo/kinetics at
     # the same state.  Storing these here avoids that redundant evaluation.
@@ -475,6 +495,7 @@ def residual(
                 j_fixed, T_fixed, float(problem.T_in),
                 bool(_outlet_species_flux_bc(problem)),
                 float(getattr(problem, "inlet_mass_flux", -1.0)),
+                convection, conv_w,
             )
             _profile_record(problem, "residual_assembly_numba", t_assembly)
             _apply_transient_terms(F_numba, x, problem, rdt, x_old)
@@ -520,7 +541,7 @@ def residual(
         if problem.solve_energy:
             F[b + C_T] = _energy_residual(
                 u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face, fm, fp,
-                j, z, dzm, dzp, dz2, n_sp, W, invW, problem)
+                j, z, dzm, dzp, dz2, n_sp, W, invW, problem, convection, conv_w[j])
         else:
             T_prof = getattr(problem, "T_profile_fixed", None)
             F[b + C_T] = T[j] - (T_prof[j] if T_prof is not None else problem.T_in)
@@ -528,10 +549,13 @@ def residual(
         # Y_k / species equations (differential, diag=1)
         rho_u_j = rho[j] * u[j]
         for k in range(n_sp):
-            jloc = j if u[j] > 0.0 else j + 1
-            dz_up = z[jloc] - z[jloc - 1]
-            dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
-            dYdz = dYdz_up
+            if convection == 0:
+                jloc = j if u[j] > 0.0 else j + 1
+                dz_up = z[jloc] - z[jloc - 1]
+                dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
+                dYdz = dYdz_up
+            else:
+                dYdz = conv_w[j, 1] * (Y[k, j + 1] - Y[k, j]) + conv_w[j, 0] * (Y[k, j] - Y[k, j - 1])
             conv = rho_u_j * dYdz
             diff = 2.0 * (fp[k] - fm[k]) / dz2
             F[b + C_Y + k] = (omega[k, j] - conv - diff) / rho[j]
@@ -616,15 +640,20 @@ def _right_bc(F: np.ndarray, u, T, Y, rho, flux_last, problem, nv, n_sp, n_pts):
 #  Ecuación de energía interior
 # ---------------------------------------------------------------------------
 def _energy_residual(u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face,
-                     fm, fp, j, z, dzm, dzp, dz2, n_sp, W, invW, problem):
+                     fm, fp, j, z, dzm, dzp, dz2, n_sp, W, invW, problem,
+                     convection=0, weights=None):
     """Residual de la ecuación de energía en el punto interior j."""
     rho_u_j = rho[j] * u[j]
 
     # Upwind para convección
     jloc = j if u[j] > 0.0 else j + 1
     dz_up = z[jloc] - z[jloc - 1]
-    dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
-    dTdz = dTdz_up
+    if convection == 0:
+        dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
+        dTdz = dTdz_up
+    else:
+        wm, wp = weights[0], weights[1]
+        dTdz = wp * (T[j + 1] - T[j]) + wm * (T[j] - T[j - 1])
 
     # Conducción centrada
     lam_m = lam_face[j - 1]
@@ -632,8 +661,12 @@ def _energy_residual(u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face,
     cond = -2.0 * (lam_p * (T[j + 1] - T[j]) / dzp
                    - lam_m * (T[j] - T[j - 1]) / dzm) / dz2
 
-    # Gradientes de entalpía (upwind)
-    dhk_dz = (hk_n[:, jloc] - hk_n[:, jloc - 1]) / dz_up
+    # Gradientes de entalpía (upwind; centrados con el esquema exponencial)
+    if convection == 0:
+        dhk_dz = (hk_n[:, jloc] - hk_n[:, jloc - 1]) / dz_up
+    else:
+        hm, hp = weights[2], weights[3]
+        dhk_dz = hp * (hk_n[:, j + 1] - hk_n[:, j]) + hm * (hk_n[:, j] - hk_n[:, j - 1])
 
     flx = 0.5 * (fm + fp)
     en_sum = float(np.dot(hk_n[:, j] * omega[:, j], invW) +
@@ -799,10 +832,15 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
         if problem.T_fixed_point is not None else 0.0
     )
 
+    # Convective weights are frozen at the base state, like transport.
+    convection, conv_w = _convection_weights(problem, u, rho, cp_n, lam_face, z)
+
     cache = {
         "n_pts": n_pts,
         "n_sp": n_sp,
         "nv": 2 + n_sp,
+        "convection": int(convection),
+        "conv_w": conv_w,
         "z": np.asarray(z, dtype=float),
         "W": W,
         "invW": invW,
@@ -1039,10 +1077,16 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
             rho_u_j = rho_j * u[j]
             jloc = j if u[j] > 0.0 else j + 1
             dz_up = z[jloc] - z[jloc - 1]
+            exponential = int(cache.get("convection", 0)) != 0
+            if exponential:
+                wm, wp, hm, hp = cache["conv_w"][j]
 
             if solve_energy:
-                dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
-                dTdz = dTdz_up
+                if exponential:
+                    dTdz = wp * (T[j + 1] - T[j]) + wm * (T[j] - T[j - 1])
+                else:
+                    dTdz_up = (T[jloc] - T[jloc - 1]) / dz_up
+                    dTdz = dTdz_up
 
                 lam_m = lam_face[j - 1]
                 lam_p = lam_face[j]
@@ -1051,7 +1095,10 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
                 jloc_o = jloc + off
                 hk_j = hk_local[:, jo]
                 om_j = omega_local[:, jo]
-                dhk_dz = (hk_local[:, jloc_o] - hk_local[:, jloc_o - 1]) / dz_up
+                if exponential:
+                    dhk_dz = hp * (hk_local[:, jo + 1] - hk_j) + hm * (hk_j - hk_local[:, jo - 1])
+                else:
+                    dhk_dz = (hk_local[:, jloc_o] - hk_local[:, jloc_o - 1]) / dz_up
                 flx = 0.5 * (fm + fp)
                 en_sum = float(np.dot(hk_j * om_j, invW) + np.dot(flx * dhk_dz, invW))
                 cp_j = cp_local[jo]
@@ -1060,8 +1107,11 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
                 block[C_T] = T[j] - (T_prof[j] if T_prof is not None else T_in)
 
             om_j = omega_local[:, jo]
-            dYdz_up = (Y[:, jloc] - Y[:, jloc - 1]) / dz_up
-            dYdz = dYdz_up
+            if exponential:
+                dYdz = wp * (Y[:, j + 1] - Y[:, j]) + wm * (Y[:, j] - Y[:, j - 1])
+            else:
+                dYdz_up = (Y[:, jloc] - Y[:, jloc - 1]) / dz_up
+                dYdz = dYdz_up
             conv = rho_u_j * dYdz
             diff = 2.0 * (fp - fm) / dz2
             block[C_Y:C_Y + n_sp] = (om_j - conv - diff) / rho_j
@@ -1183,6 +1233,7 @@ if _NUMBA_AVAILABLE:
         multicomponent_flux, dz_face, W, invW, Y_in, T_prof,
         has_T_prof, solve_energy, j_fixed, T_fixed, T_in, p0, p1, n0,
         f0, n_faces, basis_molar, rho0_base, outlet_species_flux, inlet_mass_flux,
+        convection, conv_w,
     ):
         n_batch = u.shape[0]
         n_sp = Y.shape[1]
@@ -1329,10 +1380,14 @@ if _NUMBA_AVAILABLE:
                     dz_up = z[jloc] - z[jloc - 1]
                     fm_i = (j - 1) - f0
                     fp_i = j - f0
+                    wm, wp, hm, hp = conv_w[j, 0], conv_w[j, 1], conv_w[j, 2], conv_w[j, 3]
 
                     if solve_energy:
-                        dTdz_up = (T[ib, jloc_o] - T[ib, jloc_m_o]) / dz_up
-                        dTdz = dTdz_up
+                        if convection == 0:
+                            dTdz_up = (T[ib, jloc_o] - T[ib, jloc_m_o]) / dz_up
+                            dTdz = dTdz_up
+                        else:
+                            dTdz = wp * (T[ib, jo + 1] - T[ib, jo]) + wm * (T[ib, jo] - T[ib, jo - 1])
                         cond = -2.0 * (
                             lam_face[j] * (T[ib, jo + 1] - T[ib, jo]) / dzp
                             - lam_face[j - 1] * (T[ib, jo] - T[ib, jo - 1]) / dzm
@@ -1342,7 +1397,11 @@ if _NUMBA_AVAILABLE:
                         for k in range(n_sp):
                             fm = flux_local[ib, k, fm_i]
                             fp = flux_local[ib, k, fp_i]
-                            dhk_dz = (hk_local[ib, k, jloc_o] - hk_local[ib, k, jloc_m_o]) / dz_up
+                            if convection == 0:
+                                dhk_dz = (hk_local[ib, k, jloc_o] - hk_local[ib, k, jloc_m_o]) / dz_up
+                            else:
+                                dhk_dz = (hp * (hk_local[ib, k, jo + 1] - hk_local[ib, k, jo])
+                                          + hm * (hk_local[ib, k, jo] - hk_local[ib, k, jo - 1]))
                             flx = 0.5 * (fm + fp)
                             en_sum += hk_local[ib, k, jo] * omega_local[ib, k, jo] * invW[k]
                             en_sum += flx * dhk_dz * invW[k]
@@ -1357,8 +1416,11 @@ if _NUMBA_AVAILABLE:
                     for k in range(n_sp):
                         fm = flux_local[ib, k, fm_i]
                         fp = flux_local[ib, k, fp_i]
-                        dYdz_up = (Y[ib, k, jloc_o] - Y[ib, k, jloc_m_o]) / dz_up
-                        dYdz = dYdz_up
+                        if convection == 0:
+                            dYdz_up = (Y[ib, k, jloc_o] - Y[ib, k, jloc_m_o]) / dz_up
+                            dYdz = dYdz_up
+                        else:
+                            dYdz = wp * (Y[ib, k, jo + 1] - Y[ib, k, jo]) + wm * (Y[ib, k, jo] - Y[ib, k, jo - 1])
                         conv = rho_u_j * dYdz
                         diff = 2.0 * (fp - fm) / dz2
                         vals_out[ib, base + C_Y + k] = (omega_local[ib, k, jo] - conv - diff) / rho_j
@@ -1551,6 +1613,8 @@ def residual_local_rows_batch_perturbed(
             float(cache["rho0"]),
             bool(_outlet_species_flux_bc(problem)),
             float(getattr(problem, "inlet_mass_flux", -1.0)),
+            int(cache.get("convection", 0)),
+            cache.get("conv_w", np.zeros((n_pts, 4))),
         )
     except Exception as exc:
         problem.last_residual_error = f"Numba local fallback: {exc}"
@@ -1759,19 +1823,28 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
             dz_up = z[jloc] - z[jloc_m]
             jloc_o = jloc + off
             jloc_m_o = jloc_m + off
+            exponential = int(cache.get("convection", 0)) != 0
+            if exponential:
+                wm, wp, hm, hp = cache["conv_w"][j]
 
             if solve_energy:
-                dTdz_up = (T[batch_idx, jloc] - T[batch_idx, jloc_m]) / dz_up
-                dTdz = dTdz_up
+                if exponential:
+                    dTdz = wp * (T[:, j + 1] - T[:, j]) + wm * (T[:, j] - T[:, j - 1])
+                else:
+                    dTdz_up = (T[batch_idx, jloc] - T[batch_idx, jloc_m]) / dz_up
+                    dTdz = dTdz_up
                 cond = -2.0 * (
                     lam_face[j] * (T[:, j + 1] - T[:, j]) / dzp
                     - lam_face[j - 1] * (T[:, j] - T[:, j - 1]) / dzm
                 ) / dz2
                 hk_j = hk_local[:, :, jo]
                 om_j = omega_local[:, :, jo]
-                hk_jloc = _take_point_values(hk_local, jloc_o)
-                hk_jloc_m = _take_point_values(hk_local, jloc_m_o)
-                dhk_dz = (hk_jloc - hk_jloc_m) / dz_up[:, None]
+                if exponential:
+                    dhk_dz = hp * (hk_local[:, :, jo + 1] - hk_j) + hm * (hk_j - hk_local[:, :, jo - 1])
+                else:
+                    hk_jloc = _take_point_values(hk_local, jloc_o)
+                    hk_jloc_m = _take_point_values(hk_local, jloc_m_o)
+                    dhk_dz = (hk_jloc - hk_jloc_m) / dz_up[:, None]
                 flx = 0.5 * (fm + fp)
                 en_sum = (
                     np.sum(hk_j * om_j * invW[None, :], axis=1)
@@ -1783,10 +1856,13 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
                 block[:, C_T] = T[:, j] - (T_prof[j] if T_prof is not None else T_in)
 
             om_j = omega_local[:, :, jo]
-            Y_jloc = _take_point_values(Y, jloc)
-            Y_jloc_m = _take_point_values(Y, jloc_m)
-            dYdz_up = (Y_jloc - Y_jloc_m) / dz_up[:, None]
-            dYdz = dYdz_up
+            if exponential:
+                dYdz = wp * (Y[:, :, j + 1] - Y[:, :, j]) + wm * (Y[:, :, j] - Y[:, :, j - 1])
+            else:
+                Y_jloc = _take_point_values(Y, jloc)
+                Y_jloc_m = _take_point_values(Y, jloc_m)
+                dYdz_up = (Y_jloc - Y_jloc_m) / dz_up[:, None]
+                dYdz = dYdz_up
             conv = rho_u_j[:, None] * dYdz
             diff = 2.0 * (fp - fm) / dz2
             block[:, C_Y:C_Y + n_sp] = (om_j - conv - diff) / rho_j[:, None]

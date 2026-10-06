@@ -209,6 +209,7 @@ las corrientes `fuel` u `oxidizer`.
 | `initial_points` | `8` | Número de nodos iniciales, al menos 3 |
 | `transport` | `"mixture-averaged"` | `"mixture-averaged"` o `"multicomponent"` |
 | `soret` | `False` | Termodifusión; disponible con los dos modelos de transporte |
+| `convection` | `"upwind"` | Solo `solve_flame`/`solve_burner_flame`. `"upwind"`: primer orden, como Cantera. `"exponential"`: Il'in–Allen–Southwell, segundo orden donde la difusión resuelve el perfil; recomendado para el calor al quemador cerca del límite adiabático |
 | `ratio` | `2.5` | Criterio de relación entre tamaños de intervalos, al menos 2 |
 | `slope` | `0.04` | Umbral normalizado de variación, en `(0, 1]` |
 | `curve` | `0.08` | Umbral normalizado de cambio de pendiente, en `(0, 1]` |

@@ -17,9 +17,12 @@ def _stream(value):
 
 
 def _settings(mechanism, temperature, pressure, width, transport, soret,
-              initial_points, ratio, slope, curve, prune, max_points, max_time, verbose):
+              initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
+              convection='upwind'):
     if transport not in ('mixture-averaged', 'multicomponent'):
         raise ValueError("transport must be 'mixture-averaged' or 'multicomponent'")
+    if convection not in ('upwind', 'exponential'):
+        raise ValueError("convection must be 'upwind' or 'exponential'")
     for name, value in dict(temperature=temperature, pressure=pressure, width=width, max_time=max_time).items():
         if not np.isfinite(value) or value <= 0:
             raise ValueError(f'{name} must be finite and positive (SI units)')
@@ -34,6 +37,7 @@ def _settings(mechanism, temperature, pressure, width, transport, soret,
         '--initial-grid-points', str(initial_points), '--ratio', str(ratio),
         '--slope', str(slope), '--curve', str(curve), '--prune', str(prune),
         '--max-grid-points', str(max_points), '--max-flame-time-s', str(max_time),
+        '--convection-scheme', convection,
         *(['--loglevel', '1'] if verbose else []),
         *(['--soret-enabled'] if soret else []),
         *(['--multicomponent-bootstrap'] if transport == 'multicomponent' or soret else []),
@@ -53,7 +57,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
                 species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None,
-                initial_solution=None):
+                initial_solution=None, convection='upwind'):
     """Solve an adiabatic premixed free flame on the native CPU backend.
 
     All arguments are keyword-only. Temperature, pressure and width use SI
@@ -90,7 +94,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     if mass_flux is not None and (not np.isfinite(mass_flux) or mass_flux <= 0):
         raise ValueError('mass_flux must be finite and positive [kg/(m^2 s)]')
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
-                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
+                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
+                     convection)
     args = build_argparser().parse_args(argv)
     mech = load_mechanism(args.mech)
     if sum(value is not None for value in (phi, X, Y)) > 1:
@@ -166,6 +171,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         initial_grid=None if grid is None else tuple(grid), steady_rtol=rtol, steady_atol=atol,
         inlet_mass_flux=mass_flux, cantera_seed_grid=mass_flux is None,
         transport_model=transport, soret_enabled=soret, ratio=ratio, slope=slope, curve=curve, prune=prune,
+        convection_scheme=convection,
     )
     folder = _output(output, 'burner' if mass_flux is not None else 'flame')
     started = time.perf_counter()
@@ -210,7 +216,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     velocity = {'inlet_velocity': float(u[0]), 'mass_flux': float(mass_flux)} if problem.is_burner else {'Su': float(u[0])}
     metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech,
                     species_names=problem.species_names, temperature=temperature,
-                    pressure=pressure, transport=transport, soret=soret, inlet_Y=problem.Y_in,
+                    pressure=pressure, transport=transport, soret=soret, convection=convection,
+                    inlet_Y=problem.Y_in,
                     initial_grid=case.initial_grid, initial_points=initial_points,
                     refinement=dict(ratio=ratio, slope=slope, curve=curve, prune=prune, max_points=max_points),
                     tolerances=dict(rtol=rtol, atol=atol),
@@ -514,6 +521,7 @@ def generate_nonadiabatic_fgm(*, phis=(.7, .85, 1., 1.05, 1.1, 1.15, 1.2, 1.25, 
                     and meta['temperature'] == target('temperature') and meta['pressure'] == target('pressure')
                     and meta['initial_width'] == target('width') and meta['transport'] == target('transport')
                     and meta['soret'] == target('soret')
+                    and meta.get('convection', 'upwind') == target('convection')
                     and all(v == target(k) for k, v in meta['refinement'].items())
                     and all(v == target(k) for k, v in meta['tolerances'].items()))
             if not matching:

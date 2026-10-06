@@ -384,6 +384,7 @@ def seed_cache_key(args: argparse.Namespace, resolved_mech: str) -> str:
         "analytic_chemistry": bool(getattr(args, "analytic_chemistry", False)),
         "outlet_species_bc": str(args.outlet_species_bc),
         "upwind_factor": float(args.upwind_factor),
+        "convection_scheme": str(args.convection_scheme),
         "T_in": float(args.T_in),
         "P": float(args.P),
         "width": float(args.width),
@@ -556,6 +557,7 @@ def solve_flame_native(
         soret_enabled=args.soret_enabled,
         outlet_species_bc=args.outlet_species_bc,
         upwind_factor=float(args.upwind_factor),
+        convection_scheme=str(args.convection_scheme),
         ratio=args.ratio,
         slope=args.slope,
         curve=args.curve,
@@ -988,6 +990,10 @@ def build_argparser() -> argparse.ArgumentParser:
                    choices=("zero_gradient", "cantera_flux"),
                    help="Salida de especies: zero_gradient reproduce Outlet de Cantera FreeFlame; cantera_flux usa la condicion cruda de Flow1D.")
     p.set_defaults(upwind_factor=1.0)
+    p.add_argument("--convection-scheme", type=str, default="upwind",
+                   choices=("upwind", "exponential"),
+                   help="Conveccion: upwind de primer orden (Cantera) o exponential "
+                        "(Il'in-Allen-Southwell, segundo orden donde la difusion resuelve el perfil).")
     p.add_argument("--T-in",             type=float, default=300.0)
     p.add_argument("--P",                type=float, default=101325.0)
     p.add_argument("--width",            type=float, default=0.03)
@@ -1309,7 +1315,7 @@ def main(argv=None) -> Path:
         f"initial_grid={args.initial_grid_points}, "
         "transient=PTC-SER/BE-fallback, "
         f"damp=step_norm/{args.damp_factor:g}, "
-        f"upwind_factor={args.upwind_factor:g}, "
+        f"upwind_factor={args.upwind_factor:g}, convection={args.convection_scheme}, "
         f"jacobian={args.jacobian_mode}, "
         "transient_linear=direct"
     )
@@ -1657,6 +1663,7 @@ def main(argv=None) -> Path:
         "acceptance_criterion": str(args.acceptance_criterion),
         "residual_guard_inf": float(args.residual_guard_inf),
         "upwind_factor": float(args.upwind_factor),
+        "convection_scheme": str(args.convection_scheme),
         "precompute_jacobian_thermo": bool(args.precompute_jacobian_thermo),
         "analytic_chemistry": bool(args.analytic_chemistry),
         "analytic_spatial": bool(args.analytic_spatial),

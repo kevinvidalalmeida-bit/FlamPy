@@ -18,11 +18,14 @@ from kflame.flame.solver import _apply_fixed_temperature_anchor, _domain_too_nar
 from kflame.flame.enthalpy import inlet_enthalpy_diagnostics
 
 
-@pytest.fixture(params=['mixture-averaged', 'multicomponent'])
+@pytest.fixture(params=[('mixture-averaged', 'upwind'), ('multicomponent', 'upwind'),
+                        ('mixture-averaged', 'exponential'), ('multicomponent', 'exponential')],
+                ids=lambda p: '-'.join(p))
 def burner(request):
+    transport, convection = request.param
     case = FlameCase(mech='h2o2.yaml', fuel='H2', inlet_mass_flux=.08,
-                     transport_model=request.param, soret_enabled=True,
-                     cantera_seed_grid=False)
+                     transport_model=transport, soret_enabled=True,
+                     cantera_seed_grid=False, convection_scheme=convection)
     problem = FreeFlameProblem(case)
     problem.backend = NativeSpeciesBackend(problem)
     state = problem.make_initial_guess()

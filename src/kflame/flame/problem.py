@@ -93,6 +93,9 @@ class FreeFlameProblem:
         # Keep old metadata readable, but never silently change its model.
         if float(getattr(case, "upwind_factor", 1.0)) != 1.0:
             raise ValueError("The centered/upwind experiment was removed; FlamPy uses upwind=1.")
+        from kflame.flame.convection import scheme_code
+        self.convection_scheme = str(getattr(case, "convection_scheme", "upwind")).strip().lower()
+        self.convection_code = scheme_code(self.convection_scheme)
 
         # ---- Opciones de refinamiento ----
         self.refine_with_u = bool(getattr(case, "refine_with_u", True))
