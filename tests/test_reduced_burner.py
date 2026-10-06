@@ -7,7 +7,7 @@ import pytest
 from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM
-from kflame.fgm.reduced_burner import ReducedBurnerProblem
+from kflame.fgm.reduced_burner import ReducedBurnerProblem, _newton
 
 
 @pytest.fixture(scope='module')
@@ -155,6 +155,35 @@ def test_boundary_projection_and_outlet_zero_gradients(problem):
     assert flux['total'][0, 2] == pytest.approx(problem.mass_flux*problem.h_feed+flux['conduction'][0])
 
 
+def test_inlet_diagnostics_distinguish_nodal_defect_from_face_correction(problem):
+    x = np.column_stack([np.linspace(.35,.39,13),np.linspace(.25,.31,13),np.linspace(0.,.9,13)])
+    state = problem.state(x)
+    flux = problem.fluxes(state)
+    report = problem.diagnostics(x)
+    energy_scale = max(abs(report['burner_heat_loss_W_m2']),abs(report['outlet_enthalpy_loss_W_m2']),1.)
+    expected = problem.mass_flux*state['h'][0]+np.sum(
+        problem.model.thermo.partial_molar_enthalpies(state['T'][0])
+        *problem.mech.inv_molecular_weights*flux['species'][:,0])-problem.mass_flux*problem.h_feed
+    assert report['inlet_enthalpy_flux_error_W_m2'] == pytest.approx(expected,abs=1e-8)
+    correction = flux['total'][0,2]-flux['reconstructed_inlet_enthalpy_flux']
+    assert report['inlet_enthalpy_face_correction_W_m2'] == pytest.approx(correction)
+    assert report['relative_inlet_enthalpy_face_correction'] == pytest.approx(abs(correction)/energy_scale)
+    assert report['relative_inlet_enthalpy_flux_error'] == pytest.approx(abs(expected)/energy_scale)
+
+
+def test_boundary_residual_never_scales_uninitialized_rows(problem,monkeypatch):
+    original = np.empty
+    def poisoned_empty(*args,**kwargs):
+        value = original(*args,**kwargs)
+        if value.shape == (len(problem.z),3):
+            value.fill(np.finfo(float).max)
+        return value
+    monkeypatch.setattr(np,'empty',poisoned_empty)
+    x = np.tile([.36,.27,.55],(len(problem.z),1))
+    with np.errstate(over='raise',invalid='raise'):
+        assert np.isfinite(problem.residual(x)).all()
+
+
 def test_colored_thermodynamic_cache_matches_full_residual(problem):
     x = np.random.default_rng(818).uniform(.2, .8, (13, 3)).ravel()
     base = problem.state(x)
@@ -179,3 +208,42 @@ def test_invalid_grid_or_flux_rejected(model, grid, flux):
     feed = fresh_mixture(load_mechanism(model.metadata['mechanism']), 1., 'CH4', 'O2:1,N2:3.76')
     with pytest.raises(ValueError):
         ReducedBurnerProblem(model, grid, flux, feed)
+
+
+def test_bounded_newton_moves_free_variables_when_another_direction_is_outward():
+    class BoundProblem:
+        z = np.linspace(0.,1.,5)
+        _last_projection_coefficients = None
+
+        def state(self,x):
+            return dict(geometry=True,T=np.zeros(len(self.z)))
+
+        def residual(self,x,**kwargs):
+            a = np.asarray(x).reshape(-1,3)
+            r = np.column_stack([a[:,0]-(a[:,1]-.5)**2,a[:,1]-.5,a[:,2]-.3])
+            r[0,2] = a[0,2]
+            return r.ravel()
+
+    initial = np.tile([0.,.1,.3],(5,1))
+    actual,history,reason = _newton(BoundProblem(),initial,residual_tolerance=1e-8,max_iterations=12,verbose=False)
+    assert reason == 'converged'
+    assert history[0]['projected_bound_directions'] == 5
+    np.testing.assert_allclose(actual.reshape(-1,3)[:,0],0.,atol=1e-8)
+    np.testing.assert_allclose(actual.reshape(-1,3)[:,1],.5,atol=1e-8)
+
+
+def test_bounded_newton_preserves_an_already_converged_boundary_state():
+    class BoundProblem:
+        z = np.linspace(0.,1.,5)
+        _last_projection_coefficients = None
+
+        def state(self,x):
+            return dict(geometry=True,T=np.zeros(len(self.z)))
+
+        def residual(self,x,**kwargs):
+            return np.asarray(x).copy()
+
+    initial = np.zeros(15)
+    actual,history,reason = _newton(BoundProblem(),initial,residual_tolerance=1e-12,max_iterations=2,verbose=False)
+    assert reason == 'converged' and len(history) == 1
+    np.testing.assert_array_equal(actual,initial)

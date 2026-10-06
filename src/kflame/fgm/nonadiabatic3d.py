@@ -140,6 +140,36 @@ def _connected_cells(shape, controls):
         excluded_folded_cells=int(folded.sum()), excluded_degenerate_cells=int(degenerate.sum()))
 
 
+def training_enthalpy_quality(h_feed, endpoint_h, relative_tolerance):
+    """Check adiabatic outlet drift against the smallest sampled heat loss.
+
+    Local h need not be constant along an adiabatic flame: conduction and
+    species diffusion transport energy there. The zero-gradient outlet,
+    however, must approach feed h. Normalize its discretization defect by
+    each family's weakest burner loss, not by formation h or combustion heat.
+    """
+    feed, endpoints = np.asarray(h_feed, dtype=float), np.asarray(endpoint_h, dtype=float)
+    if (feed.ndim != 1 or endpoints.ndim != 2 or endpoints.shape[0] != len(feed)
+            or endpoints.shape[1] < 2 or not np.isfinite(feed).all()
+            or not np.isfinite(endpoints).all()):
+        raise ValueError('Require finite feed and adiabatic/burner endpoint enthalpies for each family')
+    if not np.isfinite(relative_tolerance) or not 0. < relative_tolerance < 1.:
+        raise ValueError('Training enthalpy tolerance must lie between zero and one')
+    deficit = feed[:, None]-endpoints
+    weakest = np.min(deficit[:, 1:], axis=1)
+    # A finite absolute floor makes the diagnostic defined at zero loss;
+    # nonpositive burner losses still fail the physical check explicitly.
+    relative = abs(deficit[:, 0])/np.maximum(weakest, 1.)
+    passed = (weakest > 0.) & (relative <= relative_tolerance)
+    rows = [dict(composition_index=i, adiabatic_endpoint_defect_J_kg=float(deficit[i, 0]),
+                 weakest_burner_deficit_J_kg=float(weakest[i]),
+                 relative_adiabatic_enthalpy_error=float(relative[i]), passed=bool(passed[i]))
+            for i in range(len(feed))]
+    return dict(passed=bool(passed.all()), relative_tolerance=float(relative_tolerance),
+                maximum_relative_adiabatic_enthalpy_error=float(relative.max()),
+                rows=rows, normalization='weakest_positive_burner_outlet_deficit_with_1_J_kg_floor')
+
+
 def build_nonadiabatic_table(folder, *, progress_points=181):
     """Build connected cells from accepted profiles listed in generation.json."""
     folder = Path(folder)
@@ -193,6 +223,16 @@ def build_nonadiabatic_table(folder, *, progress_points=181):
         fields['qdot'][i, j] = -np.sum(thermo.partial_molar_enthalpies(T) * omega, axis=0)
     if any(not np.isfinite(value).all() for value in fields.values()):
         raise ValueError('Nonfinite property in resolved flamelet samples')
+    feeds = np.asarray([next(r['inlet_Y'] for r in generation['rows']
+                            if r['composition_index'] == i and r['loss_index'] == 0)
+                        for i in range(n_phi)]).T
+    quality = training_enthalpy_quality(thermo.enthalpy_mass(generation['temperature_K'], feeds),
+                                      fields['h'][:, :, -1], generation['max_energy_error'])
+    (folder / 'training_enthalpy_quality.json').write_text(json.dumps(quality, indent=2)+'\n', encoding='utf-8')
+    if not quality['passed']:
+        failed = [r['composition_index'] for r in quality['rows'] if not r['passed']]
+        raise ValueError(f'Training adiabatic outlet enthalpy exceeds the weakest-loss budget in families {failed}; '
+                         'refine and recheck the physical profiles before tabulation')
     controls = np.column_stack([fields[name].ravel() for name in ('Z', 'C', 'h')])
     cells, triangles, mesh_statistics = _connected_cells(shape, controls)
     reference_points = np.column_stack((fields['Z'][:, 0].ravel(), fields['C'][:, 0].ravel()))
@@ -210,6 +250,7 @@ def build_nonadiabatic_table(folder, *, progress_points=181):
                     h_definition='total_sensible_plus_formation_J_kg',
                     source_units=dict(omega_C='kg/(m^3 s)', qdot='W/m^3'), progress_points=progress_points,
                     training_profile_sha256=profile_hashes,
+                    training_enthalpy_quality=quality,
                     mechanism_sha256=hashlib.sha256(Path(resolve_mechanism(generation['mechanism'])).read_bytes()).hexdigest(),
                     mesh=mesh_statistics,
                     interpolation='barycentric_on_adjacent_flamelets_with_enthalpy_temperature_recovery',
@@ -286,6 +327,16 @@ class NonAdiabaticFGM:
         self.thermo = NativeThermo(mech)
         self.max_temperature = 2. * mech.max_temperature
         self._mesh = self._reference_mesh = None
+
+    def training_enthalpy_quality(self):
+        """Recompute endpoint quality, including for tables predating the guard."""
+        shape = tuple(self.table['structured_shape'])
+        feeds = np.asarray([next(r['inlet_Y'] for r in self.metadata['rows']
+                                if r['composition_index'] == i and r['loss_index'] == 0)
+                            for i in range(shape[0])]).T
+        return training_enthalpy_quality(self.thermo.enthalpy_mass(self.metadata['temperature_K'], feeds),
+                                        self.table['h'].reshape(shape)[:, :, -1],
+                                        self.metadata['max_energy_error'])
 
     @property
     def mesh(self):
@@ -365,19 +416,21 @@ class NonAdiabaticFGM:
         """
         T=np.clip(np.asarray(guess,dtype=float),200.,self.max_temperature)
         lower=np.full(len(T),200.);upper=np.full(len(T),self.max_temperature)
+        active=np.arange(len(T))
         for _ in range(16):
-            residual=self.thermo.enthalpy_mass(T,Y)-h
+            enthalpy,cp=self.thermo.enthalpy_mass_cp_mass(T[active],Y[:,active])
+            residual=enthalpy-h[active]
             done=abs(residual)<=1e-6
             if done.all():
                 return T
-            lower=np.where(residual<0.,T,lower)
-            upper=np.where(residual>0.,T,upper)
-            cp=self.thermo.cp_mass(T,Y)
-            proposed=T-residual/cp
-            safe=(cp>0.) & np.isfinite(proposed) & (proposed>lower) & (proposed<upper)
-            T=np.where(done,T,np.where(safe,proposed,.5*(lower+upper)))
-        bad=abs(self.thermo.enthalpy_mass(T,Y)-h)>1e-6
-        for i in np.flatnonzero(bad):
+            active=active[~done];residual=residual[~done];cp=cp[~done]
+            lower[active]=np.where(residual<0.,T[active],lower[active])
+            upper[active]=np.where(residual>0.,T[active],upper[active])
+            proposed=T[active]-residual/cp
+            safe=(cp>0.) & np.isfinite(proposed) & (proposed>lower[active]) & (proposed<upper[active])
+            T[active]=np.where(safe,proposed,.5*(lower[active]+upper[active]))
+        bad=abs(self.thermo.enthalpy_mass(T[active],Y[:,active])-h[active])>1e-6
+        for i in active[bad]:
             T[i]=brentq(lambda temperature:float(self.thermo.enthalpy_mass(temperature,Y[:,i]))-h[i],
                         200.,self.max_temperature,xtol=1e-8)
         return T

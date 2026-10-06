@@ -1,14 +1,15 @@
 """
 thermo_native.py – NASA-7 polynomial thermodynamics for ideal gas.
 
-Evaluates cp, h, s, and derived quantities for all species simultaneously
-using vectorized NumPy on CPU.
+Evaluates cp, h, s, and derived quantities using NumPy on CPU. The joint
+mixture h/cp evaluation uses a fused Numba kernel without species temporaries.
 
 NO Cantera dependency.
 """
 from __future__ import annotations
 import numpy as np
 from kflame.chemistry.mechanism import MechanismData, R_UNIV
+from kflame.chemistry.thermo_kernels import enthalpy_cp_mass
 
 # R_UNIV = 8314.46261815324 J/(kmol·K)  – same as Cantera
 
@@ -163,6 +164,37 @@ class NativeThermo:
             y = y[:, None]
         invW = self.invW if h.ndim == 1 else self.invW[:, None]
         return self.xp.sum(y * h * invW, axis=0)
+
+    def enthalpy_mass_cp_mass(self, T, Y: np.ndarray):
+        """Evaluate total h and its temperature derivative with one NASA pass.
+
+        Supports a single composition or profiles, with scalar or vector T.
+        The same formation-enthalpy convention and polynomial branch as the
+        separate methods are retained, including each species' breakpoint.
+        """
+        T_arr, is_scalar = self._to_1d(T)
+        y = self.xp.asarray(Y)
+        if self.xp is np:
+            fractions = y[:, None] if y.ndim == 1 else y
+            if fractions.ndim != 2 or fractions.shape[0] != self.n_sp:
+                raise ValueError('Expected species fractions or a species-by-node profile')
+            h, cp = enthalpy_cp_mass(T_arr, fractions, self._lo, self._hi,
+                                     self._Tmid, self.invW, R_UNIV)
+            return (h[0], cp[0]) if is_scalar and y.ndim == 1 else (h, cp)
+        c = self._get_coefs(T_arr)
+        t = T_arr[:, None]
+        cp = (c[:, :, 0] + t * (c[:, :, 1] + t * (c[:, :, 2]
+              + t * (c[:, :, 3] + t * c[:, :, 4])))).T * R_UNIV
+        h = (c[:, :, 0] + t * (c[:, :, 1]/2. + t * (c[:, :, 2]/3.
+             + t * (c[:, :, 3]/4. + t * c[:, :, 4]/5.)))
+             + c[:, :, 5]/t).T * R_UNIV * T_arr[None, :]
+        if is_scalar and y.ndim == 1:
+            return (self.xp.sum(y * h[:, 0] * self.invW),
+                    self.xp.sum(y * cp[:, 0] * self.invW))
+        if y.ndim == 1:
+            y = y[:, None]
+        return (self.xp.sum(y * h * self.invW[:, None], axis=0),
+                self.xp.sum(y * cp * self.invW[:, None], axis=0))
 
     def partial_molar_entropies(self, T) -> np.ndarray:
         """s_k  [J/(kmol·K)]."""

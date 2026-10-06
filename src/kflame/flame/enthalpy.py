@@ -7,6 +7,26 @@ from kflame.flame.equations import (
 from kflame.flame.state import unpack_state
 
 
+def inlet_enthalpy_diagnostics(thermo, temperature, Y, feed_Y, species_flux,
+                              mass_flux, *, energy_scale, feed_temperature=None):
+    """Independent species-flux inlet test, using boundary-node enthalpies.
+
+    A reduced projected boundary may conserve Z/C while failing this full
+    species condition. Its enthalpy defect must be distinguished from global
+    closure of a prescribed total-h flux and from face-discretization error.
+    """
+    if feed_temperature is None:
+        feed_temperature = temperature
+    defect = mass_flux*(Y-feed_Y)+species_flux
+    hk = thermo.partial_molar_enthalpies(temperature)*thermo.invW
+    enthalpy_error = float(hk@defect + mass_flux*(
+        thermo.enthalpy_mass(temperature,feed_Y)
+        - thermo.enthalpy_mass(feed_temperature,feed_Y)))
+    return dict(inlet_species_flux_error_over_mdot=float(np.max(abs(defect))/abs(mass_flux)),
+                inlet_enthalpy_flux_error_W_m2=enthalpy_error,
+                relative_inlet_enthalpy_flux_error=abs(enthalpy_error)/max(abs(energy_scale),1.))
+
+
 def enthalpy_diagnostics(problem, state):
     """Use the solver's face transport and thermodynamic reference convention.
 
@@ -56,4 +76,7 @@ def enthalpy_diagnostics(problem, state):
         outlet_diffusive_enthalpy_flux_W_m2=float(q_diffusion[-1]),
         note='Boundary fluxes are finite-grid estimates; refine before interpreting small losses.',
     )
+    diagnostics.update(inlet_enthalpy_diagnostics(thermo,T[0],Y[:,0],problem.Y_in,J[:,0],
+        mdot[0],energy_scale=max(abs(wall_flux),abs(flux_outlet),1.),
+        feed_temperature=problem.T_in))
     return fields, diagnostics

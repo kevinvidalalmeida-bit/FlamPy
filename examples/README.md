@@ -138,3 +138,22 @@ compara tiempos con el commit anterior y `reconstruct_adaptive_table.py`
 reproduce la selección publicada sin repetir simulaciones.
 `plot_adaptive_fgm.py` redibuja las tres figuras desde los datos guardados.
 [Unidades, criterios y resultado de validación](../docs/adaptive-fgm.md).
+
+`audit_burner_enthalpy.py` compara el balance global, los defectos de entrada
+y el presupuesto de entalpía de las referencias adiabáticas de perfiles
+guardados, sin resolver nuevas llamas. `benchmark_reduced_burner.py`
+incluye una comparación intercalada de la inversión termodinámica.
+[Hallazgos y reproducción](../docs/heat-loss-review.md).
+
+`refine_library_enthalpy.py` continúa referencias y reconstruye sus caudales
+contra el presupuesto de pérdida. `select_reduced_progress.py` selecciona
+pesos comunes usando solo entrenamiento y comprueba después la geometría.
+`extend_reduced_fgm_tail.py --jobs 2 --endpoint-policy monotone_branch`
+continúa ramas químicas nativas. `validate_frozen_reduced_cases.py` compara una
+tabla reconstruida con referencias independientes guardadas, sin volver a
+resolverlas; congela entradas y código y permite reanudar casos calculados.
+`audit_burner_enthalpy.py --species-balances` añade todos los balances de
+especies y elementos. `--thermal-rates` distingue las tasas materiales de
+temperatura y entalpía de la disipación escalar de h, reutilizando el transporte
+de los perfiles guardados. Estos controles adicionales no amplían por sí solos
+el rango físico validado.

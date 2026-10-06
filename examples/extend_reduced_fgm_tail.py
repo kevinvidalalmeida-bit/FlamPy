@@ -6,6 +6,7 @@ The relaxation path retains chemistry, elements and total enthalpy. It is a
 post-flame closure, not a new spatial flamelet; validate it a posteriori.
 """
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import hashlib
 import json
 from pathlib import Path
@@ -121,9 +122,27 @@ def reactor_tail(model, mech, kinetics, T0, Y0, h0, equilibrium, points, *, endp
                    monotonicity_tolerance=monotonicity_tolerance,endpoint_reason=reason)
 
 
-def extend(source, output, *, tail_points=16, endpoints=None, reactor_cache=None):
+def _initialize_tail_worker(source):
+    global _worker_model, _worker_mech, _worker_kinetics
+    _worker_model = NonAdiabaticFGM(source)
+    _worker_mech = load_mechanism(_worker_model.metadata['mechanism'])
+    _worker_kinetics = NativeKinetics(_worker_mech)
+
+
+def _solve_tail_worker(arguments):
+    temperature, Y, h, equilibrium, points, policy = arguments
+    return reactor_tail(_worker_model, _worker_mech, _worker_kinetics, temperature,
+                        Y, h, equilibrium, points, endpoint_policy=policy)
+
+
+def extend(source, output, *, tail_points=16, endpoints=None, reactor_cache=None,
+           endpoint_policy=None, jobs=1):
     if not isinstance(tail_points, int) or tail_points < 3:
         raise ValueError('At least three tail samples are required')
+    if not isinstance(jobs, int) or jobs < 1:
+        raise ValueError('jobs must be a positive integer')
+    if endpoint_policy not in (None, 'hp_equilibrium', 'monotone_branch'):
+        raise ValueError('Unknown reactor endpoint policy')
     source, output = Path(source), Path(output)
     if output.exists():
         raise FileExistsError(output)
@@ -152,6 +171,8 @@ def extend(source, output, *, tail_points=16, endpoints=None, reactor_cache=None
                 or np.max(abs(cached.sum(axis=2)-1.)) > 1e-9):
             raise ValueError('Invalid reactor-cache mass fractions')
         equilibrium = cache_equilibrium
+        if endpoint_policy is not None and any(a.get('endpoint_policy','hp_equilibrium') != endpoint_policy for a in audits):
+            raise ValueError('Reactor-cache endpoint policy differs from the requested branch')
     elif endpoints is None:
         equilibrium = []
         for n, y in enumerate(end_Y):
@@ -173,21 +194,38 @@ def extend(source, output, *, tail_points=16, endpoints=None, reactor_cache=None
     if np.max(abs((equilibrium-end_Y)@elements.T)) > 1e-9:
         raise ValueError('Equilibrium endpoints do not conserve the source-table elements')
     growth = ((cached[:,-1] if cached is not None else equilibrium)-end_Y) @ t['progress_weights']
-    if np.any(growth <= 0.):
+    policy = endpoint_policy or 'hp_equilibrium'
+    if np.any(growth <= 0.) and (cached is not None or policy == 'hp_equilibrium'):
         raise ValueError('Equilibrium extension is nonmonotone for this progress definition')
     fractions = np.linspace(1./tail_points, 1., tail_points)
     if cached is None:
-        tails, audits = [], []
-        for n, y in enumerate(end_Y):
-            tail, audit = reactor_tail(model, mech, kinetics, float(old_T[:, :, -1].ravel()[n]),
-                                       y, end_h[n], equilibrium[n], tail_points)
-            tails.append(tail)
-            audits.append(audit)
-            if n % 60 == 0:
-                print(f'Native reactor tail {n}/{len(end_Y)}', flush=True)
+        arguments = [(float(temperature), y, h, ye, tail_points, policy)
+                     for temperature,y,h,ye in zip(old_T[:,:,-1].ravel(),end_Y,end_h,equilibrium)]
+        if jobs > 1:
+            with ProcessPoolExecutor(max_workers=jobs, initializer=_initialize_tail_worker, initargs=(source,)) as pool:
+                futures = {pool.submit(_solve_tail_worker, args): n for n,args in enumerate(arguments)}
+                solved = [None]*len(arguments)
+                for count, future in enumerate(as_completed(futures), 1):
+                    solved[futures[future]] = future.result()
+                    if count % 60 == 0 or count == len(arguments):
+                        print(f'Native reactor tails completed {count}/{len(arguments)}', flush=True)
+            tails, audits = zip(*solved)
+        else:
+            tails, audits = [], []
+            for n, args in enumerate(arguments):
+                temperature,y,h,ye,points,branch = args
+                tail, audit = reactor_tail(model, mech, kinetics, temperature, y, h, ye, points,
+                                           endpoint_policy=branch)
+                tails.append(tail)
+                audits.append(audit)
+                if n % 60 == 0:
+                    print(f'Native reactor tail {n}/{len(end_Y)}', flush=True)
         Y = np.asarray(tails)
     else:
         Y = cached
+    growth = (Y[:,-1]-end_Y)@t['progress_weights']
+    if np.any(growth <= 0.) or np.any(np.diff(Y@t['progress_weights'], axis=1) <= 0.):
+        raise ValueError('Actual reactor branch does not increase progress strictly')
     if np.max(abs((Y-end_Y[:, None, :])@(mech.atom_matrix*mech.inv_molecular_weights[None, :]).T)) > 1e-9:
         raise ValueError('Tail does not conserve the original flamelet elements')
     h = np.broadcast_to(end_h[:, None], Y.shape[:2]).ravel()
@@ -259,8 +297,11 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--endpoints', type=Path)
     parser.add_argument('--reactor-cache', type=Path)
+    parser.add_argument('--endpoint-policy', choices=('hp_equilibrium','monotone_branch'))
+    parser.add_argument('--jobs', type=int, default=1)
     args = parser.parse_args()
-    extend(args.source, args.output, endpoints=args.endpoints, reactor_cache=args.reactor_cache)
+    extend(args.source, args.output, endpoints=args.endpoints, reactor_cache=args.reactor_cache,
+           endpoint_policy=args.endpoint_policy, jobs=args.jobs)
 
 
 if __name__ == '__main__':

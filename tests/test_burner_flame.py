@@ -15,6 +15,7 @@ from kflame.flame.equations import (
     residual_local_rows_batch, residual_local_rows_batch_perturbed,
 )
 from kflame.flame.solver import _apply_fixed_temperature_anchor, _domain_too_narrow
+from kflame.flame.enthalpy import inlet_enthalpy_diagnostics
 
 
 @pytest.fixture(params=['mixture-averaged', 'multicomponent'])
@@ -117,3 +118,47 @@ def test_total_enthalpy_matches_independent_thermodynamics(mechanism, fuel):
     profiles = np.repeat(Y[:, None], temperatures.size, axis=1)
     np.testing.assert_allclose(thermo.enthalpy_mass(temperatures, profiles), expected, rtol=2e-12, atol=1e-7)
     np.testing.assert_allclose(thermo.enthalpy_mass(300., profiles), expected[0], rtol=2e-12, atol=1e-7)
+
+
+@pytest.mark.parametrize('mechanism', ['h2o2.yaml', 'gri30.yaml'])
+def test_fused_enthalpy_and_derivative_match_cantera_across_species_breakpoints(mechanism):
+    ct = pytest.importorskip('cantera')
+    mech = load_mechanism(mechanism)
+    thermo = NativeThermo(mech)
+    mid = np.unique(mech.nasa_Tmid)
+    T = np.r_[300., mid-1e-6, mid, mid+1e-6, 2200.]
+    Y = np.random.default_rng(143).dirichlet(np.ones(mech.n_species),len(T)).T
+    h, cp = thermo.enthalpy_mass_cp_mass(T,Y)
+    gas = ct.Solution(mechanism)
+    expected = []
+    for temperature,y in zip(T,Y.T):
+        gas.TPY = temperature,ct.one_atm,y
+        expected.append([gas.enthalpy_mass,gas.cp_mass])
+    np.testing.assert_allclose(np.column_stack([h,cp]),expected,rtol=3e-12,atol=1e-7)
+    # Broadcasting and strided profiles must retain the single-state result.
+    for temperature,fractions in [(T,Y[:,0]),(300.,Y),(300.,Y[:,0]),(T[::2],Y[:,::2])]:
+        hh,cc = thermo.enthalpy_mass_cp_mass(temperature,fractions)
+        yy = fractions[:,None] if fractions.ndim == 1 else fractions
+        np.testing.assert_allclose(hh,thermo.enthalpy_mass(temperature,fractions),rtol=3e-12,atol=1e-7)
+        expected_cp = np.sum(yy*thermo.partial_molar_cp(temperature).reshape(mech.n_species,-1)
+                             *mech.inv_molecular_weights[:,None],axis=0)
+        np.testing.assert_allclose(np.atleast_1d(cc),expected_cp,rtol=3e-12,atol=1e-10)
+
+
+@pytest.mark.parametrize('mechanism,fuel', [('h2o2.yaml','H2'),('gri30.yaml','CH4')])
+def test_inlet_enthalpy_defect_is_independent_of_prescribed_total_flux(mechanism,fuel):
+    mech = load_mechanism(mechanism)
+    thermo = NativeThermo(mech)
+    feed = fresh_mixture(mech,1.,fuel,'O2:1,N2:3.76')
+    Y = .95*feed+.05/len(feed)
+    mdot = .1
+    flux = mdot*(feed-Y)
+    matching = inlet_enthalpy_diagnostics(thermo,300.,Y,feed,flux,mdot,energy_scale=100.)
+    assert matching['inlet_enthalpy_flux_error_W_m2'] == pytest.approx(0.,abs=1e-10)
+    flux[mech.species_names.index(fuel)] += 1e-4
+    flux[mech.species_names.index('O2')] -= 1e-4
+    different = inlet_enthalpy_diagnostics(thermo,300.,Y,feed,flux,mdot,energy_scale=100.)
+    expected = mdot*thermo.enthalpy_mass(300.,Y)+thermo.partial_molar_enthalpies(300.)@(
+        flux*mech.inv_molecular_weights)-mdot*thermo.enthalpy_mass(300.,feed)
+    assert different['inlet_enthalpy_flux_error_W_m2'] == pytest.approx(expected,abs=1e-9)
+    assert different['relative_inlet_enthalpy_flux_error'] == pytest.approx(abs(expected)/100.)

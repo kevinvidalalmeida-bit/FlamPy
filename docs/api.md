@@ -28,6 +28,12 @@ mezcla. `raw_only=True` permite guardar las llamas antes de tabular;
 alimentación, transporte, tolerancias y refinamiento coincidentes.
 [Definiciones, consulta y reproducción](nonadiabatic-fgm.md).
 
+La tabulación comprueba también que el defecto de entalpía de salida de cada
+referencia adiabática no supere `max_energy_error` respecto de la menor pérdida
+de su familia. Si falla, guarda `training_enthalpy_quality.json` y solicita
+refinar los perfiles antes de construir la tabla. Las tablas antiguas pueden
+auditarse con `NonAdiabaticFGM.training_enthalpy_quality()`.
+
 `generate_adaptive_nonadiabatic_fgm(phis=..., mass_flux_fractions=..., output=..., tolerances=..., **opciones)`
 selecciona una familia tensorial por errores en perfiles nativos. Ambas listas
 requieren al menos tres candidatos. `tolerances` acepta `FGMTolerances`, un
@@ -48,9 +54,12 @@ con longitud `n` y `Y` con forma `(n, n_species)`. Con `outside="mask"`,
 `NaN`. Los solapamientos interiores siempre generan un error. La consulta
 escalar conserva su interfaz; se recomienda reutilizar el objeto cargado.
 
-En modo quemador, `initial_solution` acepta la carpeta de otra llama nativa
-aceptada con la misma química y alimentación. Sirve como estimación inicial
-de continuación; cada nuevo caudal se vuelve a resolver y certificar.
+`initial_solution` acepta la carpeta de otra llama nativa aceptada en una malla
+convergida, del mismo tipo (libre o quemador), con la misma química, alimentación,
+presión y temperatura de entrada. Permite continuar un caudal de quemador o
+refinar una llama libre conservando su perfil como estimación inicial. Cada
+nueva llama se vuelve a resolver y certificar; en modo libre la velocidad
+de propagación se vuelve a calcular.
 
 ## `solve_flame`
 

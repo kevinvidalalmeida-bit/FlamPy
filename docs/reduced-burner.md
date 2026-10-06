@@ -154,6 +154,10 @@ del dominio**. Falta una parametrización que cubra la relajación química larg
 
 ## Rendimiento y reproducción
 
+La [revisión posterior de entalpía y contorno](heat-loss-review.md) separa
+el cierre global del defecto de especies en la entrada, documenta los fallos
+físicos pendientes y mide la nueva inversión termodinámica compilada.
+
 Los núcleos Numba fusionan valores y derivadas locales, evitando una matriz
 densa de bases y un temporal (puntos,27,especies). Los lotes grandes usan
 `prange`; las consultas pequeñas usan el núcleo serial. `fastmath` permanece

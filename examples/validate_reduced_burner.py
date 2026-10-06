@@ -18,6 +18,7 @@ from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.transport import NativeTransport
 from kflame.flame.equations import _corrected_flux_frozen
+from kflame.flame.enthalpy import inlet_enthalpy_diagnostics
 from kflame.flame.burner_grid import refine_burner_boundary_grid
 from kflame.fgm.nonadiabatic3d import NonAdiabaticFGM
 from kflame.fgm.reduced_burner import solve_reduced_burner_fgm, ReducedConvergenceError, _SOURCE_SHA256
@@ -63,12 +64,15 @@ def flux_diagnostics(model, profile, mdot, feed):
     hfeed = float(model.thermo.enthalpy_mass(model.metadata['temperature_K'], feed))
     qwall = float(-conduction[0])
     deficit = float(mdot*(hfeed-h[-1]))
+    inlet = inlet_enthalpy_diagnostics(model.thermo,T[0],Y[:,0],feed,J[:,0],mdot,
+        energy_scale=max(abs(qwall),abs(deficit),1.),feed_temperature=model.metadata['temperature_K'])
     return dict(h=h, Z=model.table['bilger_weights'] @ Y+float(model.table['bilger_offset']),
                 C=model.table['progress_weights'] @ Y,
                 total_enthalpy_flux=mdot*.5*(h[:-1]+h[1:])+conduction+diffusion,
                 conductive_heat_flux=conduction, diffusive_enthalpy_flux=diffusion,
                 z_face=.5*(z[:-1]+z[1:]),
                 wall_heat_flux_W_m2=qwall, outlet_heat_flux_W_m2=deficit,
+                **inlet,
                 energy_closure_relative=abs(qwall-deficit)/max(abs(qwall), abs(deficit), 1.))
 
 
@@ -98,6 +102,9 @@ def comparisons(model, reduced, detailed, reference, mdot, feed, limits):
         cantera_energy=reference_errors['cantera_energy_closure_relative']<=limits['energy_closure_relative'])
     return dict(metrics=metrics, sources=sources, checks=checks,
                 passed=all(checks.values()), native_cantera=reference_errors,
+                inlet_diagnostics={name:{key:values[key] for key in
+                    ('inlet_species_flux_error_over_mdot','inlet_enthalpy_flux_error_W_m2','relative_inlet_enthalpy_flux_error')}
+                    for name,values in [('reduced',reduced_flux),('native',native_flux),('cantera',reference_flux)]},
                 q_native_W_m2=native_flux['wall_heat_flux_W_m2'],
                 q_reference_W_m2=reference_flux['wall_heat_flux_W_m2'])
 

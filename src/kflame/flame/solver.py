@@ -154,7 +154,9 @@ def _history_last_number(history: list[dict], key: str) -> float:
 
 def _remember_newton_metrics(problem, history: list[dict]) -> tuple[float, float]:
     step_norm = _history_last_number(history, "s1")
-    residual_inf = _history_last_number(history, "normF")
+    residual_inf = _history_last_number(history, "normF_trial")
+    if not np.isfinite(residual_inf):
+        residual_inf = _history_last_number(history, "normF")
     if np.isfinite(step_norm):
         problem.last_weighted_step_norm = float(step_norm)
     if np.isfinite(residual_inf):
@@ -829,6 +831,7 @@ def newton_solve(
     verbose: bool = False,
     jac_state: JacobianState | None = None,
     deadline: float | None = None,
+    residual_guard_inf: float = float('inf'),
 ) -> tuple[np.ndarray, bool, list[dict], JacobianState]:
     """
     Damped Newton aligned with Cantera MultiNewton.
@@ -1086,11 +1089,19 @@ def newton_solve(
                 converged = bool(alpha >= 1.0 - 1.0e-14 and s1 < tol)
             else:
                 converged = bool(s1 < tol)
+            trial_residual_inf = float(np.linalg.norm(f_try, ord=np.inf))
+            residual_guard_ok = trial_residual_inf <= residual_guard_inf
+            # A small correction can coexist with a large residual in stiff
+            # chemistry. Keep iterating toward the caller's acceptance guard
+            # instead of returning a state that refinement must reject.
+            converged = converged and residual_guard_ok
 
             record: dict[str, Any] = {
                 "iter": it,
                 "status": "ok" if converged else "step",
                 "normF": normf,
+                "normF_trial": trial_residual_inf,
+                "residual_guard_accepted": bool(residual_guard_ok),
                 "s0": s0,
                 "s1": s1,
                 "alpha": alpha,
@@ -1428,12 +1439,14 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
             max_jac_age=ss_jac_age,
             max_damp_iter=opts.max_damp_iter,
             damp_factor=damp_factor,
-            tol=opts.tol,
+            tol=(_weighted_step_limit(opts) if _acceptance_criterion(opts) != 'residual' else opts.tol),
             jac_eps=opts.jac_eps,
             alpha_min=opts.alpha_min,
             verbose=opts.verbose,
             jac_state=jac,
             deadline=deadline,
+            residual_guard_inf=(_residual_guard_limit(opts) if _acceptance_criterion(opts) == 'cantera'
+                                else _final_residual_limit(opts)),
         )
         weighted_step_norm, newton_Finf = _remember_newton_metrics(problem, hist_ss)
         history.append(

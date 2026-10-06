@@ -13,6 +13,42 @@ from examples.validate_reduced_burner import read_profile, write_json
 from kflame.fgm.tensor_kernels import evaluate_tensor
 from kflame.fgm.reduced_burner import _SOURCE_SHA256
 from numba import get_num_threads
+from scipy.optimize import brentq
+
+
+def benchmark_temperature_inversion(model, state, *, repeats=20):
+    """Matched reference to the previous separate-property Newton algorithm."""
+    target=np.tile(state['h'],repeats)
+    Y=np.tile(state['Y'],(1,repeats))
+    guess=np.tile(state['T'],repeats)+50.
+    def separate():
+        T=np.clip(guess,200.,model.max_temperature)
+        lower=np.full(len(T),200.);upper=np.full(len(T),model.max_temperature)
+        for _ in range(16):
+            residual=model.thermo.enthalpy_mass(T,Y)-target
+            done=abs(residual)<=1e-6
+            if done.all():return T
+            lower=np.where(residual<0.,T,lower);upper=np.where(residual>0.,T,upper)
+            cp=model.thermo.cp_mass(T,Y);proposed=T-residual/cp
+            safe=(cp>0.)&np.isfinite(proposed)&(proposed>lower)&(proposed<upper)
+            T=np.where(done,T,np.where(safe,proposed,.5*(lower+upper)))
+        for i in np.flatnonzero(abs(model.thermo.enthalpy_mass(T,Y)-target)>1e-6):
+            T[i]=brentq(lambda temperature:float(model.thermo.enthalpy_mass(temperature,Y[:,i]))-target[i],
+                200.,model.max_temperature,xtol=1e-8)
+        return T
+    fused=lambda:model._recover_temperature(target,Y,guess)
+    reference,actual=separate(),fused()  # Warm up compilation outside timings.
+    np.testing.assert_allclose(actual,reference,rtol=0.,atol=1e-7)
+    timings={'separate':[],'fused':[]}
+    for repetition in range(9):
+        pairs=[('separate',separate),('fused',fused)]
+        for name,run in pairs[::1 if repetition%2==0 else -1]:
+            start=time.perf_counter();run();timings[name].append(time.perf_counter()-start)
+    medians={name:float(np.median(samples)) for name,samples in timings.items()}
+    return dict(nodes=len(target),initial_temperature_offset_K=50.,median_seconds=medians,
+        samples_seconds=timings,speedup=medians['separate']/medians['fused'],
+        maximum_temperature_difference_K=float(np.max(abs(actual-reference))),
+        maximum_enthalpy_closure_J_kg=float(np.max(abs(model.thermo.enthalpy_mass(actual,Y)-target))))
 
 
 def benchmark(table, case, output):
@@ -75,6 +111,7 @@ def benchmark(table, case, output):
         total_solve_median_seconds=float(np.median([r['total_elapsed_seconds'] for r in accepted])),
         total_solve_range_seconds=[min(r['total_elapsed_seconds'] for r in accepted),max(r['total_elapsed_seconds'] for r in accepted)],
         detailed_kinetics_evaluations_in_reduced_production=0,
+        thermodynamic_inversion=benchmark_temperature_inversion(model,state),
         physical_passed_case_count=sum(json.loads(p.read_text(encoding='utf-8'))['passed']
             for p in case.parent.glob('case_*/validation.json')),
         note='Accepted counts mean numerical convergence. Case times may include concurrent validation processes; matched microbenchmarks use identical inputs. Total solve includes guide and continuation; table loading and construction are separate.')

@@ -76,8 +76,8 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
 
     A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
     solve_burner_flame provides the explicit entry point for that mode.
-    initial_solution may reference an accepted native burner output directory
-    with the same feed, mechanism, pressure and surface temperature. The state
+    initial_solution may reference an accepted native flame output directory
+    of the same flow type, feed, mechanism, pressure and inlet temperature. The state
     is a continuation guess; the new flame is always solved and certified.
     """
     from kflame.chemistry.backend import NativeSpeciesBackend
@@ -116,20 +116,26 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         inlet /= inlet.sum()
     seed = None
     if initial_solution is not None:
-        if mass_flux is None:
-            raise ValueError('initial_solution continuation is supported for burner flames only')
         seed_path = Path(initial_solution)
         seed_meta = json.loads((seed_path / 'metadata.json').read_text(encoding='utf-8'))
+        flow_type = 'free_flame' if mass_flux is None else 'isothermal_burner'
         if (not seed_meta.get('accepted') or seed_meta.get('backend') != 'native_cpu'
-                or seed_meta.get('flow_type') != 'isothermal_burner'):
-            raise ValueError('initial_solution must be an accepted native burner flame')
+                or seed_meta.get('flow_type') != flow_type
+                or not seed_meta.get('report', {}).get('grid_converged')):
+            raise ValueError('initial_solution must be an accepted native flame of the same flow type on a converged grid')
         if Path(resolve_mechanism(seed_meta['mechanism'])).read_bytes() != Path(args.mech).read_bytes():
             raise ValueError('Continuation requires the same mechanism')
         current_inlet = inlet if inlet is not None else fresh_mixture(mech, 1. if phi is None else phi, _stream(fuel), _stream(oxidizer))
         if (not np.isclose(seed_meta['temperature'], temperature, rtol=1e-12)
                 or not np.isclose(seed_meta['pressure'], pressure, rtol=1e-12)
                 or not np.allclose(seed_meta['inlet_Y'], current_inlet, rtol=1e-12, atol=1e-15)):
-            raise ValueError('Continuation requires the same feed, pressure and burner temperature')
+            raise ValueError('Continuation requires the same feed, pressure and inlet temperature')
+        seed_flux = mass_flux
+        if seed_flux is None:
+            from kflame.chemistry.thermo import NativeThermo
+            seed_flux = float(seed_meta['Su'])*float(NativeThermo(mech).density(temperature, pressure, current_inlet))
+        if not np.isfinite(seed_flux) or seed_flux <= 0.:
+            raise ValueError('Continuation requires a finite positive mass flux')
         with np.load(seed_path / 'flame.npz', allow_pickle=False) as saved:
             seed = {key: saved[key].copy() for key in ('z', 'T', 'Y', 'species_names')}
         if list(seed['species_names']) != list(mech.species_names):
@@ -174,7 +180,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         seed_T = np.interp(problem.z, seed['z'], seed['T'])
         seed_Y = problem._sanitize_Y(np.array([np.interp(problem.z, seed['z'], row) for row in seed['Y']]))
         seed_T[0] = temperature
-        seed_u = float(mass_flux) / problem._thermo.density(seed_T, pressure, seed_Y)
+        seed_u = float(seed_flux) / problem._thermo.density(seed_T, pressure, seed_Y)
         initial_state = pack_state(seed_u, seed_T, seed_Y)
     state, ok, report = solve_free_flame(problem, x0=initial_state, options=options)
     elapsed = time.perf_counter() - started

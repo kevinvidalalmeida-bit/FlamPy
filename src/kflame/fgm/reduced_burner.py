@@ -22,12 +22,16 @@ from kflame.chemistry.initialization import fresh_mixture
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.transport import NativeTransport
 from kflame.flame.equations import _corrected_flux_frozen
+from kflame.flame.enthalpy import inlet_enthalpy_diagnostics
 from kflame.fgm.tensor_kernels import evaluate_tensor, evaluate_progress
 from kflame.fgm.projection import progress_projection, stable_blend, stable_matrix
 from kflame.fgm.chart_guard import guard_chart
 
-_SOURCE_SHA256 = hashlib.sha256(b''.join(Path(__file__).with_name(q).read_bytes()
-    for q in ('reduced_burner.py','tensor_kernels.py','projection.py','chart_guard.py','nonadiabatic3d.py'))).hexdigest()
+_SOURCE_FILES = [Path(__file__).with_name(q) for q in
+    ('reduced_burner.py','tensor_kernels.py','projection.py','chart_guard.py','nonadiabatic3d.py')]
+_SOURCE_FILES += [Path(__file__).resolve().parents[1]/q for q in
+    ('chemistry/thermo.py','chemistry/thermo_kernels.py','flame/enthalpy.py')]
+_SOURCE_SHA256 = hashlib.sha256(b''.join(q.read_bytes() for q in _SOURCE_FILES)).hexdigest()
 
 
 class ReducedConvergenceError(RuntimeError):
@@ -212,18 +216,19 @@ class ReducedBurnerProblem:
             if self.kernel_backend == 'compiled':
                 values, _ = evaluate_progress(x, base, self.knots/(self.shape[2]-2),
                     self.shape, self.strides, self.raw_fields)
-            f = logical[:, :2]-base
-            bilinear = np.prod(np.where(self.corners[None, :, :],
-                               f[:, None, :], 1.-f[:, None, :]), axis=2)
-            # Extrapolation is permitted only for derivative probes above.
-            # Accepted states always use bounded partition-of-unity weights.
-            basis = BSpline.design_matrix(x[:, 2]*(self.shape[2]-2), self.knots,
-                                           2, extrapolate=geometry is not None).tocsr()
-            weights, indices = basis.data.reshape(-1, 3), basis.indices.reshape(-1, 3)
-            nodes = ((base@self.strides[:2])[:, None]
-                     +(self.corners@self.strides[:2])[None, :])[:, :, None]+indices[:, None, :]
-            nodes = nodes.reshape(-1, 12)
-            bary = (bilinear[:, :, None]*weights[:, None, :]).reshape(-1, 12)
+            else:
+                f = logical[:, :2]-base
+                bilinear = np.prod(np.where(self.corners[None, :, :],
+                                   f[:, None, :], 1.-f[:, None, :]), axis=2)
+                # Extrapolation is permitted only for derivative probes above.
+                # Accepted states always use bounded partition-of-unity weights.
+                basis = BSpline.design_matrix(x[:, 2]*(self.shape[2]-2), self.knots,
+                                               2, extrapolate=geometry is not None).tocsr()
+                weights, indices = basis.data.reshape(-1, 3), basis.indices.reshape(-1, 3)
+                nodes = ((base@self.strides[:2])[:, None]
+                         +(self.corners@self.strides[:2])[None, :])[:, :, None]+indices[:, None, :]
+                nodes = nodes.reshape(-1, 12)
+                bary = (bilinear[:, :, None]*weights[:, None, :]).reshape(-1, 12)
             active_geometry = base
         else:
             if geometry is None:
@@ -399,6 +404,7 @@ class ReducedBurnerProblem:
             advected('Z') + self.model.table['bilger_weights'] @ J,
             advected('C') + self.model.table['progress_weights'] @ J,
             advected('h') + conduction + enthalpy_diffusion])
+        reconstructed_inlet_enthalpy_flux = float(F[0, 2])
         # Danckwerts inflow fixes the incoming *total* enthalpy to the feed.
         # Imposing only projected Z/C fluxes does not enforce that identity
         # for every species in a reduced manifold. Use the physical inlet
@@ -406,6 +412,7 @@ class ReducedBurnerProblem:
         F[0, 2] = self.mass_flux*self.h_feed+conduction[0]
         species_total = self.mass_flux*((1.-weight)[None,:]*Y[:,:-1]+weight[None,:]*Y[:,1:])+J
         return dict(total=F, species=J, species_total=species_total, conduction=conduction,
+                    reconstructed_inlet_enthalpy_flux=reconstructed_inlet_enthalpy_flux,
                     enthalpy_diffusion=enthalpy_diffusion, conductivity=conductivity)
 
     def residual(self, x, *, geometry=None, temperature_cache=None, changed_nodes=None, evaluated_state=None, projection_cache=None):
@@ -414,6 +421,9 @@ class ReducedBurnerProblem:
                  if evaluated_state is None else evaluated_state)
         flux = self.fluxes(state)
         out = np.empty((len(self.z), 3))
+        # Boundary rows are overwritten below; never scale uninitialized data.
+        out[0] = 0.
+        out[-1] = 0.
         out[1:-1] = np.diff(flux['total'], axis=0)
         out[1:-1, 1] -= state['omega_C'][1:-1]*self.volumes
         self._last_projection_coefficients = None
@@ -439,18 +449,20 @@ class ReducedBurnerProblem:
         q_wall = float(-flux['conduction'][0])
         q_deficit = self.mass_flux*(self.h_feed-state['h'][-1])
         energy_scale = max(abs(q_wall), abs(q_deficit), 1.)
-        inlet_species = self.mass_flux*(state['Y'][:, 0]-self.inlet_Y)+flux['species'][:, 0]
-        inlet_energy = self.mass_flux*state['h'][0] + np.sum(
-            self.model.thermo.partial_molar_enthalpies(self.T_burner).ravel()
-            / self.mech.molecular_weights * flux['species'][:, 0])
+        inlet = inlet_enthalpy_diagnostics(self.model.thermo, state['T'][0],
+            state['Y'][:,0], self.inlet_Y, flux['species'][:,0], self.mass_flux,
+            energy_scale=energy_scale, feed_temperature=self.T_burner)
+        correction = float(flux['total'][0,2]-flux['reconstructed_inlet_enthalpy_flux'])
         progress_integral = float(np.sum(state['omega_C'][1:-1]*self.volumes))
         progress_out = self.mass_flux*(state['C'][-1]-self.C_feed)
         return dict(burner_heat_loss_W_m2=q_wall, outlet_enthalpy_loss_W_m2=float(q_deficit),
                     relative_energy_closure_error=abs(q_wall-q_deficit)/energy_scale,
                     relative_total_enthalpy_flux_spread=float(np.ptp(flux['total'][:, 2])/energy_scale),
                     physical_progress_integral_balance_error=abs(progress_integral-progress_out)/max(abs(progress_out), 1e-12),
-                    inlet_species_flux_error_over_mdot=float(np.max(abs(inlet_species))/self.mass_flux),
-                    inlet_enthalpy_flux_error_W_m2=float(inlet_energy-self.mass_flux*self.h_feed),
+                    **inlet,
+                    inlet_enthalpy_face_correction_W_m2=correction,
+                    relative_inlet_enthalpy_face_correction=abs(correction)/energy_scale,
+                    inlet_enthalpy_boundary='prescribed_feed_total_flux_plus_conduction',
                     sum_Y_error=float(np.max(abs(state['Y'].sum(axis=0)-1.))),
                     burner_temperature_error_K=float(abs(state['T'][0]-self.T_burner)),
                     maximum_scaled_residual=float(np.max(abs(self.residual(x)))))
@@ -555,7 +567,9 @@ class ReducedBurnerProblem:
 
 
 def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
-    x = np.clip(np.asarray(initial, dtype=float).ravel(), 1e-7, 1.-1e-5)
+    x = np.asarray(initial, dtype=float).ravel().copy()
+    if not np.isfinite(x).all() or np.any(x < 0.) or np.any(x > 1.):
+        raise ValueError('Initial reduced coordinates must be finite and inside the manifold')
     x[2] = 0.
     n = len(problem.z)
     pattern = lil_matrix((3*n, 3*n), dtype=int)
@@ -575,6 +589,9 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
             print(f'FGM iteration {iteration}: residual={maximum:.3g}', flush=True)
         if maximum <= residual_tolerance:
             return x, history, 'converged'
+        if not np.isfinite(f).all():
+            reason = 'nonfinite_reduced_residual'
+            break
         if (len(history) >= 16 and norm >= .999*history[-16]['norm']
                 and max(h['norm'] for h in history[-16:]) <= 1.01*norm):
             reason = 'stagnated_reduced_residual'
@@ -585,13 +602,13 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
         data = np.empty_like(pattern.data, dtype=float)
         for color in range(9):
             selected = np.arange(color, len(x), 9)
-            steps = np.full(len(selected), 1e-7)
+            steps = np.where(x[selected] > 1.-1e-7, -1e-7, 1e-7)
             plus = x.copy()
             plus[selected] += steps
             difference = problem.residual(plus, geometry=geometry,
                 temperature_cache=base_state['T'], changed_nodes=selected//3, projection_cache=projection_cache)-f
             entries = color_entries[color]
-            data[entries] = difference[pattern.indices[entries]]/1e-7
+            data[entries] = difference[pattern.indices[entries]]/steps[(columns[entries]-color)//9]
         jacobian = csc_matrix((data, pattern.indices, pattern.indptr), shape=pattern.shape)
         with warnings.catch_warnings():
             warnings.simplefilter('error', MatrixRankWarning)
@@ -604,6 +621,11 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
         if not np.isfinite(step).all():
             reason = 'nonfinite_newton_step'
             break
+        # A bound-active variable must not throttle every other spatial node.
+        # Project the search direction only; never change a physical state.
+        active_bounds = ((x < 1e-10) & (step < 0.)) | ((x > 1.-1e-10) & (step > 0.))
+        step[active_bounds] = 0.
+        history[-1]['projected_bound_directions'] = int(np.count_nonzero(active_bounds))
         positive, negative = step > 0., step < 0.
         alpha = 1.
         if positive.any():
@@ -616,7 +638,11 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
                 break
             trial = x+alpha*step
             trial[2] = 0.
-            trial_norm = np.linalg.norm(problem.residual(trial))
+            try:
+                trial_norm = np.linalg.norm(problem.residual(trial))
+            except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
+                trial_norm = np.inf
+                history[-1]['last_rejected_trial'] = str(error)
             if trial_norm <= norm*(1.-1e-4*alpha):
                 accepted = True
                 break
@@ -656,7 +682,12 @@ def _newton(problem, initial, *, residual_tolerance, max_iterations, verbose):
                         break
                     trial = x+alpha*step
                     trial[2] = 0.
-                    if np.linalg.norm(problem.residual(trial)) <= norm*(1.-1e-4*alpha):
+                    try:
+                        trial_norm = np.linalg.norm(problem.residual(trial))
+                    except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
+                        trial_norm = np.inf
+                        history[-1]['last_rejected_trial'] = str(error)
+                    if trial_norm <= norm*(1.-1e-4*alpha):
                         accepted = True
                         history[-1]['regularization'] = damping
                         break
