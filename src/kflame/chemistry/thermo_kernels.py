@@ -4,6 +4,27 @@ from numba import njit
 
 
 @njit(cache=True, nogil=True)
+def species_cp_h_RT(temperatures, low, high, midpoints, want_cp, want_h):
+    """Per-species cp/R and h/(RT), shaped (nodes, species) like the NumPy path.
+
+    Same Horner order and branch selection as NativeThermo, with no
+    (nodes, species, 7) coefficient temporary; IEEE arithmetic is kept.
+    """
+    nodes, species = len(temperatures), len(midpoints)
+    cp = np.empty((nodes if want_cp else 0, species))
+    h = np.empty((nodes if want_h else 0, species))
+    for node in range(nodes):
+        T = temperatures[node]
+        for k in range(species):
+            c = high[k] if T > midpoints[k] else low[k]
+            if want_cp:
+                cp[node, k] = c[0]+T*(c[1]+T*(c[2]+T*(c[3]+T*c[4])))
+            if want_h:
+                h[node, k] = c[0]+T*(c[1]/2.+T*(c[2]/3.+T*(c[3]/4.+T*c[4]/5.)))+c[5]/T
+    return cp, h
+
+
+@njit(cache=True, nogil=True)
 def enthalpy_cp_mass(temperatures, fractions, low, high, midpoints, inverse_weights, gas_constant):
     """Broadcast one temperature/composition or evaluate matching profiles.
 

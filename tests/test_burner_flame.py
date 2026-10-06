@@ -145,6 +145,24 @@ def test_fused_enthalpy_and_derivative_match_cantera_across_species_breakpoints(
         np.testing.assert_allclose(np.atleast_1d(cc),expected_cp,rtol=3e-12,atol=1e-10)
 
 
+@pytest.mark.parametrize('mechanism', ['h2o2.yaml', 'gri30.yaml'])
+def test_compiled_species_polynomials_are_bitwise_the_numpy_path(mechanism):
+    thermo = NativeThermo(load_mechanism(mechanism))
+    mid = thermo._Tmid
+    T = np.r_[np.linspace(250., 3500., 401), mid, np.nextafter(mid, 0.), np.nextafter(mid, 1e9)]
+    for argument in (T, T[::3], 1000., np.float64(1500.3)):
+        T_arr, scalar = thermo._to_1d(argument)
+        c, t = thermo._get_coefs(T_arr), T_arr[:, None]
+        cp = c[:,:,0]+t*(c[:,:,1]+t*(c[:,:,2]+t*(c[:,:,3]+t*c[:,:,4])))
+        h = (c[:,:,0]+t*(c[:,:,1]/2.+t*(c[:,:,2]/3.+t*(c[:,:,3]/4.+t*c[:,:,4]/5.)))
+             +c[:,:,5]/t)
+        for actual, expected in ((thermo.cp_R(argument), cp), (thermo.h_RT(argument), h)):
+            expected = expected[0] if scalar else expected.T
+            # Identical bits and memory layout keep downstream reductions unchanged.
+            assert np.array_equal(actual, expected)
+            assert actual.strides == expected.strides
+
+
 @pytest.mark.parametrize('mechanism,fuel', [('h2o2.yaml','H2'),('gri30.yaml','CH4')])
 def test_inlet_enthalpy_defect_is_independent_of_prescribed_total_flux(mechanism,fuel):
     mech = load_mechanism(mechanism)

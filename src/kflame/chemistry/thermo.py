@@ -9,7 +9,7 @@ NO Cantera dependency.
 from __future__ import annotations
 import numpy as np
 from kflame.chemistry.mechanism import MechanismData, R_UNIV
-from kflame.chemistry.thermo_kernels import enthalpy_cp_mass
+from kflame.chemistry.thermo_kernels import enthalpy_cp_mass, species_cp_h_RT
 
 # R_UNIV = 8314.46261815324 J/(kmol·K)  – same as Cantera
 
@@ -54,6 +54,9 @@ class NativeThermo:
     def cp_R(self, T) -> np.ndarray:
         """cp_k / R = a0 + a1·T + a2·T² + a3·T³ + a4·T⁴"""
         T_arr, is_scalar = self._to_1d(T)
+        if self.xp is np:
+            res = species_cp_h_RT(T_arr, self._lo, self._hi, self._Tmid, True, False)[0]
+            return res[0] if is_scalar else res.T
         c = self._get_coefs(T_arr)
         T_mat = T_arr[:, None]
         res = c[:,:,0] + T_mat * (c[:,:,1] + T_mat * (c[:,:,2] + T_mat * (c[:,:,3] + T_mat * c[:,:,4])))
@@ -62,6 +65,9 @@ class NativeThermo:
     def h_RT(self, T) -> np.ndarray:
         """h_k / (R·T) = a0 + a1·T/2 + a2·T²/3 + a3·T³/4 + a4·T⁴/5 + a5/T"""
         T_arr, is_scalar = self._to_1d(T)
+        if self.xp is np:
+            res = species_cp_h_RT(T_arr, self._lo, self._hi, self._Tmid, False, True)[1]
+            return res[0] if is_scalar else res.T
         c = self._get_coefs(T_arr)
         T_mat = T_arr[:, None]
         res = c[:,:,0] + T_mat * (c[:,:,1]/2.0 + T_mat * (c[:,:,2]/3.0 + T_mat * (c[:,:,3]/4.0 + T_mat * c[:,:,4]/5.0))) + c[:,:,5]/T_mat
