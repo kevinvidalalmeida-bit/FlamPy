@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+from numba import njit
 from scipy.interpolate import BSpline, make_interp_spline
 from scipy.sparse import csc_matrix, lil_matrix, diags
 from scipy.sparse.linalg import MatrixRankWarning, spsolve
@@ -32,6 +33,54 @@ _SOURCE_FILES = [Path(__file__).with_name(q) for q in
 _SOURCE_FILES += [Path(__file__).resolve().parents[1]/q for q in
     ('chemistry/thermo.py','chemistry/thermo_kernels.py','flame/enthalpy.py')]
 _SOURCE_SHA256 = hashlib.sha256(b''.join(q.read_bytes() for q in _SOURCE_FILES)).hexdigest()
+
+
+@njit(cache=True)
+def _flux_projections(dY, Y, rho, D, W, mw, bilger, progress, hk):
+    """Bilger, progress and enthalpy projections of corrected species-flux tangents.
+
+    Same mixture-averaged closure as ``_species_flux_tangents``, contracted
+    per node and direction without the (nodes, species, 3) temporary.
+    """
+    nodes, ns, directions = dY.shape
+    out = np.empty((nodes, 3, directions))
+    for i in range(nodes):
+        yz = 0.0
+        yc = 0.0
+        yh = 0.0
+        for j in range(ns):
+            yz += bilger[j]*Y[j, i]
+            yc += progress[j]*Y[j, i]
+            yh += hk[j, i]*Y[j, i]
+        for k in range(directions):
+            s = 0.0
+            for j in range(ns):
+                s += dY[i, j, k]/mw[j]
+            dW = -W[i]*W[i]*s
+            total = 0.0
+            pz = 0.0
+            pc = 0.0
+            ph = 0.0
+            for j in range(ns):
+                dX = (W[i]*dY[i, j, k]+Y[j, i]*dW)/mw[j]
+                flux = -rho[i]*(mw[j]/W[i])*D[j, i]*dX
+                total += flux
+                pz += bilger[j]*flux
+                pc += progress[j]*flux
+                ph += hk[j, i]*flux
+            out[i, 0, k] = pz-yz*total
+            out[i, 1, k] = pc-yc*total
+            out[i, 2, k] = ph-yh*total
+    return out
+
+
+def _species_flux_tangents(dY, Y, rho, D, W, mw):
+    """Corrected mixture-averaged flux tangents, shape (nodes, species, 3)."""
+    dW = -W[:, None]**2*np.einsum('j,njk->nk', 1./mw, dY)
+    dX = (W[:, None, None]*dY+Y.T[:, :, None]*dW[:, None, :])/mw[None, :, None]
+    J = -rho[:, None, None]*(mw[None, :, None]/W[:, None, None])*D.T[:, :, None]*dX
+    J -= Y.T[:, :, None]*J.sum(axis=1)[:, None, :]
+    return J
 
 
 class ReducedConvergenceError(RuntimeError):
@@ -316,18 +365,17 @@ class ReducedBurnerProblem:
         cp = self.model.thermo.cp_mass(T,Y)
         rho,D,lam,W=self.transport.eval_faces_poly_fast(T,self.pressure,Y,1./mw)
         dT=(dh-np.einsum('nj,njk->nk',hk.T,dY))/cp[:,None]
-        dW=-W[:,None]**2*np.einsum('j,njk->nk',1./mw,dY)
-        dX=(W[:,None,None]*dY+Y.T[:,:,None]*dW[:,None,:])/mw[None,:,None]
-        J=-rho[:,None,None]*(mw[None,:,None]/W[:,None,None])*D.T[:,:,None]*dX
-        J-=Y.T[:,:,None]*J.sum(axis=1)[:,None,:]
         table=self.model.table
         M=np.stack([np.einsum('j,njk->nk',table['bilger_weights'],dY),
                     np.einsum('j,njk->nk',table['progress_weights'],dY),dh],axis=1)
-        B=np.stack([np.einsum('j,njk->nk',table['bilger_weights'],J),
-                    np.einsum('j,njk->nk',table['progress_weights'],J),
-                    -lam[:,None]*dT+np.einsum('nj,njk->nk',hk.T,J)],axis=1)
+        # Only projections of the species-flux tangents enter M^-1 B; the full
+        # tensor is formed later for the (usually few) projected nodes.
+        projections=_flux_projections(np.ascontiguousarray(dY),np.ascontiguousarray(Y),rho,
+            np.ascontiguousarray(D),W,np.asarray(mw,dtype=float),np.asarray(table['bilger_weights'],dtype=float),
+            np.asarray(table['progress_weights'],dtype=float),np.ascontiguousarray(hk))
+        B=np.stack([projections[:,0],projections[:,1],-lam[:,None]*dT+projections[:,2]],axis=1)
         margin=1e-3*np.minimum((rho[None,:]*D).min(axis=0),lam/cp)
-        return dY,dh,hk,cp,J,M,B,margin
+        return dY,dh,hk,cp,(rho,D,W),M,B,margin
 
     def projection_multipliers(self, x, state, *, cache=None, changed_nodes=None):
         x=np.asarray(x).reshape(-1,3)
@@ -338,7 +386,7 @@ class ReducedBurnerProblem:
             a,b,g=self.projection_multipliers(x[subset],selected_state)
             alpha[:,subset],beta[subset],gamma[subset]=a,b,g
             return alpha,beta,gamma
-        dY,dh,hk,cp,J,M,B,margin=self.principal_data(x,state)
+        dY,dh,hk,cp,flux_data,M,B,margin=self.principal_data(x,state)
         metric=self.scales/self.mass_flux
         base=np.linalg.solve(M/metric[None,:,None],-B/metric[None,:,None])
         active=(~stable_matrix(base,margin) if self.progress_equation=='adaptive_projection' else np.ones(len(x),dtype=bool))
@@ -349,7 +397,10 @@ class ReducedBurnerProblem:
                 self.mech.molecular_weights,self.model.table['bilger_weights'],self.model.table['progress_weights'],metric_floor=self.metric_floor)
             Mp,Bp=M[active].copy(),B[active].copy()
             Mp[:,1]=np.einsum('nj,njk->nk',a.T,dY[active])+b[:,None]*dh[active]
-            Bp[:,1]=np.einsum('nj,njk->nk',a.T,J[active])+b[:,None]*Bp[:,2]
+            rho,D,W=flux_data
+            J=_species_flux_tangents(dY[active],state['Y'][:,active],rho[active],D[:,active],W[active],
+                                     self.mech.molecular_weights)
+            Bp[:,1]=np.einsum('nj,njk->nk',a.T,J)+b[:,None]*Bp[:,2]
             end=np.linalg.solve(Mp/metric[None,:,None],-Bp/metric[None,:,None])
             chosen=(stable_blend(base[active],end,margin[active]) if self.progress_equation=='adaptive_projection' else np.ones(active.sum()))
             alpha[:,active]=(1.-chosen)[None,:]*alpha[:,active]+chosen[None,:]*a
