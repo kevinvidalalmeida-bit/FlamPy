@@ -67,3 +67,21 @@ def test_scheme_option_changes_the_residual_and_is_validated():
     assert np.max(difference) > 0.
     nv = 2+problem.n_species
     np.testing.assert_array_equal(difference[:nv], 0.)  # boundary rows unchanged
+
+
+def test_cold_start_uses_upwind_then_solves_the_requested_scheme(monkeypatch):
+    import kflame.flame.solver as solver
+    calls = []
+
+    def fake(problem, x0, options):
+        calls.append((problem.convection_code, x0 is None))
+        return np.zeros(3), True, {'final_accepted': True, 'grid_converged': True}
+
+    monkeypatch.setattr(solver, '_solve_flame_auto', fake)
+    problem = type('P', (), {'convection_code': 1, 'n_points': 3})()
+    _, ok, report = solver.solve_free_flame(problem)
+    assert ok and calls == [(0, True), (1, False)]
+    assert problem.convection_code == 1 and report['startup_convection']['scheme'] == 'upwind'
+    calls.clear()
+    solver.solve_free_flame(problem, x0=np.zeros(3))  # continuation: requested scheme only
+    assert calls == [(1, False)]

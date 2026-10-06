@@ -2453,6 +2453,46 @@ def solve_free_flame(
     x0: np.ndarray | None = None,
     options: SolveOptions | None = None,
 ) -> tuple[np.ndarray, bool, dict[str, Any]]:
+    """Solve a free or burner flame with the problem's convection scheme.
+
+    A cold start (x0 None) of a higher-order scheme first solves the complete
+    adaptive problem with first-order upwind: on the coarse bootstrap grids its
+    pseudo-transient continuation can stall. The requested scheme is then
+    solved and refined again from that state, so the returned solution and
+    acceptance always belong to the requested scheme.
+    """
+    target = int(getattr(problem, "convection_code", 0))
+    if x0 is not None or target == 0:
+        return _solve_flame_auto(problem, x0, options)
+    opts = options or SolveOptions()
+    started = time.perf_counter()
+    problem.convection_code = 0
+    try:
+        x_start, ok_start, startup = _solve_flame_auto(problem, None, opts)
+    finally:
+        problem.convection_code = target
+    summary = dict(scheme="upwind", solved=bool(ok_start), n_points=int(problem.n_points),
+                   final_accepted=startup.get("final_accepted"), grid_converged=startup.get("grid_converged"),
+                   total_time_s=float(time.perf_counter() - started))
+    if not ok_start:
+        startup["startup_convection"] = summary
+        return x_start, False, startup
+    remaining = opts.max_total_time_s - (time.perf_counter() - started)
+    if np.isfinite(opts.max_total_time_s) and remaining <= 0.0:
+        startup["startup_convection"] = summary
+        startup["timeout_before_requested_convection"] = True
+        return x_start, False, startup
+    x, ok, report = _solve_flame_auto(
+        problem, x_start, replace(opts, max_total_time_s=remaining) if np.isfinite(remaining) else opts)
+    report["startup_convection"] = summary
+    return x, ok, report
+
+
+def _solve_flame_auto(
+    problem,
+    x0: np.ndarray | None = None,
+    options: SolveOptions | None = None,
+) -> tuple[np.ndarray, bool, dict[str, Any]]:
     """
     Replica Sim1D::solve(loglevel, refine_grid=True) con estrategia auto:
       1. Intentar con energía ON.
