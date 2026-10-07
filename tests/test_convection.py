@@ -169,3 +169,13 @@ def test_downstream_coefficient_keeps_its_sign_on_stretched_grids():
     dzm, dzp, dz2 = np.diff(z)[:-1], np.diff(z)[1:], z[2:]-z[:-2]
     diffusion_plus = 2.*gamma[1:]/(dz2*dzp)
     assert np.all(thermal[1:-1, 1] <= diffusion_plus*(1+1e-12))
+
+
+def test_saved_generation_settings_without_convection_default_to_upwind():
+    # Manifests written before the option existed must still drive the generator.
+    from kflame.fgm import generate as g
+    args = g.build_argparser().parse_args(['--mech', g._resolve_mechanism('h2o2.yaml'), '--fuel', 'H2'])
+    del args.convection_scheme
+    mech = g.load_mechanism(args.mech)
+    record, _, _ = g.solve_flame_native(1.0, args, mech, g.make_solve_options(args), {'H2O': 1.0})
+    assert record.solve_ok and record.final_accepted

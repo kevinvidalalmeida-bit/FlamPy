@@ -386,7 +386,7 @@ def seed_cache_key(args: argparse.Namespace, resolved_mech: str) -> str:
         "analytic_chemistry": bool(getattr(args, "analytic_chemistry", False)),
         "outlet_species_bc": str(args.outlet_species_bc),
         "upwind_factor": float(args.upwind_factor),
-        "convection_scheme": str(args.convection_scheme),
+        "convection_scheme": str(getattr(args, "convection_scheme", "upwind")),
         "T_in": float(args.T_in),
         "P": float(args.P),
         "width": float(args.width),
@@ -560,7 +560,7 @@ def solve_flame_native(
         soret_enabled=args.soret_enabled,
         outlet_species_bc=args.outlet_species_bc,
         upwind_factor=float(args.upwind_factor),
-        convection_scheme=str(args.convection_scheme),
+        convection_scheme=str(getattr(args, "convection_scheme", "upwind")),
         ratio=args.ratio,
         slope=args.slope,
         curve=args.curve,
@@ -1360,7 +1360,7 @@ def main(argv=None) -> Path:
         f"initial_grid={args.initial_grid_points}, "
         "transient=PTC-SER/BE-fallback, "
         f"damp=step_norm/{args.damp_factor:g}, "
-        f"upwind_factor={args.upwind_factor:g}, convection={args.convection_scheme}, "
+        f"upwind_factor={args.upwind_factor:g}, convection={getattr(args, 'convection_scheme', 'upwind')}, "
         f"jacobian={args.jacobian_mode}, "
         "transient_linear=direct"
     )
@@ -1708,7 +1708,7 @@ def main(argv=None) -> Path:
         "acceptance_criterion": str(args.acceptance_criterion),
         "residual_guard_inf": float(args.residual_guard_inf),
         "upwind_factor": float(args.upwind_factor),
-        "convection_scheme": str(args.convection_scheme),
+        "convection_scheme": str(getattr(args, "convection_scheme", "upwind")),
         "precompute_jacobian_thermo": bool(args.precompute_jacobian_thermo),
         "analytic_chemistry": bool(args.analytic_chemistry),
         "analytic_spatial": bool(args.analytic_spatial),

@@ -66,6 +66,79 @@ except ImportError:  # pragma: no cover - optional acceleration
 if njit is not None:
     _mix_soret_coefficients = njit(cache=True)(_mix_soret_coefficients)
 
+    @njit(cache=True, parallel=True)
+    def _mix_soret_fused(T, P, Y, mw, visc_poly, diff_poly, epsilon, cstar, tiny):
+        """Soret coefficients with species viscosities, binary and mixture
+        diffusivities evaluated per face from the same fits and formulas as
+        species_viscosities, binary_diff_coeffs and mix_diff_coeffs, without
+        the (species, species, faces) temporaries. Faces run in parallel.
+        """
+        n, faces = Y.shape
+        result = np.zeros((n, faces))
+        for face in prange(faces):
+            Tf = T[face]
+            logT = math.log(Tf)
+            denom = 0.0
+            for k in range(n):
+                denom += Y[k, face] / mw[k]
+            wmix = 1.0 / max(denom, 1e-300)
+            X = np.empty(n)
+            for k in range(n):
+                X[k] = max(Y[k, face] * wmix / mw[k], 1e-20)
+            visc = np.empty(n)
+            quarter = Tf ** 0.25
+            for k in range(n):
+                c = visc_poly[k]
+                sq = quarter * (c[0] + logT * (c[1] + logT * (c[2] + logT * (c[3] + logT * c[4]))))
+                visc[k] = sq * sq
+            binary = np.empty((n, n))
+            scale_T = Tf * math.sqrt(Tf)
+            for k in range(n):
+                for j in range(n):
+                    c = diff_poly[k, j]
+                    binary[k, j] = scale_T * (c[0] + logT * (c[1] + logT * (c[2] + logT * (c[3] + logT * c[4]))))
+            wmix_x = 0.0
+            for k in range(n):
+                wmix_x += X[k] * mw[k]
+            diffusion = np.empty(n)
+            for k in range(n):
+                total = 0.0
+                for j in range(n):
+                    if j != k:
+                        total += (1.0 / max(binary[j, k], 1e-300)) * max(X[j], tiny)
+                if total <= 0.0:
+                    diffusion[k] = binary[k, k] / P
+                else:
+                    diffusion[k] = (wmix_x - max(X[k], tiny) * mw[k]) / (P * wmix_x * max(total, 1e-300))
+            a = np.zeros(n)
+            for k in range(n):
+                if Y[k, face] < 1e-20:
+                    continue
+                total = 0.0
+                for j in range(n):
+                    if j != k:
+                        phi = (1 + math.sqrt(visc[k] / visc[j]) * (mw[j] / mw[k]) ** .25) ** 2 / math.sqrt(8 * (1 + mw[k] / mw[j]))
+                        total += X[j] * phi
+                a[k] = (15.0 / 4.0) * visc[k] / mw[k] / (1 + 1.065 * total / X[k])
+            for k in range(n - 1):
+                for j in range(k + 1, n):
+                    z = math.log(Tf / epsilon[k, j])
+                    star = cstar[k, j, 8]
+                    for power in range(7, -1, -1):
+                        star = star * z + cstar[k, j, power]
+                    scale = (1.2 * star - 1) / (binary[k, j] / P) / (mw[k] + mw[j])
+                    result[k, face] += scale * (Y[k, face] * a[j] - Y[j, face] * a[k])
+                    result[j, face] += scale * (Y[j, face] * a[k] - Y[k, face] * a[j])
+            total = 0.0
+            for k in range(n):
+                result[k, face] *= diffusion[k] * mw[k] * wmix
+                total += result[k, face]
+            for k in range(n):
+                result[k, face] -= Y[k, face] * total
+        return result
+else:
+    _mix_soret_fused = None
+
 
 if njit is not None:
     @njit(cache=True, parallel=True)
@@ -332,6 +405,14 @@ class NativeTransport:
         Y = np.asarray(Y, dtype=float)
         if Y.ndim == 1:
             Y = Y[:, None]
+        if (_mix_soret_fused is not None and getattr(self.xp, "__name__", "") == "numpy"
+                and bool(self._has_visc_poly_cpu.all()) and bool(self._has_diff_poly_cpu.all())):
+            return _mix_soret_fused(
+                np.ascontiguousarray(T, dtype=np.float64), float(P), np.ascontiguousarray(Y, dtype=np.float64),
+                np.asarray(self.mw, dtype=np.float64), np.ascontiguousarray(self._visc_poly, dtype=np.float64),
+                np.ascontiguousarray(self._diff_poly, dtype=np.float64),
+                np.ascontiguousarray(self._eps_pair, dtype=np.float64),
+                np.ascontiguousarray(self._cstar_poly, dtype=np.float64), float(self._tiny))
         wmix = 1.0 / np.maximum(np.sum(Y / self.mw[:, None], axis=0), 1e-300)
         X = np.maximum(Y * wmix[None, :] / self.mw[:, None], 1e-20)
         return _mix_soret_coefficients(
