@@ -4,6 +4,9 @@ from importlib import import_module
 import sys
 
 COMMANDS = {
+    'diffusion': 'kflame.diffusion',
+    'diffusion-fgm': 'kflame.fgm.diffusion',
+    'reference-diffusion': 'kflame.reference.diffusion',
     'fgm': 'kflame.fgm.generate',
     'export': 'kflame.fgm.export',
     'plot': 'kflame.fgm.plot',

@@ -1,0 +1,296 @@
+{
+  "date": "2026-10-07",
+  "scope": "Native counterflow and connected two-control FGM; independent Cantera references and withheld native strains.",
+  "cases": {
+    "CH4": {
+      "conditions": {
+        "mechanism_sha256": "06650b1e0ee0012f6903d5328b1bb218cb6007d07f8ebe375d18f24811039345",
+        "fuel": "CH4",
+        "oxidizer": "O2:1,N2:3.76",
+        "fuel_temperature": 300.0,
+        "oxidizer_temperature": 300.0,
+        "fuel_mass_flux": 0.12,
+        "oxidizer_mass_flux": 0.24,
+        "pressure": 101325.0,
+        "width": 0.02,
+        "transport": "mixture-averaged",
+        "soret": false,
+        "source_sha256": "38e7a6e7affbce3e60dd1782759ed94b77471e6264595ba0c43f2bf9f73860a7"
+      },
+      "native": {
+        "nodes": 1322,
+        "runtime_s": 58.40465090000362,
+        "maximum_scaled_residual": 1.6166893525258293e-08,
+        "enthalpy_balance": {
+          "radial_export_between_first_and_last_faces_W_m2": -556439.050973814,
+          "axial_flux_change_W_m2": 556995.5808574652,
+          "finite_grid_defect_W_m2": 556.5298836511793,
+          "relative_defect": 0.0009983433638488712,
+          "boundary_conduction_outward_W_m2": [
+            3.456202191329078e-07,
+            -0.0
+          ],
+          "note": "Face-to-face axisymmetric balance, including radial export; diagnostic finite-grid estimate."
+        }
+      },
+      "cantera": {
+        "passed": true,
+        "metrics": {
+          "temperature_K": 0.6399797835197205,
+          "species_absolute": 0.00043170836409778257,
+          "velocity_relative": 0.0002904591943690989,
+          "pressure_eigenvalue_relative": 7.474914680884232e-05,
+          "heat_release_peak_relative": 4.933292120836679e-05,
+          "peak_temperature_K": 0.01129607998245774
+        },
+        "limits": {
+          "temperature_K": 20.0,
+          "species_absolute": 0.005,
+          "velocity_relative": 0.03,
+          "pressure_eigenvalue_relative": 0.02,
+          "heat_release_peak_relative": 0.05
+        },
+        "checks": {
+          "temperature_K": true,
+          "species_absolute": true,
+          "velocity_relative": true,
+          "pressure_eigenvalue_relative": true,
+          "heat_release_peak_relative": true
+        },
+        "cantera_version": "3.2.0",
+        "reference_nodes": 1338,
+        "reference_runtime_s": 32.30458209999779,
+        "independent_initial_guess": true
+      },
+      "fgm": {
+        "passed": true,
+        "metrics": {
+          "temperature_K": 0.08923141921513889,
+          "species_absolute": 2.1421182552633367e-05,
+          "species_source_relative": 0.004933717679025623,
+          "heat_release_relative": 0.0061331921169858585,
+          "enthalpy_J_kg": 164.12525838869624,
+          "enthalpy_temperature_equivalent_K": 0.07670368926136692,
+          "species_sum_error": 1.1463052729254741e-12,
+          "thermodynamic_enthalpy_error_J_kg": 9.512295946478844e-07
+        },
+        "limits": {
+          "temperature_K": 20.0,
+          "species_absolute": 0.005,
+          "species_source_relative": 0.1,
+          "heat_release_relative": 0.1,
+          "enthalpy_temperature_equivalent_K": 20.0
+        },
+        "checks": {
+          "temperature_K": true,
+          "species_absolute": true,
+          "species_source_relative": true,
+          "heat_release_relative": true,
+          "enthalpy_temperature_equivalent_K": true,
+          "reaction_coverage": true,
+          "thermodynamic_consistency": true
+        },
+        "covered_points": 1254,
+        "total_points": 1390,
+        "reaction_coverage": 1.0,
+        "table_sha256": "36de543643b826516f27611cc6b0be73e95ed555e119760ec014e0b95fb08e76"
+      },
+      "geometry": {
+        "vertices": 12960,
+        "triangles": 16706,
+        "excluded_degenerate_cells": 570,
+        "excluded_folded_cells": 0,
+        "excluded_spatial_points_outside_feed_Z": [
+          35,
+          48,
+          60
+        ]
+      },
+      "flow_scales": [
+        0.75,
+        1.0,
+        1.25
+      ],
+      "table_builder_source_sha256": "fb51eadbada4dbbe298940ff0acfdbc18b9d7d88de18298c191df7f900f90b6b",
+      "withheld_flow_scale": 1.1,
+      "flamelet_runtime_s": [
+        0.5650889999960782,
+        32.64821600000141,
+        19.24827589999768
+      ],
+      "progress_weights": {
+        "H2O": -0.5788716318483281,
+        "CH4": 0.22239189253159491,
+        "CO2": 0.04982553486264003,
+        "C2H2": -0.14891094075743708
+      },
+      "mixture_fraction_range": [
+        2.5894798111325557e-10,
+        0.9999852707801108
+      ]
+    },
+    "H2": {
+      "conditions": {
+        "mechanism_sha256": "fa5076030f7ccea6c0b42d034a906d8c0c942a3b0f5cd5ba4cf3f197976e6974",
+        "fuel": "H2",
+        "oxidizer": "O2:1,N2:3.76",
+        "fuel_temperature": 300.0,
+        "oxidizer_temperature": 300.0,
+        "fuel_mass_flux": 0.05,
+        "oxidizer_mass_flux": 0.15,
+        "pressure": 101325.0,
+        "width": 0.02,
+        "transport": "mixture-averaged",
+        "soret": false,
+        "source_sha256": "38e7a6e7affbce3e60dd1782759ed94b77471e6264595ba0c43f2bf9f73860a7"
+      },
+      "native": {
+        "nodes": 1071,
+        "runtime_s": 4.663326399997459,
+        "maximum_scaled_residual": 1.2961298852831384e-08,
+        "enthalpy_balance": {
+          "radial_export_between_first_and_last_faces_W_m2": 2533.334458702122,
+          "axial_flux_change_W_m2": -1609.5279984596755,
+          "finite_grid_defect_W_m2": 923.8064602424465,
+          "relative_defect": 0.04254347978348756,
+          "boundary_conduction_outward_W_m2": [
+            0.0012954300796817278,
+            0.0037776864662590177
+          ],
+          "note": "Face-to-face axisymmetric balance, including radial export; diagnostic finite-grid estimate."
+        }
+      },
+      "cantera": {
+        "passed": true,
+        "metrics": {
+          "temperature_K": 4.502371001372694,
+          "species_absolute": 0.0005226546217965283,
+          "velocity_relative": 0.0017936732516302346,
+          "pressure_eigenvalue_relative": 0.00029527597056051776,
+          "heat_release_peak_relative": 0.0008882593686984076,
+          "peak_temperature_K": 0.18474960093362824
+        },
+        "limits": {
+          "temperature_K": 20.0,
+          "species_absolute": 0.005,
+          "velocity_relative": 0.03,
+          "pressure_eigenvalue_relative": 0.02,
+          "heat_release_peak_relative": 0.05
+        },
+        "checks": {
+          "temperature_K": true,
+          "species_absolute": true,
+          "velocity_relative": true,
+          "pressure_eigenvalue_relative": true,
+          "heat_release_peak_relative": true
+        },
+        "cantera_version": "3.2.0",
+        "reference_nodes": 1058,
+        "reference_runtime_s": 0.5811181000026409,
+        "independent_initial_guess": true
+      },
+      "fgm": {
+        "passed": true,
+        "metrics": {
+          "temperature_K": 1.7757153368791023,
+          "species_absolute": 2.5791708658906565e-05,
+          "species_source_relative": 0.0024184202411157846,
+          "heat_release_relative": 0.005065273845574052,
+          "enthalpy_J_kg": 2641.5478815470124,
+          "enthalpy_temperature_equivalent_K": 0.708187126944339,
+          "species_sum_error": 2.62456723021387e-13,
+          "thermodynamic_enthalpy_error_J_kg": 9.923242032527924e-07
+        },
+        "limits": {
+          "temperature_K": 20.0,
+          "species_absolute": 0.005,
+          "species_source_relative": 0.1,
+          "heat_release_relative": 0.1,
+          "enthalpy_temperature_equivalent_K": 20.0
+        },
+        "checks": {
+          "temperature_K": true,
+          "species_absolute": true,
+          "species_source_relative": true,
+          "heat_release_relative": true,
+          "enthalpy_temperature_equivalent_K": true,
+          "reaction_coverage": true,
+          "thermodynamic_consistency": true
+        },
+        "covered_points": 934,
+        "total_points": 1070,
+        "reaction_coverage": 1.0,
+        "table_sha256": "6d803c681a06f163be31f07edbe64dc8a1f8b7d41e53b8ab274b12a1c88e7337"
+      },
+      "geometry": {
+        "vertices": 9819,
+        "triangles": 12334,
+        "excluded_degenerate_cells": 754,
+        "excluded_folded_cells": 0,
+        "excluded_spatial_points_outside_feed_Z": [
+          0,
+          0,
+          0
+        ]
+      },
+      "flow_scales": [
+        0.75,
+        1.0,
+        1.25
+      ],
+      "table_builder_source_sha256": "fb51eadbada4dbbe298940ff0acfdbc18b9d7d88de18298c191df7f900f90b6b",
+      "withheld_flow_scale": 1.1,
+      "flamelet_runtime_s": [
+        1.0918620000011288,
+        2.745617599997786,
+        0.9040236000000732
+      ],
+      "progress_weights": {
+        "H": 0.4456951094641137,
+        "H2O": -0.5543048905358863
+      },
+      "mixture_fraction_range": [
+        2.621779273577485e-07,
+        0.999999999947486
+      ]
+    }
+  },
+  "hydrogen_multicomponent_soret": {
+    "passed": true,
+    "metrics": {
+      "temperature_K": 4.284429271457157,
+      "species_absolute": 0.0005745721268850534,
+      "velocity_relative": 0.001662740075385461,
+      "pressure_eigenvalue_relative": 0.0001956105722799076,
+      "heat_release_peak_relative": 0.0008378171266900331,
+      "peak_temperature_K": 0.09498101071585552
+    },
+    "checks": {
+      "temperature_K": true,
+      "species_absolute": true,
+      "velocity_relative": true,
+      "pressure_eigenvalue_relative": true,
+      "heat_release_peak_relative": true
+    },
+    "reference_runtime_s": 2.1733944000006886
+  },
+  "jacobian_assembly_benchmark": {
+    "nodes": 377,
+    "species": 53,
+    "times_s": {
+      "array": [
+        1.1825661000038963,
+        0.8589923999970779,
+        1.1058774999983143
+      ],
+      "scalar_lists": [
+        3.0031849999941187,
+        2.7964569999894593,
+        2.7623977000039304
+      ]
+    },
+    "speedup": 2.52872221380191,
+    "matrix_bitwise_equal": true
+  },
+  "timing_note": "Local wall times with compiled Numba cache, concurrent validation jobs, four default Numba threads; no reference seed. Jacobian microbenchmark compares identical matrices."
+}

@@ -519,6 +519,24 @@ class NativeTransport:
     # ------------------------------------------------------------------
     def viscosity(self, T, X: np.ndarray):
         """Mixture viscosity [Pa·s] using Wilke mixing rule (Chapman-Enskog)."""
+        if getattr(self.xp,'__name__','')=='numpy' and self._has_visc_poly_cpu.all():
+            from kflame.chemistry.viscosity_kernels import viscosity_grid
+            if not hasattr(self,'_wilke_factors'):
+                ratio=self.mw[None,:]/self.mw[:,None]
+                self._wilke_factors=(ratio**.25,np.sqrt(8.*(1.+1./ratio)))
+            scalar=np.ndim(T)==0
+            values=np.asarray(X,dtype=float)
+            if values.ndim==1:
+                values=values[:,None]
+            temperatures=np.atleast_1d(np.asarray(T,dtype=float))
+            if temperatures.ndim!=1 or values.ndim!=2 or values.shape[0]!=len(self.mw):
+                raise ValueError('Viscosity requires temperatures and aligned species mole fractions')
+            if values.shape[1]==1:
+                values=np.broadcast_to(values,(len(self.mw),len(temperatures)))
+            elif values.shape[1]!=len(temperatures):
+                raise ValueError('Viscosity temperature and composition grids differ')
+            result=viscosity_grid(temperatures,values,self._visc_poly,*self._wilke_factors)
+            return result[0] if scalar else result
         visc_k = self.species_viscosities(T)
         is_grid = self._is_grid(T)
         

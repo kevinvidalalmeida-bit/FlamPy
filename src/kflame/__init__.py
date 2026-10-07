@@ -1,4 +1,4 @@
-"""FlamPy: native premixed flames and FGM tables. References load explicitly."""
+"""FlamPy: native premixed/counterflow flames and FGM tables."""
 import os as _os
 
 # Configure before any scientific import; respect explicit user overrides.
@@ -9,6 +9,12 @@ __version__ = '0.1.0'
 
 def __getattr__(name):
     # Keep CLI/help imports light; scientific modules load on first API access.
+    if name in ('generate_diffusion_fgm','DiffusionFGM','validate_diffusion_fgm'):
+        from .fgm import diffusion
+        return getattr(diffusion,name)
+    if name == 'solve_diffusion_flame':
+        from .diffusion import solve_diffusion_flame
+        return solve_diffusion_flame
     if name == 'generate_adaptive_nonadiabatic_fgm':
         from .fgm.adaptive_nonadiabatic import generate_adaptive_nonadiabatic_fgm
         return generate_adaptive_nonadiabatic_fgm
@@ -21,4 +27,4 @@ def __getattr__(name):
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 
-__all__ = ['solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm', 'solve_reduced_burner_fgm']
+__all__ = ['solve_diffusion_flame', 'generate_diffusion_fgm', 'DiffusionFGM', 'validate_diffusion_fgm', 'solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm', 'solve_reduced_burner_fgm']

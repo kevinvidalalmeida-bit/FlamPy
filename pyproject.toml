@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "FlamPy"
 version = "0.1.0"
-description = "Native CPU premixed flame solver and flamelet-generated manifold tables"
+description = "Native CPU premixed and counterflow diffusion flames with FGM tables"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
