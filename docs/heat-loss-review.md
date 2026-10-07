@@ -340,6 +340,55 @@ se justifica seleccionar un C2 genérico con sus fuentes y flujos consistentes.
 La selección debe comprobar unicidad; no basta reutilizar los pesos del paper
 ni añadir un término químico a la ecuación de entalpía total.
 
+## Convección de segundo orden y biblioteca regenerada
+
+El modelo reducido resuelto exactamente en sus propias llamas de entrenamiento
+también subestimaba q (−2 a −16 % para r ≥ 0,9) aunque estaba convergido en
+malla. El origen era la referencia: la convección upwind de primer orden
+(la misma que Cantera) sesga Su en +0,2–0,8 % y, como q es unas 20 veces
+más sensible que Su cerca de r = 1, el calor al quemador en +10–26 %. En
+φ = 0,8, r = 0,95 Cantera da 5987, 5425, 5152 y 4988 W/m² con 336–1804
+puntos; su extrapolación de Richardson (orden observado 1,0) es ≈ 4805.
+
+`convection="exponential"` combina la derivada centrada de tres puntos con
+upwind según el Péclet de celda (Il'in–Allen–Southwell) y usa el balance de
+media celda en el quemador. El calor a la pared es el flujo de entalpía total
+de alimentación menos el que sale de esa media celda. En el mismo caso da
+4809,7 / 4804,7 / 4804,7 W/m² con 465 / 912 / 1750 nodos, y Su queda
+convergida al 0,06 % con el refinamiento de producción.
+
+Se regeneró la biblioteca (24 φ, 17 fracciones, mismo progreso), con
+`slope=0.02`, sin pasadas de refinamiento de entalpía: el defecto adiabático
+máximo es 1,74 % del presupuesto de la menor pérdida y la tabla final tiene
+92 016 vértices y ninguna celda plegada. Las referencias de los 44 casos se
+recalcularon con el mismo esquema a dos niveles (incertidumbre de q ≤ 0,27 %,
+mediana 0,004 %). El calor comparado es la pérdida conservativa
+`mdot*(h_feed-h_out)`.
+
+Convergen los 44 casos y pasan 42: los 33 con r ≤ 0,65 y 7 de los 9 que
+fallaban (error de q 0,26–1,85 %). El error con signo va de −2,0 % a
++1,5 % (16 negativos de 44): ya no hay sesgo sistemático. Los dos restantes
+fallan solo por la temperatura máxima en el frente (74,7 y 20,1 K), que
+corresponde a desplazamientos de 18 y 7 µm, por debajo del criterio de 20 µm
+de distancia de anclaje; la temperatura de salida coincide a menos de 1 K.
+Las referencias son nativas; Cantera solo dispone de upwind y exige mallas
+finas con extrapolación para servir de contraste.
+
+Tiempos en esta máquina, con cargas solapadas: biblioteca 465 s con 6
+procesos, referencias 500 s, tabla 12 s, retabulación y selección 31 s,
+colas 90 s con 6 procesos, validación 22,5 s. En una comparación controlada
+de dos familias (36 llamas) la generación pasa de 300 s a 116 s en serie.
+
+```sh
+python -m examples.generate_exponential_library --like runs/heat_loss_review/table/metadata.json --output runs/regen_exponential --jobs 6
+python -c "from kflame.fgm.nonadiabatic3d import build_nonadiabatic_table as b; b('runs/regen_exponential', progress_points=197)"
+python -m examples.retabulate_reduced_progress --source runs/regen_exponential --output runs/regen_progress
+python -m examples.select_reduced_progress --source runs/regen_progress --output runs/regen_selected --objective maximum_margin
+python -m examples.extend_reduced_fgm_tail --source runs/regen_selected --output runs/regen_table --endpoint-policy monotone_branch --jobs 6
+python -m examples.regenerate_native_references --cases docs/assets/reduced-burner-hpc --like runs/heat_loss_review/table/metadata.json --output runs/regen_references --jobs 6
+python -m examples.validate_against_native_references --table runs/regen_table --profiles runs/regen_exponential --references runs/regen_references --output runs/regen_validation.json --jobs 6
+```
+
 ## Reproducción
 
 Los tres primeros comandos reconstruyen datos publicados sin resolver llamas:
