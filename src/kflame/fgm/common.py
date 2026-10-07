@@ -296,7 +296,7 @@ def validate_fgm_table(
     table: dict[str, np.ndarray],
     *,
     mass_tolerance: float = 1.0e-6,
-    species_tolerance: float = 1.0e-8,
+    species_tolerance: float = 1.0e-7,
 ) -> dict[str, float | int | bool]:
     """Validate the numerical contract of a structured ``(Z, c)`` table.
 
@@ -377,6 +377,8 @@ def validate_fgm_table(
     if not np.all(np.isfinite(mass_fractions)):
         raise ValueError("Y contiene NaN o infinitos.")
     min_species = float(np.min(mass_fractions))
+    # Same admissible undershoot as the flame solver (Cantera's -1e-7 bound):
+    # a certified flamelet must not be rejected again when it is tabulated.
     if min_species < -float(species_tolerance):
         raise ValueError(
             f"La fracción másica mínima ({min_species:.3e}) excede la tolerancia."

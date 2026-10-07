@@ -62,12 +62,19 @@ def _jacobian_backend(problem):
 # ---------------------------------------------------------------------------
 #  Helpers de flujo difusivo
 # ---------------------------------------------------------------------------
-def _convection_weights(problem, u, rho, cp, lam_face, z):
-    """Scheme code and per-node convective weights (zeros for upwind)."""
+def _convection_weights(problem, u, rho, cp, lam_face, z, n_sp, rho_diffusivity_face=None):
+    """Scheme code, thermal (nodes, 4) and species (species, nodes, 2) weights.
+
+    Upwind returns zeros. Species use their own rho*D_k Peclet number when the
+    mixture-averaged face diffusivities are available, else the thermal one.
+    """
     convection = int(getattr(problem, "convection_code", 0))
     if convection == 0:
-        return 0, np.zeros((len(z), 4))
-    return convection, exponential_weights(u, rho, cp, lam_face, z)
+        return 0, np.zeros((len(z), 4)), np.zeros((n_sp, len(z), 2))
+    thermal, species = exponential_weights(u, rho, cp, lam_face, z, rho_diffusivity_face)
+    if rho_diffusivity_face is None:
+        species = np.broadcast_to(thermal[None, :, :2], (n_sp, len(z), 2))
+    return convection, thermal, np.ascontiguousarray(species)
 
 
 def _corrected_flux(Y_L: np.ndarray, Y_R: np.ndarray,
@@ -162,7 +169,7 @@ if _NUMBA_AVAILABLE:
     def _assemble_residual_numba_core(
         F, u, T, Y, z, rho, cp_n, omega, hk_n, lam_face, flux,
         invW, Y_in, T_prof, has_T_prof, solve_energy, j_fixed,
-        T_fixed, T_in, outlet_species_flux, inlet_mass_flux, convection, conv_w,
+        T_fixed, T_in, outlet_species_flux, inlet_mass_flux, convection, conv_w, conv_wy,
     ):
         n_pts = z.shape[0]
         n_sp = Y.shape[0]
@@ -249,7 +256,8 @@ if _NUMBA_AVAILABLE:
                     dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
                     dYdz = dYdz_up
                 else:
-                    dYdz = wp * (Y[k, j + 1] - Y[k, j]) + wm * (Y[k, j] - Y[k, j - 1])
+                    dYdz = (conv_wy[k, j, 1] * (Y[k, j + 1] - Y[k, j])
+                            + conv_wy[k, j, 0] * (Y[k, j] - Y[k, j - 1]))
                 conv = rho_u_j * dYdz
                 diff = 2.0 * (flux[k, j] - flux[k, j - 1]) / dz2
                 F[b + C_Y + k] = (omega[k, j] - conv - diff) / rho_j
@@ -379,6 +387,7 @@ def residual(
     #  2. Flujos difusivos en caras (n_pts-1 caras)
     # ------------------------------------------------------------------
     flux = np.empty((n_sp, n_pts - 1))
+    rho_diffusivity_face = None
 
     t_faces = _profile_start(problem)
     try:
@@ -428,6 +437,7 @@ def residual(
             lam_face = _to_numpy(lam_f)
             W_mix_f = _to_numpy(W_mix_f)
             dz_face = z[1:] - z[:-1]
+            rho_diffusivity_face = rho_face[None, :] * D_f
             if basis in ("molar", "mole"):
                 face_coeff = rho_face[None, :] * (W[:, None] / W_mix_f[None, :]) * D_f
             else:
@@ -457,7 +467,8 @@ def residual(
         return _profile_return(problem, "residual_full", t_profile, np.full(x.size, 1.0e20))
 
     _profile_record(problem, "residual_face_transport_and_flux", t_faces)
-    convection, conv_w = _convection_weights(problem, u, rho, cp_n, lam_face, z)
+    convection, conv_w, conv_wy = _convection_weights(
+        problem, u, rho, cp_n, lam_face, z, n_sp, rho_diffusivity_face)
     # OPT-3: Cache nodal properties for the Jacobian cache builder.
     # build_local_jacobian_cache() evaluates the exact same thermo/kinetics at
     # the same state.  Storing these here avoids that redundant evaluation.
@@ -499,7 +510,7 @@ def residual(
                 j_fixed, T_fixed, float(problem.T_in),
                 bool(_outlet_species_flux_bc(problem)),
                 float(getattr(problem, "inlet_mass_flux", -1.0)),
-                convection, conv_w,
+                convection, conv_w, conv_wy,
             )
             _profile_record(problem, "residual_assembly_numba", t_assembly)
             _apply_transient_terms(F_numba, x, problem, rdt, x_old)
@@ -559,7 +570,7 @@ def residual(
                 dYdz_up = (Y[k, jloc] - Y[k, jloc - 1]) / dz_up
                 dYdz = dYdz_up
             else:
-                dYdz = conv_w[j, 1] * (Y[k, j + 1] - Y[k, j]) + conv_w[j, 0] * (Y[k, j] - Y[k, j - 1])
+                dYdz = conv_wy[k, j, 1] * (Y[k, j + 1] - Y[k, j]) + conv_wy[k, j, 0] * (Y[k, j] - Y[k, j - 1])
             conv = rho_u_j * dYdz
             diff = 2.0 * (fp[k] - fm[k]) / dz2
             F[b + C_Y + k] = (omega[k, j] - conv - diff) / rho[j]
@@ -766,6 +777,7 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
     face_coeff = np.empty((n_sp, n_faces), dtype=float)
     multi_face_coeff = None
     soret_face_coeff = None
+    cache_rho_diffusivity = None
     flux_model = "mixture-averaged"
     dz_face = z[1:] - z[:-1]
 
@@ -804,6 +816,7 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
             lam_f = _to_numpy(lam_f)
             W_mix_f = _to_numpy(W_mix_f)
             lam_face[:] = lam_f
+            cache_rho_diffusivity = rho_f[None, :] * D_f
             if basis in ("molar", "mole"):
                 face_coeff[:] = rho_f[None, :] * (W[:, None] / W_mix_f[None, :]) * D_f
             else:
@@ -844,7 +857,8 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
     )
 
     # Convective weights are frozen at the base state, like transport.
-    convection, conv_w = _convection_weights(problem, u, rho, cp_n, lam_face, z)
+    convection, conv_w, conv_wy = _convection_weights(
+        problem, u, rho, cp_n, lam_face, z, n_sp, cache_rho_diffusivity)
 
     cache = {
         "n_pts": n_pts,
@@ -852,6 +866,7 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
         "nv": 2 + n_sp,
         "convection": int(convection),
         "conv_w": conv_w,
+        "conv_wy": conv_wy,
         "z": np.asarray(z, dtype=float),
         "W": W,
         "invW": invW,
@@ -1123,7 +1138,8 @@ def residual_local_rows(x: np.ndarray, problem, center_j: int,
 
             om_j = omega_local[:, jo]
             if exponential:
-                dYdz = wp * (Y[:, j + 1] - Y[:, j]) + wm * (Y[:, j] - Y[:, j - 1])
+                wy = cache["conv_wy"][:, j, :]
+                dYdz = wy[:, 1] * (Y[:, j + 1] - Y[:, j]) + wy[:, 0] * (Y[:, j] - Y[:, j - 1])
             else:
                 dYdz_up = (Y[:, jloc] - Y[:, jloc - 1]) / dz_up
                 dYdz = dYdz_up
@@ -1248,7 +1264,7 @@ if _NUMBA_AVAILABLE:
         multicomponent_flux, dz_face, W, invW, Y_in, T_prof,
         has_T_prof, solve_energy, j_fixed, T_fixed, T_in, p0, p1, n0,
         f0, n_faces, basis_molar, rho0_base, outlet_species_flux, inlet_mass_flux,
-        convection, conv_w,
+        convection, conv_w, conv_wy,
     ):
         n_batch = u.shape[0]
         n_sp = Y.shape[1]
@@ -1440,7 +1456,8 @@ if _NUMBA_AVAILABLE:
                             dYdz_up = (Y[ib, k, jloc_o] - Y[ib, k, jloc_m_o]) / dz_up
                             dYdz = dYdz_up
                         else:
-                            dYdz = wp * (Y[ib, k, jo + 1] - Y[ib, k, jo]) + wm * (Y[ib, k, jo] - Y[ib, k, jo - 1])
+                            dYdz = (conv_wy[k, j, 1] * (Y[ib, k, jo + 1] - Y[ib, k, jo])
+                                    + conv_wy[k, j, 0] * (Y[ib, k, jo] - Y[ib, k, jo - 1]))
                         conv = rho_u_j * dYdz
                         diff = 2.0 * (fp - fm) / dz2
                         vals_out[ib, base + C_Y + k] = (omega_local[ib, k, jo] - conv - diff) / rho_j
@@ -1635,6 +1652,7 @@ def residual_local_rows_batch_perturbed(
             float(getattr(problem, "inlet_mass_flux", -1.0)),
             int(cache.get("convection", 0)),
             cache.get("conv_w", np.zeros((n_pts, 4))),
+            cache.get("conv_wy", np.zeros((n_sp, n_pts, 2))),
         )
     except Exception as exc:
         problem.last_residual_error = f"Numba local fallback: {exc}"
@@ -1881,7 +1899,9 @@ def residual_local_rows_batch(x_batch: np.ndarray, problem, center_j: int,
 
             om_j = omega_local[:, :, jo]
             if exponential:
-                dYdz = wp * (Y[:, :, j + 1] - Y[:, :, j]) + wm * (Y[:, :, j] - Y[:, :, j - 1])
+                wy = cache["conv_wy"][:, j, :]
+                dYdz = (wy[None, :, 1] * (Y[:, :, j + 1] - Y[:, :, j])
+                        + wy[None, :, 0] * (Y[:, :, j] - Y[:, :, j - 1]))
             else:
                 Y_jloc = _take_point_values(Y, jloc)
                 Y_jloc_m = _take_point_values(Y, jloc_m)

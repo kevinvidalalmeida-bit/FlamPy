@@ -70,7 +70,9 @@ def _is_local_phi_step(
 
 
 from kflame.flame.config import FlameCase
-from kflame.flame.solver import solve_free_flame, SolveOptions
+from kflame.flame.solver import solve_free_flame, SolveOptions, _solve_flame_auto
+
+POLISH_TIME_BUDGET_S = 3.0  # a successful polish of a converged upwind flamelet takes ~0.3 s
 from kflame.flame.problem import FreeFlameProblem
 from kflame.flame.state import interpolate_state, pack_state, unpack_state
 from kflame.chemistry.mechanism import load_mechanism, resolve_mechanism as _resolve_mechanism
@@ -462,6 +464,7 @@ def make_solve_options(args: argparse.Namespace) -> SolveOptions:
         profile=bool(args.profile_solver),
         max_total_time_s=float(args.max_flame_time_s),
     )
+    opts.time_step_ladder = getattr(args, "time_step_ladder", None)
     opts.refine_Finf_limit = float(args.max_residual_inf)
     opts.final_Finf_limit = float(args.max_residual_inf)
     opts.acceptance_criterion = str(args.acceptance_criterion).strip().lower()
@@ -581,9 +584,10 @@ def solve_flame_native(
         opts.refine_grid_min = float(args.grid_min)
 
     selected_prediction: dict[str, Any] | None = None
+    continuation_state: dict[str, np.ndarray] | None = None
 
     def run_once(jacobian_mode: str):
-        nonlocal selected_prediction
+        nonlocal selected_prediction, continuation_state
         problem = FreeFlameProblem(
             flame_case, n_points=max(2, int(args.initial_grid_points)), mech_data=mech_data
         )
@@ -651,6 +655,12 @@ def solve_flame_native(
 
         problem.backend = problem.backend_factory(problem)
         run_opts.jacobian_mode = str(jacobian_mode)
+        # The composition continuation is always solved with first-order
+        # upwind, the audited route; a higher-order scheme then polishes each
+        # certified flamelet from its own converged state at the same phi.
+        requested_convection = int(getattr(problem, "convection_code", 0))
+        problem.convection_code = 0
+        continuation_state = None
         t0 = time.perf_counter()
         x_sol, solve_ok, report = solve_free_flame(problem, options=run_opts, x0=x0)
         report["max_jac_age_used"] = int(run_opts.max_jac_age)
@@ -696,6 +706,38 @@ def solve_flame_native(
                 "base_solved": bool(base_report.get("solved", False)),
                 "base_n_points": int(base_report.get("n_points_final", 0)),
             }
+        if requested_convection and bool(solve_ok):
+            continuation_state = dict(z=np.asarray(problem.z, dtype=float).copy(),
+                                      x=np.asarray(x_sol, dtype=float).copy())
+            problem.convection_code = requested_convection
+            polish_opts = copy.copy(opts)
+            polish_opts.jacobian_mode = str(jacobian_mode)
+            polish_opts.local_jacobian_refresh = False
+            # Usually ~0.3 s. On some continuation meshes the higher-order
+            # problem stalls in pseudo-time; bound that attempt and then solve
+            # this phi afresh through the cold route (upwind, then requested).
+            polish_opts.max_total_time_s = min(float(opts.max_total_time_s), POLISH_TIME_BUDGET_S)
+            t_polish = time.perf_counter()
+            x_polish, polish_ok, polish_report = _solve_flame_auto(problem, x_sol, polish_opts)
+            route = "same_phi_upwind_state"
+            if not polish_ok:
+                fresh = FreeFlameProblem(flame_case, n_points=max(2, int(args.initial_grid_points)),
+                                         mech_data=mech_data)
+                fresh.assume_finite_y = True
+                fresh.backend_factory = problem.backend_factory
+                fresh.backend = fresh.backend_factory(fresh)
+                cold_opts = copy.copy(polish_opts)
+                cold_opts.max_total_time_s = float(opts.max_total_time_s)
+                x_polish, polish_ok, polish_report = solve_free_flame(fresh, options=cold_opts, x0=None)
+                problem, route = fresh, "cold_upwind_then_requested"
+            x_sol, solve_ok = x_polish, polish_ok
+            polish_report["continuation_convection"] = dict(
+                scheme="upwind", n_points=int(continuation_state["z"].size),
+                final_accepted=report.get("final_accepted"), polish_route=route,
+                polish_time_s=float(time.perf_counter() - t_polish))
+            report = polish_report
+        else:
+            problem.convection_code = requested_convection
         dt = float(time.perf_counter() - t0)
         report["jacobian_mode"] = str(jacobian_mode)
         report["predictor_build_time_s"] = predictor_build_time_s
@@ -794,10 +836,11 @@ def solve_flame_native(
         predictor_kind=predictor_kind,
         prediction_defect=prediction_defect,
     )
+    seed_state = continuation_state if continuation_state is not None else dict(z=z, x=x_sol)
     next_solution = {
         "phi": np.array([float(phi)], dtype=float),
-        "z": z.copy(),
-        "x": np.asarray(x_sol, dtype=float).copy(),
+        "z": np.asarray(seed_state["z"], dtype=float).copy(),
+        "x": np.asarray(seed_state["x"], dtype=float).copy(),
     }
     continuation_trace = {
         "predictor_kind": predictor_kind,
@@ -990,6 +1033,8 @@ def build_argparser() -> argparse.ArgumentParser:
                    choices=("zero_gradient", "cantera_flux"),
                    help="Salida de especies: zero_gradient reproduce Outlet de Cantera FreeFlame; cantera_flux usa la condicion cruda de Flow1D.")
     p.set_defaults(upwind_factor=1.0)
+    p.add_argument("--time-step-ladder", type=float, default=None,
+                   help="Razon >1 de la escalera de pasos PTC-SER (p. ej. 1.4142); None = continuo.")
     p.add_argument("--convection-scheme", type=str, default="upwind",
                    choices=("upwind", "exponential"),
                    help="Conveccion: upwind de primer orden (Cantera) o exponential "

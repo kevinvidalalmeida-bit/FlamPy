@@ -74,7 +74,7 @@ def _dflux(df, face, col, k, v):
 def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     flux, df, lam, invW, yin, energy, has_profile, fixed,
                     outlet_flux, threshold, active_columns, inlet_mass_flux,
-                    convection, conv_w):
+                    convection, conv_w, conv_wy):
     nodes, nv = x.shape
     ns = nv-2
     blocks = np.zeros((nodes, 3, nv, nv))
@@ -171,8 +171,9 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                         dgradY = (_delta(up, col, v, k+2)-_delta(down, col, v, k+2))/dzup
                     else:
                         dy = _delta(j, col, v, k+2)
-                        gradY = wp*(x[j+1, k+2]-x[j, k+2])+wm*(x[j, k+2]-x[j-1, k+2])
-                        dgradY = wp*(_delta(j+1, col, v, k+2)-dy)+wm*(dy-_delta(j-1, col, v, k+2))
+                        ym, yp = conv_wy[k, j, 0], conv_wy[k, j, 1]
+                        gradY = yp*(x[j+1, k+2]-x[j, k+2])+ym*(x[j, k+2]-x[j-1, k+2])
+                        dgradY = yp*(_delta(j+1, col, v, k+2)-dy)+ym*(dy-_delta(j-1, col, v, k+2))
                     diff = 2*(fp-fm)/dz2
                     ddiff = 2*(dfp-dfm)/dz2
                     blocks[j, side, k+2, v] = (-du*gradY-u*dgradY+(dw-ddiff)/rho[j]
@@ -226,7 +227,8 @@ def build_analytic_blocks(x, problem, column_nodes=None):
         cache['hk_n'], drho, dcp, domega, cp_molar, flux, df, cache['lam_face'], b.invW,
         cache['Y_in'], cache['solve_energy'], cache['has_T_prof'], cache['j_fixed'],
         _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active,
-        float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']), cache['conv_w'])
+        float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']), cache['conv_w'],
+        cache['conv_wy'])
     result = BlockTridiagJacobian(np.ascontiguousarray(blocks[1:, 0]),
         np.ascontiguousarray(blocks[:, 1]), np.ascontiguousarray(blocks[:-1, 2]))
     result.use_compiled_substitution = bool(getattr(problem, 'use_compiled_block_substitution', True))

@@ -18,7 +18,7 @@ def _stream(value):
 
 def _settings(mechanism, temperature, pressure, width, transport, soret,
               initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
-              convection='upwind'):
+              convection='upwind', time_step_ladder=None):
     if transport not in ('mixture-averaged', 'multicomponent'):
         raise ValueError("transport must be 'mixture-averaged' or 'multicomponent'")
     if convection not in ('upwind', 'exponential'):
@@ -38,6 +38,7 @@ def _settings(mechanism, temperature, pressure, width, transport, soret,
         '--slope', str(slope), '--curve', str(curve), '--prune', str(prune),
         '--max-grid-points', str(max_points), '--max-flame-time-s', str(max_time),
         '--convection-scheme', convection,
+        *(['--time-step-ladder', repr(float(time_step_ladder))] if time_step_ladder is not None else []),
         *(['--loglevel', '1'] if verbose else []),
         *(['--soret-enabled'] if soret else []),
         *(['--multicomponent-bootstrap'] if transport == 'multicomponent' or soret else []),
@@ -316,7 +317,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  species=('CO2', 'H2O'), progress_species='CO2:1.0,H2O:1.0,CO:1.0,H2:0.5',
                  progress_points=241, adaptive_phi=True, target_defect=0.01,
                  max_bridges_per_round=10, max_adaptive_rounds=64,
-                 max_flamelets=256):
+                 max_flamelets=256, convection='upwind', time_step_ladder=None, jobs=1):
     """Build an accepted native FGM table on inlet composition Z and progress c.
 
     All arguments are keyword-only; physical inputs use SI units. Fuel and
@@ -340,8 +341,13 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
     new family; interpolation consistency is not experimental validation.
     """
     from kflame.fgm.generate import main
+    if time_step_ladder is not None and not (np.isfinite(time_step_ladder) and time_step_ladder > 1.):
+        raise ValueError('time_step_ladder must be None or a finite ratio > 1')
+    if not isinstance(jobs, int) or isinstance(jobs, bool) or jobs < 1:
+        raise ValueError('jobs must be a positive integer')
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
-                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose)
+                     initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
+                     convection, time_step_ladder)
     if not isinstance(progress_species, str) or not progress_species.strip():
         raise ValueError('progress_species must be a non-empty weighted species string')
     if not isinstance(progress_points, int) or progress_points < 2:
@@ -381,6 +387,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
             max_bridges_per_round=max_bridges_per_round,
             max_rounds=max_adaptive_rounds,
             max_flames=max_flamelets,
+            jobs=jobs,
         )
     else:
         main(command)

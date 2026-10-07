@@ -30,12 +30,15 @@ def test_weights_are_central_at_low_and_upwind_at_high_peclet(direction):
     phi = 3.+2.*z+7e3*z**2
     exact = 2.+1.4e4*z[1:-1]
     u = np.full(n, direction)
-    low = exponential_weights(u, np.ones(n), np.full(n, 1e-9), np.ones(n-1), z)
-    np.testing.assert_allclose(_derivative(low, phi), exact, rtol=1e-9)  # exact for quadratics
-    high = exponential_weights(u, np.ones(n), np.full(n, 1e14), np.ones(n-1), z)
+    low = exponential_weights(u, np.ones(n), np.full(n, 1e-9), np.ones(n-1), z)[0]
+    inner = slice(None, -1) if direction > 0 else slice(None)
+    np.testing.assert_allclose(_derivative(low, phi)[inner], exact[inner], rtol=1e-9)  # exact for quadratics
+    high = exponential_weights(u, np.ones(n), np.full(n, 1e14), np.ones(n-1), z)[0]
     dzm, dzp = np.diff(z)[:-1], np.diff(z)[1:]
     upwind = (phi[1:-1]-phi[:-2])/dzm if direction > 0 else (phi[2:]-phi[1:-1])/dzp
     np.testing.assert_allclose(_derivative(high, phi), upwind, rtol=1e-6)
+    if direction > 0:  # the node before the outflow copy is always one-sided upwind
+        np.testing.assert_allclose(_derivative(low, phi)[-1], upwind[-1], rtol=1e-12)
 
 
 def test_resolved_derivative_converges_at_second_order():
@@ -45,7 +48,7 @@ def test_resolved_derivative_converges_at_second_order():
         phi = np.tanh((z-5e-4)/1.5e-4)
         exact = (1.-phi[1:-1]**2)/1.5e-4
         # Cell Peclet proportional to dz, as for a fixed flow on a refined grid.
-        w = exponential_weights(np.ones(n), np.ones(n), np.full(n, 1.), np.full(n-1, 1e-1), z)
+        w = exponential_weights(np.ones(n), np.ones(n), np.full(n, 1.), np.full(n-1, 1e-1), z)[0]
         errors.append(np.max(abs(_derivative(w, phi)-exact)))
     order = np.log2(np.array(errors[:-1])/np.array(errors[1:]))
     assert np.all(order > 1.8), order
@@ -78,7 +81,7 @@ def test_cold_start_uses_upwind_then_solves_the_requested_scheme(monkeypatch):
         return np.zeros(3), True, {'final_accepted': True, 'grid_converged': True}
 
     monkeypatch.setattr(solver, '_solve_flame_auto', fake)
-    problem = type('P', (), {'convection_code': 1, 'n_points': 3})()
+    problem = type('P', (), {'convection_code': 1, 'n_points': 3, 'z': np.linspace(0., 1., 3), 'width': 1.})()
     _, ok, report = solver.solve_free_flame(problem)
     assert ok and calls == [(0, True), (1, False)]
     assert problem.convection_code == 1 and report['startup_convection']['scheme'] == 'upwind'
@@ -126,3 +129,43 @@ def test_free_flame_guess_is_translated_to_the_burner_surface():
     assert seed['T'][0] == pytest.approx(300.+.02*(T.max()-300.), rel=1e-6)
     assert np.interp(1000., seed['T'], seed['z']) < 2e-3  # flame moved from 11 mm to the surface
     np.testing.assert_allclose(seed['Y'].sum(axis=0), 1., atol=1e-12)
+
+
+def test_failed_continuation_restarts_through_upwind_from_the_same_seed_and_grid(monkeypatch):
+    import kflame.flame.solver as solver
+    calls = []
+
+    def fake(problem, x0, options):
+        calls.append((problem.convection_code, None if x0 is None else float(x0[0]), problem.n_points))
+        if len(calls) == 1:
+            problem.z, problem.n_points = np.linspace(0., 1., 7), 7  # failed attempt refined the grid
+            return np.full(3, 9.), False, {'final_accepted': False}
+        return np.full(3, float(len(calls))), True, {'final_accepted': True, 'grid_converged': True}
+
+    monkeypatch.setattr(solver, '_solve_flame_auto', fake)
+    problem = type('P', (), {'convection_code': 1, 'n_points': 3, 'z': np.linspace(0., 1., 3), 'width': 1.})()
+    x, ok, report = solver.solve_free_flame(problem, x0=np.full(3, 5.))
+    assert ok and calls == [(1, 5., 3), (0, 5., 3), (1, 2., 3)]
+    assert report['startup_convection']['scheme'] == 'upwind'
+    assert report['direct_requested_convection_attempt']['solved'] is False
+
+
+def test_species_share_the_thermal_weight_so_mass_fractions_sum_to_one():
+    z = np.cumsum(np.r_[0., np.random.default_rng(3).uniform(.5, 2., 30)])*1e-4
+    n = len(z)
+    rho_d = np.vstack([np.full(n-1, 1e3), np.full(n-1, 1e-9)])
+    thermal, species = exponential_weights(np.ones(n), np.ones(n), np.full(n, 1e3), np.full(n-1, 50.), z, rho_d)
+    assert species.shape == (2, n, 2)
+    np.testing.assert_array_equal(species[0], species[1])
+    np.testing.assert_array_equal(species[0, 1:-1], thermal[1:-1, :2])
+
+
+def test_downstream_coefficient_keeps_its_sign_on_stretched_grids():
+    # (1-theta)*|rho u|*dz_up <= 2*Gamma_down: no spurious extrema (e.g. negative Y).
+    z = np.cumsum(np.r_[0., np.geomspace(1e-6, 2e-3, 40)])
+    n = len(z)
+    gamma = np.random.default_rng(4).uniform(.02, .2, n-1)
+    thermal, _ = exponential_weights(np.ones(n), np.ones(n), np.full(n, 1.), gamma, z)
+    dzm, dzp, dz2 = np.diff(z)[:-1], np.diff(z)[1:], z[2:]-z[:-2]
+    diffusion_plus = 2.*gamma[1:]/(dz2*dzp)
+    assert np.all(thermal[1:-1, 1] <= diffusion_plus*(1+1e-12))

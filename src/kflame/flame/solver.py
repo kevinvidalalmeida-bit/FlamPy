@@ -2569,13 +2569,33 @@ def solve_free_flame(
     acceptance always belong to the requested scheme.
     """
     target = int(getattr(problem, "convection_code", 0))
-    if x0 is not None or target == 0:
+    if target == 0:
         return _solve_flame_auto(problem, x0, options)
     opts = options or SolveOptions()
     started = time.perf_counter()
+    if x0 is not None:
+        # A continuation seed is usually close enough for the requested scheme.
+        # A far predictor can stall it; then restart from the same seed and grid
+        # through upwind, as for a cold start.
+        grid = (np.asarray(problem.z, dtype=float).copy(), int(problem.n_points), float(problem.width))
+        x, ok, report = _solve_flame_auto(problem, x0, opts)
+        if ok:
+            return x, ok, report
+        problem.z, problem.n_points, problem.width = grid[0].copy(), grid[1], grid[2]
+        direct = dict(solved=False, final_accepted=report.get("final_accepted"),
+                      total_time_s=float(time.perf_counter() - started))
+        x_start, ok_start, startup = _solve_flame_seeded_through_upwind(problem, x0, opts, started)
+        startup["direct_requested_convection_attempt"] = direct
+        return x_start, ok_start, startup
+    return _solve_flame_seeded_through_upwind(problem, None, opts, started)
+
+
+def _solve_flame_seeded_through_upwind(problem, x0, opts, started):
+    """Solve with upwind from x0 (or cold), then the problem's scheme from it."""
+    target = int(problem.convection_code)
     problem.convection_code = 0
     try:
-        x_start, ok_start, startup = _solve_flame_auto(problem, None, opts)
+        x_start, ok_start, startup = _solve_flame_auto(problem, x0, opts)
     finally:
         problem.convection_code = target
     summary = dict(scheme="upwind", solved=bool(ok_start), n_points=int(problem.n_points),

@@ -42,16 +42,47 @@ def _select_bridges(
     return np.sqrt(phis[np.sort(selected)] * phis[np.sort(selected) + 1])
 
 
+_worker: dict[str, Any] = {}
+
+
+def _initialize_bridge_worker(args: Any, threads: int) -> None:
+    """Load the mechanism once per worker process for its bridge solves."""
+    native.configure_numba_kinetics_threads(threads)
+    _worker.update(
+        args=args,
+        mechanism=native.load_mechanism(native._resolve_mechanism(args.mech)),
+        options=native.make_solve_options(args),
+        weights=native.parse_progress_weights(args.progress_species),
+    )
+
+
+def _solve_bridge(task: tuple[float, Any, Any]):
+    phi, previous, previous2 = task
+    return native.solve_flame_native(
+        phi=phi, args=_worker["args"], mech_data=_worker["mechanism"], opts=_worker["options"],
+        progress_weights=_worker["weights"], prev_solution=previous, prev_prev_solution=previous2,
+    )
+
+
+def _neighbours(states: dict[float, Any], phi: float) -> tuple[Any, Any]:
+    lower = sorted(value for value in states if value < phi)
+    return (states[lower[-1]] if lower else None, states[lower[-2]] if len(lower) > 1 else None)
+
+
 def _check_progress_coordinate(record: native.FlameRecord) -> None:
     span = float(record.beta[-1] - record.beta[0])
     if not np.isfinite(record.beta).all() or abs(span) <= 1.0e-14:
         raise RuntimeError(f"Degenerate progress coordinate at phi={record.phi:g}.")
     raw_c = (record.beta - record.beta[0]) / span
+    # Sub-ppm post-flame overshoots of a higher-order convective scheme on the
+    # coarse outflow cells are accepted: tabulation monotonicizes c, and 1e-6
+    # stays three orders below the progress-grid resolution.
+    tolerance = 1.0e-6
     if (
         not np.isfinite(raw_c).all()
-        or raw_c.min() < -1.0e-7
-        or raw_c.max() > 1.0 + 1.0e-7
-        or np.diff(raw_c).min() < -1.0e-7
+        or raw_c.min() < -tolerance
+        or raw_c.max() > 1.0 + tolerance
+        or np.diff(raw_c).min() < -tolerance
     ):
         raise RuntimeError(f"Progress coordinate is not monotone and bounded at phi={record.phi:g}.")
 
@@ -103,8 +134,15 @@ def build_adaptive_fgm(
     max_bridges_per_round: int,
     max_rounds: int,
     max_flames: int,
+    jobs: int = 1,
 ) -> Path:
-    """Solve and refine an FGM family until its internal defect is acceptable."""
+    """Solve and refine an FGM family until its internal defect is acceptable.
+
+    The requested flamelets form one continuation chain and are solved in
+    order. With jobs>1 the bridges of each later round run in parallel
+    processes; each is seeded from the flamelets available when its round
+    starts, so its continuation predictor may differ from a serial run.
+    """
     initial_phis = np.asarray(initial_phis, dtype=float)
     if (
         initial_phis.ndim != 1
@@ -131,6 +169,26 @@ def build_adaptive_fgm(
     progress_weights = native.parse_progress_weights(args.progress_species)
     options = native.make_solve_options(args)
 
+    pool = None
+    if jobs > 1:
+        from concurrent.futures import ProcessPoolExecutor
+        threads = max(1, int(args.numba_kinetics_threads_resolved))
+        pool = ProcessPoolExecutor(max_workers=jobs, initializer=_initialize_bridge_worker,
+                                   initargs=(args, threads))
+    try:
+        return _adaptive_rounds(
+            args=args, initial_phis=initial_phis, output_dir=output_dir, target_defect=target_defect,
+            max_bridges_per_round=max_bridges_per_round, max_rounds=max_rounds, max_flames=max_flames,
+            started=started, mechanism=mechanism, species_names=species_names,
+            progress_weights=progress_weights, options=options, pool=pool)
+    finally:
+        if pool is not None:
+            pool.shutdown()
+
+
+def _adaptive_rounds(*, args, initial_phis, output_dir, target_defect, max_bridges_per_round,
+                     max_rounds, max_flames, started, mechanism, species_names, progress_weights,
+                     options, pool):
     records: dict[float, native.FlameRecord] = {}
     states: dict[float, dict[str, np.ndarray]] = {}
     traces: list[dict[str, Any]] = []
@@ -145,25 +203,32 @@ def build_adaptive_fgm(
         flush=True,
     )
     for round_index in range(max_rounds + 1):
-        for phi in pending:
+        role = "requested" if round_index == 0 else "bridge"
+        parallel = pool is not None and round_index > 0 and len(pending) > 1
+        if parallel:
+            snapshot = dict(states)
+            tasks = [(float(phi), *_neighbours(snapshot, float(phi))) for phi in pending]
+            print(f"Solving {len(tasks)} bridge flamelets in parallel ...", flush=True)
+            solved = list(pool.map(_solve_bridge, tasks))
+        for index, phi in enumerate(pending):
             phi = float(phi)
-            lower = sorted(value for value in states if value < phi)
-            previous = states[lower[-1]] if lower else None
-            previous2 = states[lower[-2]] if len(lower) > 1 else None
-            role = "requested" if round_index == 0 else "bridge"
-            print(
-                f"[{len(records) + 1}] Solving {role} flamelet phi={phi:.6g} ...",
-                flush=True,
-            )
-            record, state, trace = native.solve_flame_native(
-                phi=phi,
-                args=args,
-                mech_data=mechanism,
-                opts=options,
-                progress_weights=progress_weights,
-                prev_solution=previous,
-                prev_prev_solution=previous2,
-            )
+            if parallel:
+                record, state, trace = solved[index]
+            else:
+                previous, previous2 = _neighbours(states, phi)
+                print(
+                    f"[{len(records) + 1}] Solving {role} flamelet phi={phi:.6g} ...",
+                    flush=True,
+                )
+                record, state, trace = native.solve_flame_native(
+                    phi=phi,
+                    args=args,
+                    mech_data=mechanism,
+                    opts=options,
+                    progress_weights=progress_weights,
+                    prev_solution=previous,
+                    prev_prev_solution=previous2,
+                )
             record.requested = round_index == 0
             record.bridge = not record.requested
             accepted = bool(record.solve_ok and record.final_accepted)

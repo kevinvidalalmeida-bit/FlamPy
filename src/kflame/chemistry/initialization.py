@@ -1,6 +1,8 @@
 """Native fresh-mixture and HP-equilibrium initialization; no Cantera import."""
 from __future__ import annotations
 
+import hashlib
+
 import numpy as np
 from scipy.optimize import brentq, least_squares, linprog
 from scipy.special import logsumexp
@@ -129,8 +131,35 @@ def _equilibrium_moles(mech: MechanismData, thermo: NativeThermo, T: float,
     return np.exp(np.clip(log_n, -700.0, 700.0)) * participating
 
 
+_HP_EQUILIBRIUM_CACHE = {}
+
+
 def hp_equilibrium(mech: MechanismData, T_in: float, P: float, Y_in: np.ndarray):
-    """Ideal-gas adiabatic equilibrium at constant enthalpy and pressure."""
+    """Ideal-gas adiabatic equilibrium at constant enthalpy and pressure.
+
+    Memoized for identical inputs across mechanism copies: every burner of a
+    family, retries and continuations share the same feed. The key holds the
+    thermodynamic and elemental data that define the equilibrium.
+    """
+    Y_key = np.asarray(Y_in, dtype=float)
+    fingerprint = mech.__dict__.get('_equilibrium_fingerprint')
+    if fingerprint is None:
+        digest = hashlib.sha256()
+        for array in (mech.nasa_low, mech.nasa_high, mech.nasa_Tmid, mech.molecular_weights, mech.atom_matrix):
+            digest.update(np.ascontiguousarray(array, dtype=float).tobytes())
+        digest.update('|'.join(mech.species_names).encode())
+        digest.update(np.array([mech.min_temperature, mech.max_temperature, mech.ref_pressure], dtype=float).tobytes())
+        fingerprint = mech.__dict__['_equilibrium_fingerprint'] = digest.hexdigest()
+    key = (fingerprint, float(T_in), float(P), Y_key.tobytes())
+    if key not in _HP_EQUILIBRIUM_CACHE:
+        if len(_HP_EQUILIBRIUM_CACHE) >= 4096:
+            _HP_EQUILIBRIUM_CACHE.clear()
+        _HP_EQUILIBRIUM_CACHE[key] = _hp_equilibrium(mech, T_in, P, Y_key)
+    T_eq, Y_eq, rho_eq = _HP_EQUILIBRIUM_CACHE[key]
+    return T_eq, Y_eq.copy(), rho_eq
+
+
+def _hp_equilibrium(mech: MechanismData, T_in: float, P: float, Y_in: np.ndarray):
     thermo = NativeThermo(mech)
     Y_in = np.asarray(Y_in, dtype=float)
     if not np.isfinite(T_in) or not np.isfinite(P) or T_in <= 0.0 or P <= 0.0:
