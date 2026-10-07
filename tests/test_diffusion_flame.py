@@ -10,12 +10,13 @@ from kflame.chemistry.mechanism import load_mechanism,resolve_mechanism
 from kflame.flame.diffusion import DiffusionCase,DiffusionFlameProblem,upwind_gradient
 
 
-def problem():
+def problem(transport='mixture-averaged',soret=False):
     mech=load_mechanism(resolve_mechanism('h2o2.yaml'))
     feeds=[]
     for text in ('H2','O2:1,N2:3.76'):
         y=_composition(text,mech.species_names)*mech.molecular_weights;feeds.append(y/y.sum())
-    case=DiffusionCase(resolve_mechanism('h2o2.yaml'),*feeds,fuel_mass_flux=.05,oxidizer_mass_flux=.15)
+    case=DiffusionCase(resolve_mechanism('h2o2.yaml'),*feeds,fuel_mass_flux=.05,oxidizer_mass_flux=.15,
+                       transport_model=transport,soret_enabled=soret)
     return DiffusionFlameProblem(case,mech,np.linspace(0,.02,7))
 
 
@@ -35,6 +36,47 @@ def test_colored_jacobian_matches_independent_columns():
         shifted=x.copy();shifted[column]+=step
         expected=(p.residual(shifted)-base)/step
         np.testing.assert_allclose(actual[:,column],expected,rtol=1e-9,atol=1e-7)
+
+
+@pytest.mark.parametrize('transport,soret',[('mixture-averaged',False),('multicomponent',True)])
+def test_premixed_thermal_reuse_preserves_diffusion_jacobian(transport,soret):
+    p=problem(transport,soret);x=p.pack(p.initial_fields());base=p.residual(x)
+    cached=p.properties(p.unpack(x))
+    actual=p.jacobian(x,p.residual,base,
+        flow_fun=lambda value:p.residual(value,cached_properties=cached),
+        thermo_fun=lambda value,thermal:p.residual(value,nodal_thermo=thermal),base_thermo=cached[:4])
+    expected=p.jacobian(x,p.residual,base)
+    np.testing.assert_allclose(actual.toarray(),expected.toarray(),rtol=2e-8,atol=2e-6)
+
+
+@pytest.mark.parametrize('transport,soret',[('mixture-averaged',False),('mixture-averaged',True),
+                                          ('multicomponent',False),('multicomponent',True)])
+def test_cached_flow_columns_are_exact_and_include_a_donor_switch(transport,soret,monkeypatch):
+    p=problem(transport,soret);x=p.pack(p.initial_fields())
+    cached=p.properties(p.unpack(x));shifted=x.copy()
+    shifted[3*p.nv]*=-1.
+    shifted[2*p.nv+1]*=1.01;shifted[-1]*=1.03
+    expected=p.residual(shifted)
+    def no_refresh(*args,**kwargs):
+        raise AssertionError('A flow-only perturbation refreshed thermochemical properties')
+    monkeypatch.setattr(p,'properties',no_refresh)
+    np.testing.assert_array_equal(p.residual(shifted,cached_properties=cached),expected)
+
+
+@pytest.mark.parametrize('transport,soret',[('mixture-averaged',False),('mixture-averaged',True),
+                                          ('multicomponent',False),('multicomponent',True)])
+def test_residual_conserves_species_mass_and_honors_fixed_temperature(transport,soret):
+    p=problem(transport,soret);fields=p.initial_fields();x=p.pack(fields)
+    residual=p.residual(x)[:-1].reshape(p.n,p.nv)
+    # Sum of species transport/reaction equations vanishes for sum(Y)=1,
+    # independently of the unconverged flow/temperature seed.
+    np.testing.assert_allclose(residual[1:-1,3:].sum(axis=1),0.,atol=1e-8)
+    fixed=p.residual(x,previous=x*1.0001,dt=1e-4,fixed_temperature=fields['T'])
+    np.testing.assert_allclose(fixed[:-1].reshape(p.n,p.nv)[1:-1,2],0.,atol=0.)
+    for boundary in (0,p.n-1):
+        changed=x.copy();changed[boundary*p.nv+3+p.excess[boundary]]+=.001
+        row=p.residual(changed)[boundary*p.nv+3+p.excess[boundary]]
+        assert row==pytest.approx(.001,abs=1e-14)
 
 
 def test_native_diffusion_does_not_import_cantera(tmp_path,monkeypatch):

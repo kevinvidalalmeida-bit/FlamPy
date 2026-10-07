@@ -168,3 +168,68 @@ exacta de las matrices. La suite completa pasa 148 pruebas.
 Los [resultados, límites y hashes guardados](assets/diffusion/validation.json)
 permiten auditar estas afirmaciones. `examples/example_diffusion.py` ejecuta
 el flujo completo de generación y validación en un directorio nuevo.
+
+## Revisión de tiempos y reutilización de las premezcladas
+
+Los tiempos anteriores corresponden a **una llama detallada**, incluyendo
+Newton, continuación temporal y refinamiento. La consulta de una tabla FGM
+ya construida tiene un coste distinto. Se repitió la comparación secuencial
+con Cantera 3.2, con los mismos flujos, temperaturas, presión, separación y
+umbrales de refinamiento. Cada solver usa su propia malla y estimación inicial.
+
+El perfil inicial de CH4 registró 51 044 evaluaciones del residual y 287
+construcciones del Jacobiano. Estas últimas ocuparon 58.8 de 76.2 segundos
+medidos, incluyendo química, transporte y ensamblaje. La química nodal sola
+ocupó 20.2 s. Las categorías son inclusivas y no deben sumarse entre sí.
+No es solo un coste de Soret: ese caso de metano no utiliza Soret.
+
+Se trasladó el kernel `chemistry.jacobian.grouped_core` utilizado en las
+premezcladas. Para cada nodo calcula los factores NASA y de reacción en las
+dos temperaturas requeridas y los reutiliza en las perturbaciones de especies.
+La composición, densidad, terceros cuerpos y falloff se actualizan para cada
+perturbación; el resto de nodos conserva sus propiedades exactamente. Los
+coeficientes de transporte mantienen sus derivadas completas. Las columnas
+de m, V y Lambda reutilizan todas las propiedades porque no cambian T ni Y,
+incluido el caso donde la perturbación cambia el sentido del flujo axial.
+
+El ensamblaje del residual pasa a un kernel Numba sin `fastmath`, conservando
+las ecuaciones estacionarias, temporales y de temperatura fijada. Se mantiene
+la factorización dispersa con el autovalor global de presión. Los lotes térmicos
+tienen una cota estimada de 96 MiB; mecanismos o mallas que la superen usan
+el evaluador ordinario. No se crean coeficientes específicos por combustible.
+
+El perfil posterior mide 45.0 s para CH4 frente a 76.2 s antes (1.69×),
+1.75 s para H2 frente a 3.43 s (1.96×), y 5.65 s para H2 multicomponente con
+Soret frente a 8.09 s (1.43×). En CH4, la química nodal y agrupada conjuntamente
+ocupa 4.92 s y el Jacobiano completo 29.2 s. Los límites físicos siguen pasando.
+
+La última ejecución **sin instrumentación**, con kernels compilados, produjo:
+
+| Una llama | Solver nativo | Cantera | Relación nativo/Cantera |
+|---|---:|---:|---:|
+| CH4/aire, mezcla | 33.37 s | 27.63 s | 1.21 |
+| H2/aire, mezcla | 1.27 s | 0.57 s | 2.24 |
+| H2/aire, multicomponente + Soret | 4.00 s | 2.22 s | 1.80 |
+
+Son muestras locales individuales, no una garantía de velocidad. El nativo
+sigue siendo más lento que Cantera en estas tres mediciones. CH4 tiene 53
+especies y 74 033 incógnitas en la malla final; permanecen costes importantes
+de transporte y de construcción/factorización del Jacobiano. Los residuos
+completos mantienen la tolerancia `1e-7`, y las diferencias de perfiles frente
+a Cantera conservan los límites de la validación previa. La suite pasa 158
+pruebas, incluyendo equivalencia del Jacobiano térmico y ambos sentidos del
+flujo para transporte promediado/multicomponente con y sin Soret.
+
+La [auditoría de tiempos](assets/diffusion/timing-review.json) conserva hashes,
+perfiles de coste y métricas físicas. Para reproducirla:
+
+```sh
+python examples/benchmark_diffusion_solver.py --output runs/timing_profiled
+python examples/benchmark_diffusion_solver.py --output runs/timing_plain --no-profile
+```
+
+Cantera 3.2 [usa Newton amortiguado y continuación temporal](https://cantera.org/3.2/reference/onedim/nonlinear-solver.html)
+y [conserva el transporte durante el Jacobiano](https://github.com/Cantera/cantera/blob/v3.2.0/src/oneD/Flow1D.cpp).
+Se ensayó esa aproximación completa, pero aumentó las iteraciones del solver
+nativo y no mejoró el tiempo global de metano. Se conserva la reutilización
+exacta de termodinámica y se actualiza el transporte en las columnas T/Y.

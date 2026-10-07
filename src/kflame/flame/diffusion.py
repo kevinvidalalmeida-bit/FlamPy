@@ -16,6 +16,7 @@ from kflame.chemistry.backend import NativeSpeciesBackend
 from kflame.chemistry.initialization import hp_equilibrium, oxygen_demand
 from kflame.flame.equations import _corrected_flux_frozen
 from kflame.flame.solver import AdaptiveRefiner
+from kflame.flame.diffusion_kernels import assemble_residual
 
 
 @dataclass
@@ -149,10 +150,14 @@ class DiffusionFlameProblem:
         return dict(m=blocks[:,0]*self.mref,V=blocks[:,1]*self.aref,
                     T=blocks[:,2]*self.Tref,Y=blocks[:,3:].T,Lambda=x[-1]*self.lref)
 
-    def properties(self,fields):
+    def properties(self,fields, *, nodal_thermo=None):
         T,Y = fields['T'],fields['Y']
-        omega,hk = np.empty_like(Y),np.empty_like(Y)
-        rho,cp = self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
+        if nodal_thermo is None:
+            omega,hk = np.empty_like(Y),np.empty_like(Y)
+            rho,cp = self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
+            hk*=self.mech_data.inv_molecular_weights[:,None]
+        else:
+            rho,cp,omega,hk=nodal_thermo
         Tf,Yf = .5*(T[:-1]+T[1:]),.5*(Y[:,:-1]+Y[:,1:])
         if self.backend.uses_multicomponent_flux:
             rhof,lam,Wf,multi,dthermal = self.backend.eval_multicomponent_face_transport(Tf,Yf)
@@ -168,62 +173,69 @@ class DiffusionFlameProblem:
             if self.soret_enabled:
                 J -= self.backend.eval_mixture_thermal_diffusion(Tf,Yf)/Tf[None,:]*np.diff(T)[None,:]/self.dz
         viscosity = self.backend.transport.viscosity(Tf,self.thermo.Y_to_X(Yf))
-        return rho,cp,omega,hk*self.mech_data.inv_molecular_weights[:,None],lam,J,viscosity
+        return rho,cp,omega,hk,lam,J,viscosity
 
-    def residual(self,x, *, fixed_temperature=None, previous=None, dt=None):
+    def residual(self,x, *, fixed_temperature=None, previous=None, dt=None,cached_properties=None,nodal_thermo=None):
         f = self.unpack(x)
         m,V,T,Y,L = (f[k] for k in ('m','V','T','Y','Lambda'))
-        rho,cp,omega,hk,lam,J,mu = self.properties(f)
-        out = np.zeros((self.n,self.nv))
-        continuity = np.diff(m)+self.dz*(rho[:-1]*V[:-1]+rho[1:]*V[1:])
-        out[0,0],out[-1,0] = m[0]-self.case.fuel_mass_flux,m[-1]+self.case.oxidizer_mass_flux
-        out[1:-1,0] = continuity[:-1]
-        out[:,0] /= self.mref
-        out[0,1],out[-1,1] = V[0]/self.aref,V[-1]/self.aref
-        out[1:-1,1] = (m[1:-1]*upwind_gradient(V,self.z,m)+rho[1:-1]*V[1:-1]**2+L
-                       -np.diff(mu*np.diff(V)/self.dz)/self.volumes)/self.lref
-        out[0,2],out[-1,2] = (T[0]-self.case.fuel_temperature)/self.Tref,(T[-1]-self.case.oxidizer_temperature)/self.Tref
-        out[1:-1,2] = (m[1:-1]*cp[1:-1]*upwind_gradient(T,self.z,m)
-                       -np.diff(lam*np.diff(T)/self.dz)/self.volumes
-                       +np.sum(.5*(J[:,:-1]+J[:,1:])*upwind_gradient(hk,self.z,m),axis=0)
-                       +np.sum(hk[:,1:-1]*omega[:,1:-1],axis=0))/self.energy_scale
-        species = np.zeros_like(Y)
-        species[:,0] = (m[0]*(Y[:,0]-self.case.fuel_Y)+J[:,0])/self.mref
-        species[:,-1] = (m[-1]*(Y[:,-1]-self.case.oxidizer_Y)+J[:,-1])/self.mref
-        species[:,1:-1] = (m[None,1:-1]*upwind_gradient(Y,self.z,m)
-                          +np.diff(J,axis=1)/self.volumes-omega[:,1:-1])/self.species_scale
-        out[:,3:] = species.T
-        if previous is not None:
-            old = self.unpack(previous)
-            out[1:-1,1] += rho[1:-1]*(V[1:-1]-old['V'][1:-1])/(dt*self.lref)
-            out[1:-1,2] += rho[1:-1]*cp[1:-1]*(T[1:-1]-old['T'][1:-1])/(dt*self.energy_scale)
-            out[1:-1,3:] += (rho[None,1:-1]*(Y[:,1:-1]-old['Y'][:,1:-1])/(dt*self.species_scale)).T
-        if fixed_temperature is not None:
-            out[1:-1,2] = (T[1:-1]-fixed_temperature[1:-1])/self.Tref
-        # Normalization replaces one species equation only at the two inlets.
-        # Interior species retain their differential equations, including the
-        # equation governing deviations of sum(Y) during Newton iterations.
-        for boundary in (0,self.n-1):
-            out[boundary,3+self.excess[boundary]]=Y[:,boundary].sum()-1.
-        return np.r_[out.ravel(),continuity[-1]/self.mref]
+        rho,cp,omega,hk,lam,J,mu = self.properties(f,nodal_thermo=nodal_thermo) if cached_properties is None else cached_properties
+        old=f if previous is None else self.unpack(previous)
+        return assemble_residual(m,V,T,Y,L,rho,cp,omega,hk,lam,J,mu,self.dz,
+            self.case.fuel_Y,self.case.oxidizer_Y,self.case.fuel_mass_flux,self.case.oxidizer_mass_flux,
+            self.case.fuel_temperature,self.case.oxidizer_temperature,
+            self.mref,self.aref,self.Tref,self.lref,self.species_scale,self.energy_scale,self.excess,
+            previous is not None,old['V'],old['T'],old['Y'],1. if dt is None else dt,
+            fixed_temperature is not None,T if fixed_temperature is None else fixed_temperature)
 
-    def jacobian(self,x,fun,base):
-        """Color nonoverlapping node triples; cost is independent of mesh size."""
+    def _perturbed_node_thermo(self,x,nodes):
+        """Reuse the premixed backend's exact [base,T,Y...] thermal batches."""
+        nv=self.ns+2
+        fields=self.unpack(x)
+        temperatures=np.repeat(fields['T'][nodes],nv)
+        compositions=np.repeat(fields['Y'][:,nodes],nv,axis=1)
+        tcolumns=nodes*self.nv+2
+        temperatures[1::nv]=(x[tcolumns]+1e-7*np.maximum(abs(x[tcolumns]),1.))*self.Tref
+        species=np.arange(self.ns)[:,None]
+        columns=np.arange(len(nodes))[None,:]*nv+2+species
+        compositions[species,columns]+=1e-10+1e-5*abs(fields['Y'][:,nodes])
+        omega=np.empty_like(compositions);hk=np.empty_like(compositions)
+        rho,cp=self.backend.eval_jacobian_thermo_kinetics_into(temperatures,compositions,omega,hk)
+        hk*=self.mech_data.inv_molecular_weights[:,None]
+        return rho.reshape(-1,nv),cp.reshape(-1,nv),omega.reshape(self.ns,-1,nv),hk.reshape(self.ns,-1,nv)
+
+    def jacobian(self,x,fun,base, *, flow_fun=None,thermo_fun=None,base_thermo=None):
+        """Color node triples; the number of residual batches is mesh-independent."""
         rows,cols,values = [],[],[]
-        for component in range(self.nv):
-            for nodes,lengths,rr in self.color_rows:
+        for nodes,lengths,rr in self.color_rows:
+            # Bound temporary memory for large mechanisms; the ordinary path
+            # retains identical equations and full derivatives when exceeded.
+            bytes_needed=8*len(nodes)*(self.ns+2)*(3*self.ns+3)
+            bank=(self._perturbed_node_thermo(x,nodes) if thermo_fun is not None
+                  and base_thermo is not None and bytes_needed<=96*1024**2 else None)
+            for component in range(self.nv):
                 indices = nodes*self.nv+component
                 if not len(indices):
                     continue
                 step = (1e-10+1e-5*abs(x[indices]) if component>=3
                         else 1e-7*np.maximum(abs(x[indices]),1.))
                 trial = x.copy();trial[indices] += step
-                difference = fun(trial)-base
+                if component<2 and flow_fun is not None:
+                    difference=flow_fun(trial)-base
+                elif bank is not None and component>=2:
+                    thermal=[value.copy() for value in base_thermo]
+                    column=component-1
+                    thermal[0][nodes]=bank[0][:,column]
+                    thermal[1][nodes]=bank[1][:,column]
+                    thermal[2][:,nodes]=bank[2][:,:,column]
+                    thermal[3][:,nodes]=bank[3][:,:,column]
+                    difference=thermo_fun(trial,thermal)-base
+                else:
+                    difference=fun(trial)-base
                 rows.append(rr)
                 cols.append(np.repeat(indices,lengths))
                 values.append(difference[rr]/np.repeat(step,lengths))
         trial=x.copy();increment=1e-7*max(abs(x[-1]),1.);trial[-1]+=increment
-        difference=(fun(trial)-base)/increment
+        difference=((fun(trial) if flow_fun is None else flow_fun(trial))-base)/increment
         rr=np.flatnonzero(difference)
         rows.append(rr);cols.append(np.full(len(rr),len(x)-1));values.append(difference[rr])
         return csc_matrix((np.concatenate(values),(np.concatenate(rows),np.concatenate(cols))),shape=(len(x),len(x)))
@@ -243,7 +255,20 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
             return x,True,'converged'
         if factor is None or age>=4:
             try:
-                factor=splu(problem.jacobian(x,fun,base));age=0
+                if isinstance(problem,DiffusionFlameProblem):
+                    # m, V and Lambda do not change T or Y. Reuse exact
+                    # properties only for these columns, including a donor
+                    # switch at stagnation; all T/Y derivatives stay complete.
+                    cached=problem.properties(problem.unpack(x))
+                    flow_fun=lambda value:problem.residual(value,fixed_temperature=fixed_temperature,
+                        previous=previous,dt=dt,cached_properties=cached)
+                    thermo_fun=lambda value,thermal:problem.residual(value,fixed_temperature=fixed_temperature,
+                        previous=previous,dt=dt,nodal_thermo=thermal)
+                    matrix=problem.jacobian(x,fun,base,flow_fun=flow_fun,
+                        thermo_fun=thermo_fun,base_thermo=cached[:4])
+                else:
+                    matrix=problem.jacobian(x,fun,base)
+                factor=splu(matrix);age=0
             except RuntimeError:
                 return x,False,'singular_jacobian'
         age+=1

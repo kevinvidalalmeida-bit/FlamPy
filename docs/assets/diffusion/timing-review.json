@@ -1,0 +1,324 @@
+{
+  "date": "2026-10-07",
+  "scope": "One detailed diffusion flame per case; same feeds, pressure, separation and refinement thresholds. Independent initial guesses and grids. Compiled native kernels, one sequential sample per configuration.",
+  "timing_warning": "Profiled and unprofiled wall times are reported separately. Measurements are local, not a statistical speed guarantee.",
+  "cases": {
+    "CH4": {
+      "latest_unprofiled": {
+        "native_s": 33.36902660000487,
+        "native_api_s": 33.57244720000017,
+        "cantera_s": 27.632173799996963,
+        "native_over_cantera": 1.2076149651320063,
+        "native_nodes": 1322,
+        "cantera_nodes": 1338,
+        "validation_passed": true,
+        "metrics": {
+          "temperature_K": 0.6399797835185836,
+          "species_absolute": 0.00043170836409778257,
+          "velocity_relative": 0.0002904591943687633,
+          "pressure_eigenvalue_relative": 7.474914680884232e-05,
+          "heat_release_peak_relative": 4.933292121430132e-05,
+          "peak_temperature_K": 0.011296079982912488
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_before": {
+        "native_s": 76.18785400000343,
+        "cantera_s": 34.203264899988426,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 51057,
+            "time_s": 5.891053699029726
+          },
+          "thermo_kinetics": {
+            "calls": 51045,
+            "time_s": 20.21725919797609
+          },
+          "viscosity": {
+            "calls": 51045,
+            "time_s": 9.77870359919325
+          },
+          "residual_inclusive": {
+            "calls": 51044,
+            "time_s": 55.51259529890376
+          },
+          "jacobian_inclusive": {
+            "calls": 287,
+            "time_s": 58.804530899913516
+          },
+          "lu_factorization": {
+            "calls": 287,
+            "time_s": 6.830116499782889
+          },
+          "linear_solves": {
+            "calls": 3400,
+            "time_s": 1.9669279000954702
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 4.983931299997494
+          }
+        },
+        "source_sha256": "c5f8bfa001c619e7906bb6f8632df94e27adad15eb09894ef7c088d9c034f9b9"
+      },
+      "profiled_after": {
+        "native_s": 44.97549829998752,
+        "cantera_s": 32.11419570000726,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 49490,
+            "time_s": 4.945809298325912
+          },
+          "thermo_kinetics": {
+            "calls": 2822,
+            "time_s": 1.0524564005754655
+          },
+          "viscosity": {
+            "calls": 49478,
+            "time_s": 8.870901700865943
+          },
+          "residual_inclusive": {
+            "calls": 51205,
+            "time_s": 21.57274579827208
+          },
+          "grouped_jacobian_thermo": {
+            "calls": 864,
+            "time_s": 3.8638051000307314
+          },
+          "jacobian_inclusive": {
+            "calls": 288,
+            "time_s": 29.214150199884898
+          },
+          "lu_factorization": {
+            "calls": 288,
+            "time_s": 6.165672099989024
+          },
+          "linear_solves": {
+            "calls": 3392,
+            "time_s": 1.7855659997148905
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 4.7856273999932455
+          }
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_native_speedup": 1.6939857673577918
+    },
+    "H2": {
+      "latest_unprofiled": {
+        "native_s": 1.2666117999906419,
+        "native_api_s": 1.2679090000019642,
+        "cantera_s": 0.5661467000027187,
+        "native_over_cantera": 2.237250168524447,
+        "native_nodes": 1071,
+        "cantera_nodes": 1058,
+        "validation_passed": true,
+        "metrics": {
+          "temperature_K": 4.502371001373604,
+          "species_absolute": 0.00052265462179657,
+          "velocity_relative": 0.0017936732516307802,
+          "pressure_eigenvalue_relative": 0.00029527597056051776,
+          "heat_release_peak_relative": 0.0008882593689111797,
+          "peak_temperature_K": 0.184749600934083
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_before": {
+        "native_s": 3.426898899997468,
+        "cantera_s": 0.8106592999974964,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 6916,
+            "time_s": 0.1409969999367604
+          },
+          "thermo_kinetics": {
+            "calls": 6905,
+            "time_s": 0.447209899808513
+          },
+          "viscosity": {
+            "calls": 6905,
+            "time_s": 0.16853730035654735
+          },
+          "residual_inclusive": {
+            "calls": 6904,
+            "time_s": 2.7239787003345555
+          },
+          "jacobian_inclusive": {
+            "calls": 143,
+            "time_s": 2.487145600025542
+          },
+          "lu_factorization": {
+            "calls": 143,
+            "time_s": 0.2518234000017401
+          },
+          "linear_solves": {
+            "calls": 1610,
+            "time_s": 0.09400249976897612
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 0.002317400008905679
+          }
+        },
+        "source_sha256": "c5f8bfa001c619e7906bb6f8632df94e27adad15eb09894ef7c088d9c034f9b9"
+      },
+      "profiled_after": {
+        "native_s": 1.7473535000026459,
+        "cantera_s": 0.7978808999905596,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 6058,
+            "time_s": 0.11560000029567163
+          },
+          "thermo_kinetics": {
+            "calls": 1328,
+            "time_s": 0.08076880010776222
+          },
+          "viscosity": {
+            "calls": 6047,
+            "time_s": 0.13764669989177492
+          },
+          "residual_inclusive": {
+            "calls": 6904,
+            "time_s": 0.9278002003848087
+          },
+          "grouped_jacobian_thermo": {
+            "calls": 429,
+            "time_s": 0.0624721001368016
+          },
+          "jacobian_inclusive": {
+            "calls": 143,
+            "time_s": 1.0368105999805266
+          },
+          "lu_factorization": {
+            "calls": 143,
+            "time_s": 0.2278269999223994
+          },
+          "linear_solves": {
+            "calls": 1610,
+            "time_s": 0.08961990021634847
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 0.002023600012762472
+          }
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_native_speedup": 1.961193828262157
+    },
+    "H2-MS": {
+      "latest_unprofiled": {
+        "native_s": 4.001778599995305,
+        "native_api_s": 4.003129599994281,
+        "cantera_s": 2.223000800004229,
+        "native_over_cantera": 1.8001696625514898,
+        "native_nodes": 1043,
+        "cantera_nodes": 1077,
+        "validation_passed": true,
+        "metrics": {
+          "temperature_K": 4.284429270418741,
+          "species_absolute": 0.0005745721254903358,
+          "velocity_relative": 0.001662740074972761,
+          "pressure_eigenvalue_relative": 0.00019561057204044906,
+          "heat_release_peak_relative": 0.0008378171430197215,
+          "peak_temperature_K": 0.09498101073313592
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_before": {
+        "native_s": 8.093894799996633,
+        "cantera_s": 3.240914399997564,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 11,
+            "time_s": 0.00030949999927543104
+          },
+          "thermo_kinetics": {
+            "calls": 6929,
+            "time_s": 0.48797190077311825
+          },
+          "multicomponent_face_transport": {
+            "calls": 6929,
+            "time_s": 4.170587199565489
+          },
+          "viscosity": {
+            "calls": 6929,
+            "time_s": 0.21282839964260347
+          },
+          "residual_inclusive": {
+            "calls": 6928,
+            "time_s": 7.34217090025777
+          },
+          "jacobian_inclusive": {
+            "calls": 146,
+            "time_s": 6.351435600008699
+          },
+          "lu_factorization": {
+            "calls": 146,
+            "time_s": 0.2538573000347242
+          },
+          "linear_solves": {
+            "calls": 1516,
+            "time_s": 0.10218840009474661
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 0.0022653000050922856
+          }
+        },
+        "source_sha256": "c5f8bfa001c619e7906bb6f8632df94e27adad15eb09894ef7c088d9c034f9b9"
+      },
+      "profiled_after": {
+        "native_s": 5.650080100007472,
+        "cantera_s": 3.0598880000034114,
+        "inclusive_timings": {
+          "mixture_face_transport": {
+            "calls": 11,
+            "time_s": 0.0003042000316781923
+          },
+          "thermo_kinetics": {
+            "calls": 1235,
+            "time_s": 0.08238140014873352
+          },
+          "multicomponent_face_transport": {
+            "calls": 6053,
+            "time_s": 3.5172014998533996
+          },
+          "viscosity": {
+            "calls": 6053,
+            "time_s": 0.16758570009551477
+          },
+          "residual_inclusive": {
+            "calls": 6928,
+            "time_s": 4.6355636000371305
+          },
+          "grouped_jacobian_thermo": {
+            "calls": 438,
+            "time_s": 0.0670294000155991
+          },
+          "jacobian_inclusive": {
+            "calls": 146,
+            "time_s": 4.034595200122567
+          },
+          "lu_factorization": {
+            "calls": 146,
+            "time_s": 0.25857729993003886
+          },
+          "linear_solves": {
+            "calls": 1516,
+            "time_s": 0.09587389993248507
+          },
+          "equilibrium_fallback": {
+            "calls": 1,
+            "time_s": 0.0022210000024642795
+          }
+        },
+        "source_sha256": "de9b90176485bac8445d89a6305cb2bf58e96b77748de66c87752435df8b46e3"
+      },
+      "profiled_native_speedup": 1.432527443281013
+    }
+  }
+}
