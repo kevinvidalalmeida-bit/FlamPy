@@ -145,7 +145,7 @@ def _ea_to_SI(ea_val: float, ea_units: str) -> float:
 
 
 def _A_to_SI(A_val: float, length_units: str, quantity_units: str,
-             n_reactants_total: float) -> float:
+             n_reactants_total: float, time_units: str = 's') -> float:
     """
     Convert pre-exponential factor A to SI (kmol, m, s).
 
@@ -176,7 +176,10 @@ def _A_to_SI(A_val: float, length_units: str, quantity_units: str,
     conc_factor = qty_factor / (len_factor ** 3)
     order = n_reactants_total
     # A * [old_conc]^(1-n) = A_SI * [SI_conc]^(1-n)
-    return A_val * conc_factor ** (1.0 - order)
+    time_factors={'s':1.0,'ms':1e-3,'us':1e-6,'min':60.0,'hr':3600.0}
+    if time_units not in time_factors:
+        raise ValueError(f'Unsupported time unit: {time_units}')
+    return A_val * conc_factor ** (1.0 - order) / time_factors[time_units]
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -266,14 +269,18 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
 
     # ── units ──────────────────────────────────────────────────────────
     units = data.get("units", {})
-    length_u = units.get("length", "cm")
-    # time_u   = units.get("time", "s")
-    quant_u  = units.get("quantity", "mol")
-    ea_u     = units.get("activation-energy", "cal/mol")
+    length_u = units.get("length", "m")
+    time_u   = units.get("time", "s")
+    quant_u  = units.get("quantity", "kmol")
+    ea_u     = units.get("activation-energy", f"{units.get('energy','J')}/{quant_u}")
+    if units.get('temperature','K')!='K':
+        raise ValueError('The native mechanism parser requires temperature units K')
 
     # ── species ────────────────────────────────────────────────────────
     sp_list = data["species"]
     phase = data.get('phases', [{}])[0]
+    if 'units' in phase:
+        raise ValueError('Nested units are not supported; use top-level mechanism units')
     if phase.get('thermo', 'ideal-gas') != 'ideal-gas':
         raise ValueError('The native backend supports the first ideal-gas phase only')
     selected = phase.get('species', 'all')
@@ -329,14 +336,32 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
 
         # thermo
         thermo = sp["thermo"]
-        assert thermo["model"] == "NASA7", f"Only NASA7 supported, got {thermo['model']}"
+        if any('units' in section for section in (sp,thermo,sp.get('transport',{}))):
+            raise ValueError('Nested species units are not supported; use top-level mechanism units')
+        if thermo['model']!='NASA7':
+            raise ValueError(f"Only NASA7 supported, got {thermo['model']}")
+        if 'reference-pressure' in thermo:
+            value=thermo['reference-pressure']
+            parts=str(value).split()
+            pressure_unit=parts[1] if len(parts)==2 else units.get('pressure','Pa')
+            pressure_factors={'Pa':1.0,'kPa':1000.0,'bar':1e5,'atm':ONE_ATM}
+            if pressure_unit not in pressure_factors or len(parts)>2:
+                raise ValueError('Unsupported thermodynamic reference-pressure units')
+            reference_pressure=float(parts[0])*pressure_factors[pressure_unit]
+            if not np.isclose(reference_pressure,ONE_ATM,rtol=1e-12,atol=0.):
+                raise ValueError('The native backend requires thermodynamic reference-pressure 101325 Pa')
         tranges = thermo["temperature-ranges"]
+        coefs = thermo["data"]
+        if (len(coefs) not in (1,2) or len(tranges)!=len(coefs)+1
+                or any(len(row)!=7 for row in coefs)
+                or not np.isfinite(np.asarray(coefs,dtype=float)).all()
+                or not np.isfinite(tranges).all() or np.any(np.diff(tranges)<=0.)):
+            raise ValueError(f'Invalid NASA7 regions for {species_names[i]}')
         temperature_minima[i] = tranges[0]
         temperature_maxima[i] = tranges[-1]
         nasa_Tmid[i] = tranges[1]
-        coefs = thermo["data"]
         nasa_low[i, :] = coefs[0]
-        nasa_high[i, :] = coefs[1]
+        nasa_high[i, :] = coefs[-1]
 
         # transport
         tr = sp.get("transport", {})
@@ -356,9 +381,17 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
 
     for idx, rxn in enumerate(raw_rxns):
         eq_str = rxn["equation"]
-        rtype = rxn.get("type", "elementary")
-
         ri, rs, pi, ps, reversible, has_M = _parse_equation(eq_str, sp_index)
+        rtype = rxn.get('type','three-body' if has_M else 'elementary')
+        if rtype not in ('elementary','three-body','falloff'):
+            raise ValueError(f'Unsupported reaction type {rtype!r}: {eq_str}')
+        if rxn.get('orders'):
+            raise ValueError(f'Explicit reaction orders are not supported: {eq_str}')
+        if any(field in rxn for field in ('SRI','Tsang')):
+            raise ValueError(f'Unsupported falloff function; use Lindemann or Troe: {eq_str}')
+        if 'units' in rxn or any('units' in rxn.get(field,{}) for field in
+                ('rate-constant','high-P-rate-constant','low-P-rate-constant','Troe')):
+            raise ValueError(f'Nested reaction units are not supported: {eq_str}')
 
         # total reactant stoichiometric order (for unit conversion)
         total_order = float(rs.sum())
@@ -366,25 +399,25 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
         # Arrhenius parameters
         if rtype == "falloff":
             rc_hi = rxn["high-P-rate-constant"]
-            A_hi  = _A_to_SI(rc_hi["A"], length_u, quant_u, total_order)
+            A_hi  = _A_to_SI(rc_hi["A"], length_u, quant_u, total_order,time_u)
             b_hi  = rc_hi["b"]
             Ea_hi = _ea_to_SI(rc_hi["Ea"], ea_u)
 
             rc_lo = rxn["low-P-rate-constant"]
             # low-P has one extra order (+1 for [M])
-            A_lo  = _A_to_SI(rc_lo["A"], length_u, quant_u, total_order + 1.0)
+            A_lo  = _A_to_SI(rc_lo["A"], length_u, quant_u, total_order + 1.0,time_u)
             b_lo  = rc_lo["b"]
             Ea_lo = _ea_to_SI(rc_lo["Ea"], ea_u)
         elif rtype == "three-body":
             rc = rxn["rate-constant"]
             # three-body: extra order from [M]
-            A_hi  = _A_to_SI(rc["A"], length_u, quant_u, total_order + 1.0)
+            A_hi  = _A_to_SI(rc["A"], length_u, quant_u, total_order + 1.0,time_u)
             b_hi  = rc["b"]
             Ea_hi = _ea_to_SI(rc["Ea"], ea_u)
             A_lo, b_lo, Ea_lo = 0.0, 0.0, 0.0
         else:
             rc = rxn["rate-constant"]
-            A_hi  = _A_to_SI(rc["A"], length_u, quant_u, total_order)
+            A_hi  = _A_to_SI(rc["A"], length_u, quant_u, total_order,time_u)
             b_hi  = rc["b"]
             Ea_hi = _ea_to_SI(rc["Ea"], ea_u)
             A_lo, b_lo, Ea_lo = 0.0, 0.0, 0.0
@@ -392,7 +425,7 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
         # efficiencies
         eff = None
         if rtype in ("three-body", "falloff"):
-            eff = np.ones(n_sp)
+            eff = np.full(n_sp,float(rxn.get('default-efficiency',1.0)))
             for sp_name, val in rxn.get("efficiencies", {}).items():
                 sp_name_fixed = _fix_name(sp_name)
                 if sp_name_fixed in sp_index:
@@ -408,6 +441,9 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
             troe_T3 = troe["T3"]
             troe_T1 = troe["T1"]
             troe_T2 = troe.get("T2", 1e30)
+            # Cantera treats T2=0 as omission of the fourth Troe term.
+            if troe_T2==0.:
+                troe_T2=1e30
 
         # build net stoich for this reaction
         net = np.zeros(n_sp)

@@ -82,6 +82,10 @@ de nuevo con los mismos criterios. Una malla explícita del usuario se conserva.
 conductivo, difusivo y axial total, y `2ρVh`, la exportación radial de entalpía.
 El balance continuo es `(mh + q_conducción + Σh_k J_k)' + 2ρVh = 0`.
 El informe calcula un defecto integrado entre la primera y la última cara.
+La revisión posterior reconstruye el caudal de cara mediante la continuidad
+trapezoidal, y usa `m_face*h_face` para su parte convectiva. El defecto relativo
+se normaliza por `mref*cpref*Tref`, con escala guardada en el informe;
+los porcentajes de diagnósticos históricos con otra escala no son comparables.
 Es un diagnóstico de discretización: la convergencia algebraica y una buena
 comparación de temperatura no garantizan por sí solas un balance integral
 preciso. No se aplica la identidad planar de caudal constante a esta geometría.
@@ -233,3 +237,24 @@ y [conserva el transporte durante el Jacobiano](https://github.com/Cantera/cante
 Se ensayó esa aproximación completa, pero aumentó las iteraciones del solver
 nativo y no mejoró el tiempo global de metano. Se conserva la reutilización
 exacta de termodinámica y se actualiza el transporte en las columnas T/Y.
+
+## Auditoría posterior con cuatro agentes
+
+La [revisión integrada](reviews/diffusion-four-agent-review.md) reúne matemática,
+química, transporte y solver, con informes independientes del checkpoint
+`70708b4`. Incluye correcciones de Soret para estados no normalizados, diagnóstico
+entálpico compatible con continuidad, aceptación de la última iteración Newton,
+vida de buffers térmicos y admisión de mecanismos YAML. Se reutilizan el residual
+aceptado y la corrección original para evitar evaluaciones/resoluciones repetidas.
+La suite actual pasa 184 pruebas y nueve comparaciones físicas (tres por caso).
+
+La [evidencia posterior](assets/diffusion/four-agent-review.json) conserva
+medianas, dispersión, hashes y balances. Cantera sigue siendo más rápido;
+las propuestas de calendario temporal, persistencia, fusión de transporte,
+derivadas analíticas y Schur quedan diferenciadas de las correcciones integradas.
+La selección propuesta usa descriptores/coste del mecanismo y transporte,
+sin rutas codificadas por nombre de combustible. Para repetir la medición:
+
+```sh
+python examples/benchmark_diffusion_solver.py --output runs/repeated_diffusion --no-profile --repeats 3
+```

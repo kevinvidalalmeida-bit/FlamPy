@@ -49,6 +49,57 @@ def test_premixed_thermal_reuse_preserves_diffusion_jacobian(transport,soret):
     np.testing.assert_allclose(actual.toarray(),expected.toarray(),rtol=2e-8,atol=2e-6)
 
 
+def test_thermal_banks_release_previous_color_and_budget_fallback_is_exact(monkeypatch):
+    import weakref
+    from kflame.flame import diffusion
+    p=problem();x=p.pack(p.initial_fields());base=p.residual(x);cached=p.properties(p.unpack(x))
+    original=p._perturbed_node_thermo;references=[]
+    def checked_bank(value,nodes):
+        assert all(reference() is None for reference in references)
+        bank=original(value,nodes)
+        references[:]=[weakref.ref(array) for array in bank]
+        return bank
+    monkeypatch.setattr(p,'_perturbed_node_thermo',checked_bank)
+    options=dict(flow_fun=lambda value:p.residual(value,cached_properties=cached),
+        thermo_fun=lambda value,thermal:p.residual(value,nodal_thermo=thermal),base_thermo=cached[:4])
+    grouped=p.jacobian(x,p.residual,base,**options)
+    assert all(reference() is None for reference in references)
+    monkeypatch.setattr(diffusion,'_THERMO_BATCH_BUDGET_BYTES',0)
+    ordinary=p.jacobian(x,p.residual,base,**options)
+    np.testing.assert_allclose(grouped.toarray(),ordinary.toarray(),rtol=2e-8,atol=2e-6)
+
+
+@pytest.mark.parametrize('z',[np.array([0.,.5,1.]),np.array([0.,.1,.4,.8,1.])])
+def test_enthalpy_diagnostic_is_compatible_with_continuity_and_its_reference(z):
+    from kflame.flame.diffusion import enthalpy_face_balance
+    rho=np.ones(len(z));V=np.sin(np.pi*z)
+    m=np.r_[.5,.5-np.cumsum(np.diff(z)*(V[:-1]+V[1:]))]
+    flux=np.zeros(len(z)-1)
+    for offset in (0.,1.,1e6):
+        _,_,_,_,defect=enthalpy_face_balance(z,m,rho,V,np.full(len(z),offset),flux)
+        assert abs(defect)<1e-9
+    h=1000.*z**2
+    ordinary=enthalpy_face_balance(z,m,rho,V,h,flux)[-1]
+    shifted=enthalpy_face_balance(z,m,rho,V,h+1e6,flux)[-1]
+    assert shifted==pytest.approx(ordinary,abs=1e-9)
+
+
+@pytest.mark.parametrize('transient',[False,True])
+def test_newton_accepts_a_root_on_the_last_allowed_iteration(transient):
+    import time
+    from types import SimpleNamespace
+    from scipy.sparse import eye
+    from kflame.flame.diffusion import _newton
+    target=np.array([0.,0.,1.,.5,0.]);start=target+np.array([1.,1.,0.,0.,1.])
+    p=SimpleNamespace(n=1,nv=4,Tref=300.,
+        residual=lambda value,**kwargs:value-target,
+        jacobian=lambda *args:eye(len(target),format='csc'))
+    options=dict(previous=start,dt=1e-4) if transient else {}
+    solved,ok,reason=_newton(p,start,time.perf_counter()+5.,max_iterations=1,**options)
+    assert ok,reason
+    np.testing.assert_array_equal(solved,target)
+
+
 @pytest.mark.parametrize('transport,soret',[('mixture-averaged',False),('mixture-averaged',True),
                                           ('multicomponent',False),('multicomponent',True)])
 def test_cached_flow_columns_are_exact_and_include_a_donor_switch(transport,soret,monkeypatch):

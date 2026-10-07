@@ -514,7 +514,7 @@ class NativeSpeciesBackend:
         else:
             cp_R = self.thermo.cp_R(T_dev)
         lam = self.transport.thermal_conductivity(T_dev, X, cp_R)
-        Dm = self.transport.mix_diff_coeffs(T_dev, P, X)
+        Dm = self.transport.mix_diff_coeffs(T_dev, P, X, mean_molecular_weight=Wmix)
         return rho, Dm, lam, Wmix
 
     # ------------------------------------------------------------------
@@ -594,8 +594,8 @@ class NativeSpeciesBackend:
         P = self.problem.P
 
         rho = self.thermo.density(Tm, P, Ym)
-        Dm_arr = self.transport.mix_diff_coeffs(Tm, P, self.thermo.Y_to_X(Ym))
         Wmix = self.thermo.mean_molecular_weight(Ym, self.invW_dev)
+        Dm_arr = self.transport.mix_diff_coeffs(Tm, P, self.thermo.Y_to_X(Ym),mean_molecular_weight=Wmix)
         return (
             float(np.asarray(rho)),
             np.asarray(Dm_arr),
@@ -614,8 +614,8 @@ class NativeSpeciesBackend:
         cp_R = self.thermo.cp_R(Tm)
         X = self.thermo.Y_to_X(Ym)
         lam = self.transport.thermal_conductivity(Tm, X, cp_R)
-        Dm  = self.transport.mix_diff_coeffs(Tm, P, X)
         Wmix = self.thermo.mean_molecular_weight(Ym, self.invW_dev)
+        Dm  = self.transport.mix_diff_coeffs(Tm, P, X,mean_molecular_weight=Wmix)
         return (
             float(np.asarray(rho)),
             np.asarray(Dm),

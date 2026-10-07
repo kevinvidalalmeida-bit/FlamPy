@@ -97,9 +97,6 @@ if njit is not None:
                 for j in range(n):
                     c = diff_poly[k, j]
                     binary[k, j] = scale_T * (c[0] + logT * (c[1] + logT * (c[2] + logT * (c[3] + logT * c[4]))))
-            wmix_x = 0.0
-            for k in range(n):
-                wmix_x += X[k] * mw[k]
             diffusion = np.empty(n)
             for k in range(n):
                 total = 0.0
@@ -109,7 +106,7 @@ if njit is not None:
                 if total <= 0.0:
                     diffusion[k] = binary[k, k] / P
                 else:
-                    diffusion[k] = (wmix_x - max(X[k], tiny) * mw[k]) / (P * wmix_x * max(total, 1e-300))
+                    diffusion[k] = (wmix - max(X[k], tiny) * mw[k]) / (P * wmix * max(total, 1e-300))
             a = np.zeros(n)
             for k in range(n):
                 if Y[k, face] < 1e-20:
@@ -417,7 +414,7 @@ class NativeTransport:
         X = np.maximum(Y * wmix[None, :] / self.mw[:, None], 1e-20)
         return _mix_soret_coefficients(
             T, float(P), Y, X, wmix, self.mw, self.species_viscosities(T),
-            self.binary_diff_coeffs(T), self.mix_diff_coeffs(T, P, X),
+            self.binary_diff_coeffs(T), self.mix_diff_coeffs(T, P, X, mean_molecular_weight=wmix),
             self._eps_pair, self._cstar_poly,
         )
 
@@ -725,8 +722,13 @@ class NativeTransport:
     # ------------------------------------------------------------------
     #  Mixture-averaged diffusion coefficients
     # ------------------------------------------------------------------
-    def mix_diff_coeffs(self, T, P: float, X: np.ndarray) -> np.ndarray:
-        """Mixture-averaged diffusion coefficients D_km [m²/s]."""
+    def mix_diff_coeffs(self, T, P: float, X: np.ndarray, *, mean_molecular_weight=None) -> np.ndarray:
+        """Mixture-averaged diffusion coefficients D_km [m²/s].
+
+        X alone represents a normalized composition. For an unnormalized Y
+        state, callers must supply its 1/sum(Y/W); sum(X*W) loses that scale.
+        The supplied weight is scalar for a point or broadcasts over a grid.
+        """
         bdiff = self.binary_diff_coeffs(T)
         Xsafe = self.xp.maximum(X, self._tiny)
         is_grid = self._is_grid(T)
@@ -735,15 +737,17 @@ class NativeTransport:
         mask = 1.0 - self.xp.eye(self.n_sp)
         
         if is_grid:
-            Wmix = self.xp.sum(X * self.mw[:, None], axis=0)
+            Wmix = (self.xp.sum(X * self.mw[:, None], axis=0) if mean_molecular_weight is None
+                    else self.xp.asarray(mean_molecular_weight))
             mask = mask[:, :, None]
             Xsafe_b = Xsafe[:, None, :] # shape (n_sp, 1, N) for sum over axis 0 (j)
             sum2 = self.xp.sum((inv_bdiff * mask) * Xsafe_b, axis=0)
             diag_bdiff = self.xp.diagonal(bdiff, axis1=0, axis2=1).T
-            Wmix_b = Wmix[None, :]
+            Wmix_b = self.xp.atleast_1d(Wmix)[None, :]
             mw_b = self.mw[:, None]
         else:
-            Wmix = self.xp.sum(X * self.mw)
+            Wmix = (self.xp.sum(X * self.mw) if mean_molecular_weight is None
+                    else self.xp.asarray(mean_molecular_weight))
             sum2 = (inv_bdiff * mask) @ Xsafe
             diag_bdiff = self.xp.diag(bdiff)
             Wmix_b = Wmix
@@ -763,12 +767,14 @@ class NativeTransport:
         
         if is_grid:
             YW = Y * invW[:, None]
-            X = YW / self.xp.maximum(YW.sum(axis=0)[None, :], 1e-300)
+            inv_wmix = self.xp.maximum(YW.sum(axis=0), 1e-300)
+            X = YW / inv_wmix[None, :]
         else:
             YW = Y * invW
-            X = YW / self.xp.maximum(YW.sum(), 1e-300)
+            inv_wmix = self.xp.maximum(YW.sum(), 1e-300)
+            X = YW / inv_wmix
             
         mu  = self.viscosity(T, X)
         lam = self.thermal_conductivity(T, X, cp_R)
-        Dm  = self.mix_diff_coeffs(T, P, X)
+        Dm  = self.mix_diff_coeffs(T, P, X, mean_molecular_weight=1.0/inv_wmix)
         return mu, lam, Dm, X

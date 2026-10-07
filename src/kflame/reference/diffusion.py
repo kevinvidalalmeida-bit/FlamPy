@@ -47,6 +47,16 @@ def compare_diffusion_flame(native,output, *, slope=.01,curve=.02,limits=None):
     checks={key:metrics[key]<=value for key,value in limits.items()}
     report=dict(passed=all(checks.values()),metrics=metrics,limits=limits,checks=checks,
         cantera_version=ct.__version__,reference_nodes=len(flame.grid),reference_runtime_s=runtime,
+        solver_statistics={name:list(getattr(flame,name)) for name in
+            ('grid_size_stats','jacobian_count_stats','jacobian_time_stats',
+             'eval_count_stats','eval_time_stats','time_step_stats')},
+        convergence_settings=dict(component_names=list(flame.flame.component_names),
+            steady_relative=flame.flame.steady_reltol().tolist(),
+            steady_absolute=flame.flame.steady_abstol().tolist(),
+            transient_relative=flame.flame.transient_reltol().tolist(),
+            transient_absolute=flame.flame.transient_abstol().tolist(),
+            criterion='Cantera weighted Newton correction norm',
+            linear_solver=type(flame.linear_solver).__name__),
         independent_initial_guess=True,native_metadata=meta,
         numerical_settings=dict(ratio=3.,slope=slope,curve=curve,max_points=2400),
         scope='Same streams, temperatures, pressure, inlet mass fluxes, separation and transport. '

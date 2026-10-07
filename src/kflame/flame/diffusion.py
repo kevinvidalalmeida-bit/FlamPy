@@ -18,6 +18,7 @@ from kflame.flame.equations import _corrected_flux_frozen
 from kflame.flame.solver import AdaptiveRefiner
 from kflame.flame.diffusion_kernels import assemble_residual
 
+_THERMO_BATCH_BUDGET_BYTES=96*1024**2
 
 @dataclass
 class DiffusionCase:
@@ -40,6 +41,23 @@ def upwind_gradient(values, z, mass_flux):
     left = (values[...,1:-1]-values[...,:-2])/np.diff(z)[:-1]
     right = (values[...,2:]-values[...,1:-1])/np.diff(z)[1:]
     return np.where(mass_flux[1:-1] >= 0.,left,right)
+
+
+def enthalpy_face_balance(z,m,rho,V,h,diffusive_heat_flux):
+    """Face-to-face diagnostic compatible with trapezoidal continuity.
+
+    Integrate the linearly reconstructed radial mass export to each midpoint;
+    averaging nodal m*h would break invariance to a common enthalpy offset.
+    This diagnostic does not remove truncation error from the energy scheme.
+    """
+    dz=np.diff(z);zface=.5*(z[:-1]+z[1:]);radial_mass=2.*rho*V
+    mface=.5*(m[:-1]+m[1:])+dz*(radial_mass[1:]-radial_mass[:-1])/8.
+    totalflux=mface*.5*(h[:-1]+h[1:])+diffusive_heat_flux
+    radial=radial_mass*h
+    integration_z=np.r_[zface[0],z[1:-1],zface[-1]]
+    export=float(np.trapezoid(np.interp(integration_z,z,radial),integration_z))
+    defect=float(totalflux[-1]-totalflux[0]+export)
+    return zface,totalflux,radial,export,defect
 
 
 class DiffusionFlameProblem:
@@ -207,11 +225,13 @@ class DiffusionFlameProblem:
         """Color node triples; the number of residual batches is mesh-independent."""
         rows,cols,values = [],[],[]
         for nodes,lengths,rr in self.color_rows:
+            # Drop the previous color before allocating the next thermal bank.
+            bank=None
             # Bound temporary memory for large mechanisms; the ordinary path
             # retains identical equations and full derivatives when exceeded.
             bytes_needed=8*len(nodes)*(self.ns+2)*(3*self.ns+3)
             bank=(self._perturbed_node_thermo(x,nodes) if thermo_fun is not None
-                  and base_thermo is not None and bytes_needed<=96*1024**2 else None)
+                  and base_thermo is not None and bytes_needed<=_THERMO_BATCH_BUDGET_BYTES else None)
             for component in range(self.nv):
                 indices = nodes*self.nv+component
                 if not len(indices):
@@ -229,6 +249,7 @@ class DiffusionFlameProblem:
                     thermal[2][:,nodes]=bank[2][:,:,column]
                     thermal[3][:,nodes]=bank[3][:,:,column]
                     difference=thermo_fun(trial,thermal)-base
+                    del thermal
                 else:
                     difference=fun(trial)-base
                 rows.append(rr)
@@ -243,11 +264,12 @@ class DiffusionFlameProblem:
 
 def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,max_iterations=25):
     fun = lambda value:problem.residual(value,fixed_temperature=fixed_temperature,previous=previous,dt=dt)
-    factor=None;age=0
+    factor=None;age=0;base=None
     for iteration in range(max_iterations):
         if time.perf_counter() > deadline:
             return x,False,'time_limit'
-        base = fun(x)
+        if base is None:
+            base = fun(x)
         if not np.isfinite(base).all():
             return x,False,'nonfinite_residual'
         norm = float(np.max(abs(base)))
@@ -276,6 +298,10 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
         if not np.isfinite(step).all():
             return x,False,'singular_jacobian'
         b,delta = x[:-1].reshape(problem.n,problem.nv),step[:-1].reshape(problem.n,problem.nv)
+        # Use the original correction before the trace-species bound changes it.
+        component_scale=1e-9+1e-4*np.mean(abs(b),axis=0)
+        scales=np.r_[np.tile(component_scale,problem.n),1e-4*max(abs(x[-1]),1.)]
+        oldnorm=np.linalg.norm(step/scales)
         # At a zero trace-species bound an unconstrained cold Newton step can
         # point out of the physical simplex. Release that component again as
         # soon as its direction points inward; acceptance still requires the
@@ -297,14 +323,15 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
             return x,False,'bounds'
         # Reuse the factorization for error-based damping, as in MultiNewton.
         # Raw chemistry rates span many decades and are a poor merit norm.
-        component_scale=1e-9+1e-4*np.mean(abs(b),axis=0)
-        scales=np.r_[np.tile(component_scale,problem.n),1e-4*max(abs(x[-1]),1.)]
-        oldnorm = np.linalg.norm(factor.solve(base)/scales)
         for _ in range(16):
             trial = x+length*step
             candidate = fun(trial)
-            if np.isfinite(candidate).all() and np.linalg.norm(factor.solve(candidate)/scales)<oldnorm*(1.-1e-4*length):
-                x=trial;break
+            if np.isfinite(candidate).all():
+                # A root reached on the last allowed step is still converged.
+                if np.max(abs(candidate))<1e-7:
+                    return trial,True,'converged'
+                if np.linalg.norm(factor.solve(candidate)/scales)<oldnorm*(1.-1e-4*length):
+                    x=trial;base=candidate;break
             length*=.5
         else:
             if age>1:
@@ -384,14 +411,11 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
                   species_names=np.array(problem.mech_data.species_names))
     # Total h includes formation enthalpy. Counterflow exports enthalpy
     # radially: a planar constant-mdot outlet-deficit identity is inapplicable.
-    zface=.5*(problem.z[:-1]+problem.z[1:])
     hkface=problem.thermo.partial_molar_enthalpies(.5*(fields['T'][:-1]+fields['T'][1:]))*problem.mech_data.inv_molecular_weights[:,None]
     qspecies=np.sum(hkface*J,axis=0)
-    totalflux=.5*(fields['m'][:-1]*fields['h'][:-1]+fields['m'][1:]*fields['h'][1:])+qspecies+fields['conductive_heat_flux']
-    radial=2.*rho*fields['V']*fields['h']
-    integration_z=np.r_[zface[0],problem.z[1:-1],zface[-1]]
-    export=float(np.trapezoid(np.interp(integration_z,problem.z,radial),integration_z))
-    defect=float(totalflux[-1]-totalflux[0]+export)
+    zface,totalflux,radial,export,defect=enthalpy_face_balance(problem.z,fields['m'],rho,
+        fields['V'],fields['h'],qspecies+fields['conductive_heat_flux'])
+    balance_scale=problem.mref*problem.cpref*problem.Tref
     fields.update(z_face=zface,diffusive_enthalpy_flux=qspecies,total_enthalpy_flux=totalflux,
                   radial_enthalpy_export_density=radial)
     maximum=float(np.max(abs(problem.residual(x))))
@@ -408,9 +432,11 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
                 enthalpy_balance=dict(radial_export_between_first_and_last_faces_W_m2=export,
                     axial_flux_change_W_m2=float(totalflux[-1]-totalflux[0]),
                     finite_grid_defect_W_m2=defect,
-                    relative_defect=abs(defect)/max(float(abs(totalflux).max()),abs(export),1.),
+                    relative_defect=abs(defect)/balance_scale,
+                    normalization_W_m2=balance_scale,
                     boundary_conduction_outward_W_m2=[float(-fields['conductive_heat_flux'][0]),float(fields['conductive_heat_flux'][-1])],
-                    note='Face-to-face axisymmetric balance, including radial export; diagnostic finite-grid estimate.'),
+                    note='Continuity-compatible face mass flux and radial export; finite-grid estimate. '
+                         'Relative defect normalized by mref*cpref*Tref, independent of the enthalpy zero.'),
                 runtime_s=time.perf_counter()-started)
     accepted=bool(ok and (grid_converged or not refine) and burning and maximum<1e-7
                   and report['minimum_mass_fraction']>=-1e-7 and report['maximum_species_sum_error']<1e-7)
