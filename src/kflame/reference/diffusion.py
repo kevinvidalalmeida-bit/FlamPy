@@ -24,13 +24,19 @@ def compare_diffusion_flame(native,output, *, slope=.01,curve=.02,limits=None):
     for boundary,prefix in ((flame.fuel_inlet,'fuel'),(flame.oxidizer_inlet,'oxidizer')):
         boundary.Y=meta[prefix+'_Y'];boundary.T=meta[prefix+'_temperature'];boundary.mdot=meta[prefix+'_mass_flux']
     flame.transport_model=meta['transport'];flame.soret_enabled=meta['soret']
-    flame.radiation_enabled=False
+    # Same optically thin radiation as the native flame; a scaled loss has
+    # no Cantera counterpart and is rejected instead of compared.
+    if meta.get('radiation') and float(meta.get('radiation_scale',1.))!=1.:
+        raise ValueError('Cantera has no scaled radiative loss; compare radiation_scale=1 only')
+    flame.radiation_enabled=bool(meta.get('radiation',False))
+    flame.boundary_emissivities=tuple(meta.get('boundary_emissivities',(0.,0.)))
     flame.set_max_grid_points(flame.flame,2400)
     flame.set_refine_criteria(ratio=3.,slope=slope,curve=curve,prune=0.)
     started=time.perf_counter();flame.solve(loglevel=0,auto=True);runtime=time.perf_counter()-started
     reference=dict(z=flame.grid,T=flame.T,Y=flame.Y,u=flame.velocity,V=flame.spread_rate,
         Lambda=float(flame.flame.radial_pressure_gradient[0]),rho=flame.density,h=flame.enthalpy_mass,
         qdot=flame.heat_release_rate,omega_Y=flame.net_production_rates*gas.molecular_weights[:,None],
+        qrad=np.asarray(flame.flame.radiative_heat_loss) if flame.radiation_enabled else np.zeros(len(flame.grid)),
         species_names=np.array(gas.species_names))
     np.savez_compressed(output/'reference.npz',**reference)
     targets=ours['z']

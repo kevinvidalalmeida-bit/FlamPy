@@ -18,7 +18,8 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
                           fuel_mass_flux=.12, oxidizer_mass_flux=.24, width=.02, grid=None,
                           initial_points=31, transport='mixture-averaged', soret=False,
                           ratio=3., slope=.01, curve=.02, max_points=2400, max_time=600.,
-                          initial_solution=None, refine=True, output=None, plots=False):
+                          initial_solution=None, refine=True, output=None, plots=False,
+                          radiation=False, radiation_scale=1., boundary_emissivities=(0., 0.)):
     """Solve a native axisymmetric diffusion flame with two separate inflows.
 
     Streams are mole-basis strings/dictionaries. Both mass fluxes are positive
@@ -27,6 +28,12 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     Saves NPZ, CSV and metadata. A rejected/extinguished solve saves its state
     before raising RuntimeError. No premixed flame speed is assigned. Cantera
     is never loaded by this entry point. Output must not already exist.
+
+    ``radiation=True`` adds the optically thin H2O/CO2 radiative loss of
+    Cantera's Flow1D to the energy equation (non-adiabatic flame); the default
+    is adiabatic. ``radiation_scale`` multiplies that loss to generate deeper
+    enthalpy defects for tabulation (1 is the physical model), and
+    ``boundary_emissivities`` are the (fuel, oxidizer) inlet emissivities.
     """
     for name,value in dict(fuel_temperature=fuel_temperature,oxidizer_temperature=oxidizer_temperature,
             pressure=pressure,fuel_mass_flux=fuel_mass_flux,oxidizer_mass_flux=oxidizer_mass_flux,
@@ -35,6 +42,10 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
             raise ValueError(f'{name} must be finite and positive in SI units')
     if transport not in ('mixture-averaged','multicomponent'):
         raise ValueError('Unknown transport model')
+    emissivities=tuple(float(value) for value in boundary_emissivities)
+    if (not np.isfinite(radiation_scale) or radiation_scale<0. or len(emissivities)!=2
+            or not all(0.<=value<=1. for value in emissivities)):
+        raise ValueError('Require radiation_scale >= 0 and two emissivities in [0, 1]')
     if output is not None and Path(output).exists():
         raise FileExistsError(f'Output already exists: {output}')
     if not isinstance(initial_points,int) or not isinstance(max_points,int) or not 5<=initial_points<=max_points:
@@ -87,7 +98,9 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
             or z[0]!=0. or not np.isclose(z[-1],width,rtol=1e-12,atol=0.) or np.any(np.diff(z)<=0.)):
         raise ValueError('grid must contain increasing finite nodes from 0 to width')
     case=DiffusionCase(mechanism,*feeds,fuel_temperature,oxidizer_temperature,
-                       fuel_mass_flux,oxidizer_mass_flux,pressure,width,transport,bool(soret))
+                       fuel_mass_flux,oxidizer_mass_flux,pressure,width,transport,bool(soret),
+                       radiation_enabled=bool(radiation),radiation_scale=float(radiation_scale),
+                       boundary_emissivities=emissivities)
     source_root=Path(__file__).parent
     digest=hashlib.sha256()
     for source in sorted(source_root.rglob('*.py')):
@@ -116,15 +129,17 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
         fuel=fuel,oxidizer=oxidizer,fuel_Y=feeds[0].tolist(),oxidizer_Y=feeds[1].tolist(),
         fuel_temperature=fuel_temperature,oxidizer_temperature=oxidizer_temperature,pressure=pressure,
         fuel_mass_flux=fuel_mass_flux,oxidizer_mass_flux=oxidizer_mass_flux,width=width,
-        transport=transport,soret=bool(soret),refine=bool(refine),report=report,runtime_s=runtime,
+        transport=transport,soret=bool(soret),radiation=bool(radiation),radiation_scale=float(radiation_scale),
+        boundary_emissivities=list(emissivities),refine=bool(refine),report=report,runtime_s=runtime,
         source_sha256=source_sha256,
         numerical_settings=dict(initial_points=len(z),ratio=ratio,slope=slope,curve=curve,
                                 max_points=max_points,max_time=max_time))
     (folder/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n',encoding='utf-8')
     with (folder/'profiles.csv').open('w',newline='',encoding='utf-8') as out:
         writer=csv.writer(out)
-        writer.writerow(['z_m','T_K','u_m_s','V_s1','Z','h_J_kg','qdot_W_m3',*mech.species_names])
-        writer.writerows(np.column_stack([fields[k] for k in ('z','T','u','V','Z','h','qdot')]+[fields['Y'].T]))
+        writer.writerow(['z_m','T_K','u_m_s','V_s1','Z','h_J_kg','qdot_W_m3','qrad_W_m3',*mech.species_names])
+        writer.writerows(np.column_stack([fields[k] for k in ('z','T','u','V','Z','h','qdot','radiative_heat_loss')]
+                                         +[fields['Y'].T]))
     if plots:
         import matplotlib.pyplot as plt
         figure,axes=plt.subplots(2,1,sharex=True)
@@ -148,6 +163,8 @@ def main(argv=None):
         parser.add_argument('--'+name,type=float,default=default)
     parser.add_argument('--transport',choices=['mixture-averaged','multicomponent'],default='mixture-averaged')
     parser.add_argument('--soret',action='store_true')
+    parser.add_argument('--radiation',action='store_true',help='Optically thin H2O/CO2 radiative loss')
+    parser.add_argument('--radiation-scale',type=float,default=1.)
     parser.add_argument('--plots',action='store_true')
     parser.add_argument('--output',type=Path)
     parser.add_argument('--initial-solution',type=Path)

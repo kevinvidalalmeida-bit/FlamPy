@@ -4,6 +4,10 @@ La rama de [llamas de difusión en contraflujo](docs/diffusion-flames.md) añade
 dos entradas independientes, un solver nativo, tablas FGM `(Z,C)` y validación
 con Cantera para metano/aire e hidrógeno/aire. Incluye entalpía total y su salida
 radial; la tabla de dos controles conserva las historias de entrenamiento.
+Admite transporte promediado o multicomponente, Soret y, opcionalmente, pérdidas
+por radiación ópticamente delgada (`radiation=True`), con Jacobiana compilada
+por bloques: en los casos medidos es más rápido que Cantera 3.2
+([rendimiento](docs/diffusion-flames.md#rendimiento-de-alto-nivel-y-pérdidas-radiativas)).
 
 **Llamas premezcladas con química detallada y tablas FGM, desde Python.**
 

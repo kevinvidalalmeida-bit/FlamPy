@@ -53,9 +53,11 @@ cambia de lado al cambiar el signo de `m`. Las dos entradas satisfacen
 `m(Y-Y_feed)+J=0`; la normalización sustituye una ecuación de especie en cada
 entrada, mientras el interior conserva todas las ecuaciones diferenciales.
 
-Newton usa un Jacobiano disperso por colores, factorizaciones reutilizadas y
-amortiguación basada en el error. Si la estimación inicial no converge, usa
-equilibrio HP nativo y continuación temporal implícita. Ninguna referencia
+Newton usa una Jacobiana compilada por bloques con borde para Lambda, una
+factorización por ambos extremos, un modelo lineal persistente y amortiguación
+basada en el error (véase [rendimiento](#rendimiento-de-alto-nivel-y-pérdidas-radiativas)).
+Si la estimación inicial no converge, usa continuación temporal implícita y,
+como último recurso, equilibrio HP nativo. Ninguna referencia
 de Cantera inicializa una solución nativa. Se exige residuo escalado completo
 menor que `1e-7`, conservación de la suma de especies y fracciones no menores
 que `-1e-7`. La rama de llama debe alcanzar una temperatura al menos 100 K
@@ -105,8 +107,9 @@ Las consultas fuera de las celdas disponibles lanzan `OutsideManifoldError`.
 La interpolación recupera T a partir de la **entalpía total interpolada y Y**,
 sin recomputar química detallada. Esta tabla de dos controles contiene las
 historias de entalpía de las llamas de entrenamiento. No ofrece todavía un
-control independiente de pérdidas térmicas `(Z,C,h)`, radiación ni un solver
-reducido de contraflujo. Esas capacidades requieren una familia física adicional
+control independiente de pérdidas térmicas `(Z,C,h)` ni un solver reducido de
+contraflujo; las llamas pueden incluir radiación (`radiation=True`), cuya historia
+entálpica queda en la tabla de su familia. Esas capacidades requieren una familia física adicional
 y cierres de transporte propios de esta geometría.
 
 `validate_diffusion_fgm(table, native, output)` compara una llama nativa
@@ -126,7 +129,8 @@ Se consultaron las [ecuaciones oficiales de Cantera](https://cantera.org/stable/
 el [ejemplo de llama de difusión](https://cantera.org/stable/examples/python/onedim/diffusion_flame.html)
 y las implementaciones de [Flow1D en 3.2.0](https://github.com/Cantera/cantera/blob/v3.2.0/src/oneD/Flow1D.cpp)
 y [las fronteras de entrada](https://github.com/Cantera/cantera/blob/v3.2.0/src/oneD/Boundary1D.cpp).
-La referencia y el solver nativo desactivan radiación en estas comparaciones.
+La referencia usa la misma radiación que la llama nativa: desactivada por
+defecto y, con `radiation=True`, el modelo ópticamente delgado de Cantera.
 
 ## Resultados verificados el 7 de octubre de 2026
 
@@ -257,4 +261,145 @@ sin rutas codificadas por nombre de combustible. Para repetir la medición:
 
 ```sh
 python examples/benchmark_diffusion_solver.py --output runs/repeated_diffusion --no-profile --repeats 3
+```
+
+## Rendimiento de alto nivel y pérdidas radiativas
+
+Revisión del 7 de octubre de 2026 sobre `21399ef`. Objetivo: resolver llamas de
+difusión **con o sin pérdidas**, con transporte promediado o multicomponente y
+Soret, más rápido que Cantera 3.2 sin cambiar las ecuaciones ni la puerta de
+aceptación (residual escalado completo `< 1e-7`, suma y mínimo de Y, llama
+encendida, convergencia de malla).
+
+### Dónde estaba el coste
+
+La traza del código anterior mostraba que en CH4 unos 26 de 35 s ocurrían en la
+malla inicial de 31 nodos: 273 Jacobianas de ~55 ms (casi todo sobrecoste de
+169 residuales completos por Jacobiana), 15 intentos estacionarios de 25
+iteraciones que fallaban y 5.6 s del equilibrio HP de respaldo. En mallas
+finas, cada Jacobiana recalculaba el transporte de todas las caras para cada
+columna coloreada y SuperLU factorizaba una matriz casi densa por bloques.
+
+### Cambios integrados
+
+| Pieza | Cambio | Comprobación |
+|---|---|---|
+| Jacobiana | Kernel compilado local (`jacobian_blocks`): cada columna perturba un nodo y recalcula solo su termoquímica, sus dos caras y tres bloques de filas, con los **mismos pasos FD** que el Jacobiano coloreado. La columna de Λ es exacta (uno en cada fila de momento interior). | Igual al Jacobiano coloreado del residual completo hasta el ruido FD (≤3e-5 relativo por fila) en mezcla, mezcla+Soret, multicomponente y multicomponente+Soret, con cambio de donante, T fijada, matriz transitoria y radiación |
+| Caras | Datos dependientes solo de T (ajustes, D_kj binarios, factores de Wilke, cocientes de Soret) se reutilizan en las columnas de composición. En mezcla sin Soret, actualización de **rango uno** de las sumas de mezcla: O(ns) por columna en vez de O(ns²) | Mismas pruebas; diferencias de redondeo de la diferencia finita |
+| Química | Columnas de producción con las derivadas analíticas dω/dY y dω/dT ya validadas en las premezcladas; respaldo FD agrupado (`grouped_node`) si hay órdenes no elementales | Igual al FD a ≤5e-6 relativo |
+| Álgebra lineal | `[[A, c], [r, 0]]` con A tridiagonal por bloques: complemento de Schur para Λ y eliminación compilada **por ambos extremos** (LAPACK/BLAS), con los dos barridos en paralelo; respaldo a SuperLU ante pivote singular | Error hacia atrás ~1e-16; diferencia con SuperLU 1e-9 relativa en CH4 de 1322 nodos |
+| Newton | Jacobiana estacionaria persistente entre pasos temporales e intentos; matriz transitoria = `J_ss + masa/dt` (como `MultiJac` de Cantera), refactorizada solo al cambiar dt; refresco por contracción lenta (0.5) y edad máxima 12/20 | La aceptación de cada paso usa siempre el residual completo |
+| Continuación | Pasos pseudotemporales aceptados por corrección ponderada (rtol 1e-4, atol 1e-11, como Cantera); dt ×1.5 tras un paso sin Jacobiana nueva y ×0.5 tras un fallo; intentos estacionarios tras 2, 5, 10 y 20 pasos, con amortiguación limitada y descartados si fallan. El equilibrio HP y la T fijada quedan como último recurso | Criterio final idéntico: residual `< 1e-7` |
+| Residual | λ, μ y flujos en un kernel compilado por caras (`compiled_faces=True`) | Igual a la ruta NumPy a ~1e-14 relativo |
+| Multicomponente | Separación T/composición del sistema Dixon–Lewis, eliminación de Schur en bucles para sistemas pequeños y BLAS para grandes, sin asignaciones por cara. `multicomponent_jacobian='auto'`: exacto hasta 20 especies; por encima, las columnas de composición conservan D_kl, D^T y λ de la cara base (práctica de Cantera), con gradientes, ρ, W̄, μ y todas las columnas de T exactas. El residual nunca se congela | Schur en bucles/BLAS igual a LAPACK a ≤3e-15; ambos modos dan la misma llama |
+| Hilos | Kernels de rango sin GIL repartidos en `NUMBA_NUM_THREADS` hilos (4 por defecto en FlamPy); la compilación JIT se hace antes de iniciar el cronómetro `max_time` | Resultados idénticos con 1 y 4 hilos |
+
+### Pérdidas radiativas (llamas no adiabáticas)
+
+`radiation=True` añade a la energía de los nodos interiores la pérdida
+ópticamente delgada del `Flow1D` de Cantera 3.2:
+
+\[
+q_{rad}=s\,2k_P\left(2\sigma T^4-\sigma\varepsilon_f T_f^4-\sigma\varepsilon_o T_o^4\right),\qquad
+k_P=\frac{P}{1\,\mathrm{atm}}\sum_{k\in\{H_2O,CO_2\}}X_k\,a_k\!\left(\frac{1000}{T}\right),
+\]
+
+con los polinomios de absorción media de Planck de Cantera. `s=radiation_scale`
+(1 por defecto) permite generar defectos de entalpía mayores para tabulación;
+`boundary_emissivities=(ε_f, ε_o)` usa las temperaturas de entrada, idénticas a
+las de los nodos de contorno en todo iterado. La fórmula coincide con
+`radiative_heat_loss` de Cantera a 3e-11 relativo, con y sin emisividades. El
+término entra en las filas compartidas por residual y Jacobiana, de modo que
+sus derivadas son automáticas. Las salidas añaden `radiative_heat_loss`
+(W/m³, también en `profiles.csv`), `report['radiation']` y la integral de la
+pérdida en el balance entálpico:
+`(mh + q_cond + Σ h_k J_k)' + 2ρVh + q_rad = 0`.
+
+```python
+h2 = dict(mechanism='h2o2.yaml', fuel='H2', fuel_mass_flux=.05, oxidizer_mass_flux=.15,
+          transport='multicomponent', soret=True)
+radiative = solve_diffusion_flame(**h2, radiation=True, output='runs/h2_radiative')
+# Mayor pérdida para tabulación, continuando desde la llama radiativa aceptada.
+deeper = solve_diffusion_flame(**h2, radiation=True, radiation_scale=4.,
+                               initial_solution=radiative['output'], output='runs/h2_lossy')
+```
+
+```sh
+flampy diffusion --fuel CH4 --radiation --output runs/ch4_radiative
+flampy diffusion --mechanism h2o2.yaml --fuel H2 --fuel-mass-flux .05 --oxidizer-mass-flux .15 --transport multicomponent --soret --radiation --radiation-scale 4 --output runs/h2_lossy
+```
+
+Un arranque en frío con radiación resuelve primero la rama adiabática en la malla
+inicial y después activa la radiación desde esa llama encendida (etapa
+`adiabatic_start` en `report['history']`). Sin ello, en CH4 con deformación baja
+(caudales ÷3) la continuación pseudotemporal de la malla gruesa se enfriaba
+hasta la extinción; con el arranque adiabático se obtiene 2008.6 K frente a
+2009.0 K de Cantera (4.4 s frente a 20.6 s). Las ecuaciones finales no cambian.
+
+La continuación admite cambiar `radiation`/`radiation_scale`; la comparación
+con Cantera activa la misma radiación y rechaza escalas distintas de 1, que no
+tienen equivalente en Cantera. `generate_diffusion_fgm(..., radiation=True)`
+genera familias radiativas; la tabla `(Z,C)` contiene sus historias entálpicas.
+Una tabla `(Z,C,h)` con niveles de pérdida independientes requiere todavía
+familias en `radiation_scale` y una triangulación tridimensional propia.
+
+### Resultados medidos
+
+Misma máquina (Ryzen 9 7845HX), secuencial, kernels compilados, sin
+instrumentación, mismas condiciones y umbrales de refinamiento; cada solver con
+su propia malla y estimación inicial. Medianas de dos muestras (adiabático) o
+una muestra (radiación). Nativo con 4 hilos Numba; Cantera usa un hilo.
+
+| Caso | Nativo | Cantera 3.2 | Nativo/Cantera | ΔT máx. | ΔY máx. |
+|---|---:|---:|---:|---:|---:|
+| CH4/aire, mezcla | 3.62 s | 29.79 s | 0.12 | 0.640 K | 0.00043 |
+| H2/aire, mezcla | 0.48 s | 0.59 s | 0.81 | 4.502 K | 0.00052 |
+| H2/aire, multicomponente + Soret | 1.07 s | 2.48 s | 0.43 | 4.284 K | 0.00057 |
+| CH4/aire, multicomponente + Soret | 17.37 s | 84.56 s | 0.21 | 1.163 K | 0.00065 |
+| CH4/aire, mezcla, **radiación** | 3.56 s | 32.87 s | 0.11 | 0.742 K | 0.00042 |
+| H2/aire, mezcla, **radiación** | 0.60 s | 0.67 s | 0.90 | 4.342 K | 0.00049 |
+| H2/aire, multicomp. + Soret, **radiación** | 1.20 s | 3.13 s | 0.38 | 4.614 K | 0.00059 |
+
+**Las diez comparaciones físicas pasan** (20 K, 0.005, 3%, 2%, 5%). Las
+mallas y diferencias de los casos adiabáticos coinciden con la validación
+original (1322, 1071 y 1043 nodos; 0.640, 4.502 y 4.284 K): la optimización no
+cambió la solución. El pico de pérdida radiativa de CH4 coincide con Cantera a
+0.005%. Con **un solo hilo**, el nativo tardó 5.8–6.0 s (CH4), 0.52 s (H2) y
+1.66 s (H2 multicomponente + Soret), también por debajo de Cantera.
+En CH4 multicomponente + Soret, el modo exacto tardó 51 s y el automático 19 s
+en una medición previa, con la misma llama.
+
+Barrido de robustez adicional, todos aceptados (H2 comparado con Cantera):
+
+| Condición | Nativo | Cantera | ΔT máx. |
+|---|---:|---:|---:|
+| H2, caudales ×4 | 0.49 s | 0.62 s | 2.35 K |
+| H2, caudales ÷3 | 0.45 s | 0.55 s | 1.95 K |
+| H2:1,N2:1, 5 bar, Soret | 0.52 s | 2.88 s | 0.90 K |
+| H2, aire a 800 K, multicomponente + Soret + radiación | 0.71 s | 1.26 s | 2.65 K |
+| CH4, caudales ×3 | 3.33 s | — | — |
+| CH4, caudales ÷3, radiación | 4.35 s | 20.6 s | 0.4 K en T máx. |
+| CH4:1,N2:1, 2 bar | 3.01 s | — | — |
+
+### Traslado a las llamas premezcladas
+
+La eliminación por ambos extremos (`kflame/flame/block_linear.py`) sustituye
+también el Thomas por bloques de las premezcladas (`jacobian_mode='block_tridiag'`,
+con `compiled_block_substitution=True`), que llamaba a LAPACK bloque a bloque desde
+Python; un pivote singular en ese orden vuelve al Thomas con pivoteo anterior.
+PTC refactoriza en cada cambio de dt, por lo que la factorización pesaba ~35% del
+tiempo. Medido con GRI-Mech 3.0, CH4/aire, phi=1, 300 K: llama libre 2.26 → 1.8–1.9 s
+(misma `Su` hasta 1e-16, 261 nodos) y llama de quemador con `mass_flux=.2`
+4.16 → 3.2 s (225 nodos); H2/aire 0.23 → 0.20 s. Las 202 pruebas pasan.
+
+El tiempo varía entre procesos en este portátil (hasta ~30% entre sesiones);
+son muestras locales, no garantías. La primera ejecución tras instalar o
+modificar el código compila los kernels (≈2–3 min en total, una sola vez por
+caché de Numba). Evidencia: [adiabático](assets/diffusion/hpc-adiabatic.json) y
+[radiación](assets/diffusion/hpc-radiation.json).
+
+```sh
+python examples/benchmark_diffusion_solver.py --output runs/hpc --no-profile --repeats 2 --cases CH4 H2 H2-MS CH4-MS
+python examples/benchmark_diffusion_solver.py --output runs/hpc_rad --no-profile --radiation
+NUMBA_NUM_THREADS=1 python examples/benchmark_diffusion_solver.py --output runs/hpc_one_thread --no-profile
 ```

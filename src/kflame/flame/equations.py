@@ -2738,6 +2738,33 @@ def factorize(jmat) -> dict:
     if isinstance(jmat, BlockTridiagJacobian):
         n = int(jmat.n_blocks)
         nv = int(jmat.block_size)
+        if bool(getattr(jmat, "use_compiled_substitution", True)):
+            # Compiled two-ended elimination (LAPACK/BLAS blocks, two
+            # concurrent sweeps on large grids). A singular pivot block in
+            # this order falls back to the pivoted block Thomas below.
+            from kflame.flame.block_linear import factor_two_ended
+            lower = np.ascontiguousarray(jmat.lower, dtype=np.float64)
+            upper = np.ascontiguousarray(jmat.upper, dtype=np.float64)
+            try:
+                inverse, coupling, middle = factor_two_ended(
+                    lower, np.ascontiguousarray(jmat.diag, dtype=np.float64), upper)
+            except np.linalg.LinAlgError:
+                inverse = None
+            if inverse is not None:
+                out = {
+                    "method": "block_twisted",
+                    "solver": "two_ended_block_elimination",
+                    "inverse": inverse,
+                    "coupling": coupling,
+                    "middle": middle,
+                    "lower_blocks": lower,
+                    "upper_blocks": upper,
+                    "n_blocks": n,
+                    "block_size": nv,
+                }
+                if problem is not None:
+                    _profile_record(problem, "linear_factorize", t_profile)
+                return out
         lu_blocks: list[tuple[np.ndarray, np.ndarray]] = []
         lu_blocks_array = np.empty((n, nv, nv), dtype=np.float64)
         pivots_array = np.empty((n, nv), dtype=np.int32)
@@ -2814,6 +2841,18 @@ def solve_linear(linear_state, rhs: np.ndarray) -> np.ndarray:
         if int(info) != 0:
             raise RuntimeError(f"LAPACK dgbtrs failed with info={int(info)}")
         out = x[:, 0]
+        if problem is not None:
+            _profile_record(problem, "linear_solve", t_profile)
+        return out
+    if isinstance(linear_state, dict) and linear_state.get("method") == "block_twisted":
+        from kflame.flame.block_linear import twisted_solve
+        state = (linear_state["lower_blocks"], linear_state["upper_blocks"],
+                 linear_state["inverse"], linear_state["coupling"], int(linear_state["middle"]))
+        if rhs_array.ndim == 1:
+            out = twisted_solve(*state, np.ascontiguousarray(rhs_array, dtype=np.float64))
+        else:
+            out = np.column_stack([twisted_solve(*state, np.ascontiguousarray(column, dtype=np.float64))
+                                   for column in rhs_array.T])
         if problem is not None:
             _profile_record(problem, "linear_solve", t_profile)
         return out
