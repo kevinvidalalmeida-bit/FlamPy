@@ -416,6 +416,52 @@
    "factorization_pct": 35.8,
    "transient_refactorization_pct": 25.4,
    "jacobian_pct": 12.3
+  },
+  "deboer_2024_table_3_2": {
+   "source": "Y. de Boer, Flame speed based 2-zone combustion model for methanol-diesel dual fuel engines, TU Eindhoven, 2024, p. 28, Table 3.2 (Cantera freeflame, phi=0.5, T=600 K, p=40 atm, average refinement criteria)",
+   "reported_s": {
+    "Aramco Mech 3.0": 9195,
+    "Gri Mech 3.0": 15,
+    "Gri Mech 3.0 High Temperature": 17,
+    "NUI Galway methanol Mechanism": 133,
+    "Lund Mechanism": 1,
+    "Princeton Mechanism": 2
+   },
+   "here": [
+    {
+     "mechanism": "gri30",
+     "refine": "solve_flame default (2.5, 0.04, 0.08)",
+     "runtime_s": 4.84,
+     "Su": 0.09560196155360971,
+     "nodes": 240,
+     "peak_MB": 211
+    },
+    {
+     "mechanism": "gri30",
+     "refine": "Cantera example (3, 0.06, 0.12)",
+     "runtime_s": 2.8,
+     "Su": 0.09648920052940235,
+     "nodes": 165,
+     "peak_MB": 176
+    },
+    {
+     "mechanism": "aramcomech3",
+     "refine": "solve_flame default (2.5, 0.04, 0.08)",
+     "runtime_s": 116.97,
+     "Su": 0.10369074932931244,
+     "nodes": 241,
+     "peak_MB": 1751
+    },
+    {
+     "mechanism": "aramcomech3",
+     "refine": "Cantera example (3, 0.06, 0.12)",
+     "runtime_s": 115.83,
+     "Su": 0.10458787504198609,
+     "nodes": 178,
+     "peak_MB": 1409
+    }
+   ],
+   "case_here": "CH3OH/air, phi=0.5, 600 K, 40*101325 Pa, mixture-averaged, solve_flame defaults otherwise, high priority"
   }
  }
 }

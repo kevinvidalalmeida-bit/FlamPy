@@ -125,6 +125,19 @@ Su coincide en las tres variantes hasta 10⁻¹⁴. Con el mismo caso, USC Mech 
 
 Sólo sirven como orden de magnitud: aquí la llama completa de Aramco 3.0, con 581 especies, tarda unos 3 minutos en un portátil.
 
+### Caso de la Tabla 3.2 de de Boer (2024)
+
+La tesis de máster de Y. de Boer (TU Eindhoven, 2024, *Flame speed based 2-zone combustion model for methanol-diesel dual fuel engines*, p. 28, Tabla 3.2) da el tiempo de una llama libre de Cantera a ϕ = 0,5, T = 600 K, p = 40 atm, con «criterios de refinamiento medios». Por el contexto de la tesis el combustible es metanol, aunque el pie de la tabla no lo dice. La tesis tampoco da los valores de refinamiento, el modelo de transporte ni el ordenador.
+
+Aquí se resolvió el mismo caso: CH₃OH/aire, ϕ = 0,5, 600 K, 40 atm, mezcla promediada. Se usaron dos juegos de refinamiento: los de `solve_flame` (ratio 2,5, slope 0,04, curve 0,08) y los del ejemplo habitual de Cantera (3; 0,06; 0,12).
+
+| Mecanismo | de Boer, Cantera (s) | Aquí, refinamiento por defecto (s) | Aquí, refinamiento del ejemplo de Cantera (s) |
+|---|---:|---:|---:|
+| GRI-Mech 3.0 | 15 | 4,8 (Su 0,0956 m/s, 240 nodos) | 2,8 (Su 0,0965 m/s, 165 nodos) |
+| AramcoMech 3.0 | 9195 | **117** (Su 0,1037 m/s, 241 nodos, 1,75 GB) | **116** (Su 0,1046 m/s, 178 nodos, 1,4 GB) |
+
+El hardware y la versión de Cantera son distintos, así que el cociente (≈ 80× con Aramco 3.0) es indicativo y no una comparación controlada. Con Aramco 3.0 el tiempo apenas depende del refinamiento: domina el pseudo-transitorio en las mallas gruesas iniciales.
+
 ## Qué se probó y se descartó
 
 | Estrategia | Resultado medido | Decisión |
