@@ -1,30 +1,33 @@
 # FlamPy
 
-[Guía de lectura](docs/README.md) ·
-[Estado del repositorio y prioridades HPC (2026-10-08)](docs/reviews/repository-hpc-2026-10-08.md).
+[Guía de lectura](docs/README.md) · [API](docs/api.md) · [Ejemplos](examples/README.md)
 
-[Transporte multicomponente: perfil, mejoras HPC y tiempos antes/después](docs/hpc-multicomponent.md).
+## Novedades
 
-[Localidad L1/L2, buffers y validación exacta](docs/hpc-memory-layout.md).
-
-[Continuación HPC: caras compartidas, derivadas por bloques y tiempos antes/después](docs/hpc-next-strategies.md).
-
-[Mecanismos grandes: Jacobiano estructurado, Newton–Krylov y transporte vectorizado](docs/hpc-large-mechanisms.md):
-la llama de difusión completa con AramcoMech 3.0 pasa de no terminar a 115 s; JetSurF 3,6×, GRI 1,5×.
-
-[Validación de CO, NO y NO₂ con GRI-Mech 3.0](docs/pollutants.md):
-perfiles en ppm, fuentes químicas y comprobación de contaminantes en FGM.
-
-La rama de [llamas de difusión en contraflujo](docs/diffusion-flames.md) añade
-dos entradas independientes, un solver nativo, tablas FGM `(Z,C)` y validación
-con Cantera para metano/aire e hidrógeno/aire. Incluye entalpía total y su salida
-radial; la tabla de dos controles conserva las historias de entrenamiento.
-Admite transporte promediado o multicomponente, Soret y, opcionalmente, pérdidas
-por radiación ópticamente delgada (`radiation=True`), con Jacobiana compilada
-por bloques: en los casos medidos es más rápido que Cantera 3.2
-([rendimiento](docs/diffusion-flames.md#rendimiento-de-alto-nivel-y-pérdidas-radiativas)).
-Las familias con pérdidas forman tablas `(Z,C,h)` validadas con flamelets reservados
-([tablas con pérdidas](docs/diffusion-flames.md#tablas-fgm-con-pérdidas-zch)).
+- **Nueve mecanismos químicos**, de H₂/O₂ (10 especies) a AramcoMech 3.0
+  (581 especies y 3037 reacciones), con PLOG, SRI y Troe nativos
+  ([mecanismos](docs/mechanisms.md)). `examples/example_mechanisms.py` resuelve
+  la misma llama con todos y dibuja la comparación.
+- **Mecanismos grandes en minutos** ([Jacobiano estructurado, Newton–Krylov y
+  transporte vectorizado](docs/hpc-large-mechanisms.md)):
+  - la llama de difusión de CH₄/aire con AramcoMech 3.0 pasa de no terminar
+    (32 GB agotados) a unos 103 s;
+  - la llama premezclada del artículo del mecanismo baja de 580 s a 178 s;
+  - el caso de la tesis de de Boer (2024, TU/e), con 9195 s reportados con
+    Cantera, tarda aquí 117 s (otro hardware).
+- **Llamas de difusión en contraflujo** ([documentación](docs/diffusion-flames.md)):
+  - dos entradas independientes y un solver nativo;
+  - tablas FGM `(Z,C)` y, con radiación ópticamente delgada, `(Z,C,h)`;
+  - validación con flamelets reservados.
+- **Contaminantes**: [CO, NO y NO₂ con GRI-Mech 3.0](docs/pollutants.md) en perfiles y en FGM.
+- **Llamas no adiabáticas y pérdidas hacia el quemador**: FGM `(Z,C,h)` validado
+  ([modelo](docs/nonadiabatic-fgm.md), [pérdidas](docs/heat-loss.md)).
+- Notas HPC por tema:
+  - [estado y prioridades](docs/reviews/repository-hpc-2026-10-08.md);
+  - [transporte multicomponente](docs/hpc-multicomponent.md);
+  - [localidad de memoria](docs/hpc-memory-layout.md);
+  - [caras compartidas y derivadas por bloques](docs/hpc-next-strategies.md);
+  - [estado de las estrategias](docs/hpc-strategy-status.md).
 
 **Llamas premezcladas con química detallada y tablas FGM, desde Python.**
 

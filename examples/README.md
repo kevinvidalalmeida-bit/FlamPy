@@ -27,6 +27,7 @@ python -m pip install -e ".[reference]"
 | [`benchmark_diffusion_solver.py`](benchmark_diffusion_solver.py) | Mide resolución nativa/Cantera con repeticiones; requiere `reference` y una carpeta nueva indicada con `--output` |
 | [`benchmark_diffusion_mechanisms.py`](benchmark_diffusion_mechanisms.py) | Llamas de difusión completas para cada mecanismo instalado, camino nuevo frente al anterior (`--modes new legacy split4`), un proceso por caso; requiere `--output` nuevo |
 | [`benchmark_memory_layout.py`](benchmark_memory_layout.py) | Compara perfiles y tiempos entre dos árboles de código; requiere `--baseline-src` y una carpeta nueva con `--output` |
+| [`example_mechanisms.py`](example_mechanisms.py) | Resuelve la misma llama premezclada (o de contraflujo con `--flame diffusion`) con cada mecanismo instalado y dibuja perfiles, velocidad de llama o temperatura máxima y tiempo del solver; `--plot-only` redibuja la figura publicada |
 | [`validate_mechanisms.py`](validate_mechanisms.py) | Comprueba el catálogo instalado, transporte nativo, cinética fusionada y entrada analítica contra Cantera; requiere `reference` y `--output` |
 
 Para la nueva familia no adiabática, consulta [el modelo y sus referencias](../docs/heat-loss.md).

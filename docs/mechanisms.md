@@ -49,14 +49,14 @@ flame = solve_diffusion_flame(
 )
 ```
 
-En los archivos USC, JetSurF y Aramco instalados, el intervalo común de los
-polinomios NASA es 300–2000 K. En USC, la inicialización adiabática de
-CH₄/aire estequiométrico a 300 K
-requiere 2230,33 K y queda fuera del intervalo que acota el solver nativo de
-equilibrio. El ejemplo usa combustible diluido: su temperatura de equilibrio
-es 1848,93 K; la comprobación independiente con Cantera difiere en menos de
-2×10⁻⁸ K. La dilución define otro caso físico; no es una aceleración del caso
-de metano puro. Los coeficientes y el intervalo original se conservan.
+En los archivos USC, JetSurF y Aramco el intervalo común de los polinomios
+NASA es 300–2000 K, pero la llama estequiométrica de CH₄/aire supera 2200 K.
+La búsqueda del equilibrio adiabático que inicializa las llamas amplía su
+intervalo hasta 2·T_max cuando hace falta, la misma cota que ya usa el
+resolvedor. Por eso CH₄/aire puro arranca con todos los mecanismos del catálogo.
+Los coeficientes y el intervalo original se conservan. El ejemplo de USC con
+combustible diluido de arriba es solo otro caso físico; no es necesario para
+que el cálculo arranque.
 
 AramcoMech se instaló en `~/.kflame/mechanisms` en esta máquina; esos YAML
 no se incluyen en el paquete. En otra máquina hay que proporcionar los
@@ -72,6 +72,48 @@ flampy diffusion --mechanism aramcomech2.yaml --fuel 'CH4:1,N2:4' --output runs/
 Un mecanismo local ausente produce un error; no se sustituye por GRI ni por
 otra versión. Cambiar el mecanismo cambia la química del cálculo: no es una
 optimización HPC que mantenga la misma solución.
+
+## Mismo caso con todos los mecanismos
+
+[`examples/example_mechanisms.py`](../examples/example_mechanisms.py) resuelve la
+misma llama con cada mecanismo instalado: premezclada de CH₄/aire (φ = 1,
+300 K, 1 atm) o, con `--flame diffusion`, contraflujo de CH₄/aire. Guarda cada
+llama en su carpeta y un `summary.json` con perfiles, velocidad de llama o
+temperatura máxima, nodos y tiempo del solver. La figura se dibuja solo desde
+ese archivo.
+
+```sh
+python examples/example_mechanisms.py
+python examples/example_mechanisms.py --flame diffusion
+python examples/example_mechanisms.py --plot-only docs/assets/mechanisms/premixed-ch4.json
+```
+
+![Llama premezclada de CH₄/aire con cada mecanismo](assets/mechanisms/mechanisms_premixed.png)
+
+![Llama de contraflujo de CH₄/aire con cada mecanismo](assets/mechanisms/mechanisms_diffusion.png)
+
+| Mecanismo | Especies | Premezclada: Su (cm/s) | Premezclada: tiempo (s) | Contraflujo: Tmax (K) | Contraflujo: tiempo (s) |
+|---|---:|---:|---:|---:|---:|
+| DRM19 | 21 | 40,3 | 1,1 | 2050 | 2,0 |
+| DRM22 | 24 | 40,5 | 0,7 | 2052 | 1,1 |
+| FFCM-1 | 38 | 34,6 | 1,5 | 2022 | 1,9 |
+| GRI-Mech 3.0 | 53 | 37,9 | 1,5 | 2050 | 1,9 |
+| USC Mech II | 111 | 36,1 | 3,3 | 2051 | 4,8 |
+| JetSurF 2.0 | 348 | 36,2 | 28,4 | 2050 | 39,5 |
+| AramcoMech 2.0 | 493 | 36,5 | 109,9 | 2016 | 79,2 |
+| AramcoMech 3.0 | 581 | 36,2 | 292,3 | 2016 | 109,0 |
+
+Ryzen 9 7845HX, prioridad alta, un proceso por figura. FFCM-1 premezclada midió
+6,7 s en esa ejecución porque fue la primera llama con tasas dependientes de la
+presión y pagó la compilación JIT; en dos procesos nuevos tarda 1,5 s, con la
+misma Su y la misma malla (se publica 1,5 s y se conserva la nota en el JSON).
+
+Los datos publicados están en [premixed-ch4.json](assets/mechanisms/premixed-ch4.json)
+y [diffusion-ch4.json](assets/mechanisms/diffusion-ch4.json). Cambiar el
+mecanismo cambia la química y, por tanto, la solución: las diferencias entre
+curvas son del mecanismo, no del solver. Cómo se consiguen estos tiempos con
+los mecanismos grandes: [Jacobiano estructurado, Newton–Krylov y transporte
+vectorizado](hpc-large-mechanisms.md).
 
 ## Procedencia y convenciones de conversión
 
@@ -140,6 +182,10 @@ La campaña HPC posterior valida el mismo árbol integrado con **853 pruebas
 aprobadas**, comparación de transporte/cinética contra Cantera en los nueve
 mecanismos y doce pares exactos de llamas completas. Sus tiempos emparejados,
 intervalos y decisión CPU/GPU están en [HPC por mecanismo](hpc-mechanisms.md).
+
+Con el Jacobiano estructurado, la factorización por tramos y la llama premezclada
+estructurada integrados, la suite completa da **1077 pruebas aprobadas y ningún
+fallo** (11 de octubre de 2026).
 
 Para repetir la comprobación del backend completo con los mecanismos instalados:
 
