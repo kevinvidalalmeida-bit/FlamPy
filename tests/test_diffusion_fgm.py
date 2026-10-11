@@ -192,6 +192,59 @@ def test_parallel_heat_loss_rows_build_the_serial_table(tmp_path):
         generate_diffusion_heat_loss_fgm(**base,output=tmp_path/'bad',jobs=0)
 
 
+def _profile(Z,T):
+    n=len(Z)
+    Y=np.vstack([Z,1.-Z])
+    return dict(Z=np.asarray(Z,float),T=np.asarray(T,float),h=np.asarray(T,float)*1e3,qdot=np.zeros(n),
+                Y=Y,omega_Y=np.zeros_like(Y))
+
+
+def test_adaptive_mixture_sampling_bounds_the_stored_table_error():
+    # Review P2: one flamelet spans [0,1], the other [0.1,0.9]. The table
+    # samples each full profile; the bound must hold for what is stored.
+    from kflame.fgm.diffusion import _mixture_columns
+    # The wide flamelet changes steeply between its knot at Z=0, outside the
+    # shared domain, and its first inside knot at Z=0.3: the table value at
+    # Z=0.1 comes from that steep segment, not from the first inside knot.
+    wide=np.array([1.,.8,.5,.3,0.])
+    narrow=np.linspace(.9,.1,9)
+    profiles=[_profile(wide,[300.,300.,300.,300.,2000.]),
+              _profile(narrow,300.+1000.*narrow)]  # linear: needs no inserted knots
+    for p in profiles:                              # isolate T and h: uniform composition
+        p['Y']=np.full_like(p['Y'],.5)
+    tolerance=1e-3
+    Zgrid,fields,info,lower,upper=_mixture_columns(profiles,3,tolerance)
+    assert (lower,upper)==(.1,.9)
+    span=max(np.ptp(p['T'][(p['Z']>=lower)&(p['Z']<=upper)]) for p in profiles)
+    for row,p in zip(fields['T'],profiles):
+        inside=(p['Z']>=lower)&(p['Z']<=upper)
+        error=np.max(abs(np.interp(p['Z'][inside],Zgrid,row)-p['T'][inside]))/span
+        assert error<=tolerance
+    assert info['sampling_error']<=tolerance
+
+
+def test_mixture_sampling_reports_an_insufficient_point_budget():
+    from kflame.fgm import diffusion as D
+    Z=np.linspace(1.,0.,401)
+    profiles=[_profile(Z,300.+1700.*np.sin(7*np.pi*Z)**2),_profile(Z,300.+1600.*np.sin(7*np.pi*Z)**2)]
+    columns=D._mixture_columns(profiles,3)[0]  # only checks the profiles are admissible
+    assert len(columns)
+    with pytest.raises(ValueError,match='more than 20 points'):
+        cols=[(p['Z'][::-1],np.arange(len(Z))[::-1],p) for p in profiles]
+        D._adaptive_mixture_grid(cols,0.,1.,3,1e-4,max_points=20)
+
+
+def test_accumulated_z_reversals_are_a_fold_not_rounding(tmp_path):
+    # Review P2: three reversals of 8e-7 accumulate 2.4e-6 > FOLD_TOLERANCE.
+    from kflame.fgm.diffusion import FOLD_TOLERANCE,_mixture_columns
+    Z=np.linspace(1.,0.,12)
+    Z[5:8]=Z[4]+np.array([8e-7,16e-7,24e-7])        # Z rises three times in a row
+    assert np.all(np.diff(Z[4:8])<=FOLD_TOLERANCE)  # each single step looks like rounding
+    profiles=[_profile(Z,300.+1000.*Z),_profile(np.linspace(1.,0.,12),300.+900.*np.linspace(1.,0.,12))]
+    with pytest.raises(ValueError,match='folds'):
+        _mixture_columns(profiles,5)
+
+
 def test_rounding_level_reversals_of_z_are_dropped_and_counted(tmp_path):
     profiles,metadata=synthetic_family()
     for profile in profiles:

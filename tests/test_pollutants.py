@@ -61,11 +61,15 @@ def test_nonfinite_or_mismatched_profiles_are_rejected():
         compare_pollutant_profiles({'NO': row}, {'NO2': row})
 
 
-def test_fgm_pollutant_tails_require_coverage_even_with_exact_covered_values(tmp_path):
+def _saved_native_and_comparison(tmp_path, full_arrays):
+    """A 4-node native flame and an FGM comparison covering its middle nodes.
+
+    The (Z,C) validator stores covered states only; the (Z,C,h) validator
+    stores every native node, with NaN where the table gives no state.
+    """
     import hashlib
     import json
     from pathlib import Path
-    from kflame.pollutants import validate_diffusion_pollutants
     mech = load_mechanism(resolve_mechanism('gri30.yaml'))
     native, comparison = tmp_path / 'native', tmp_path / 'comparison'
     native.mkdir(); comparison.mkdir()
@@ -81,8 +85,30 @@ def test_fgm_pollutant_tails_require_coverage_even_with_exact_covered_values(tmp
     np.savez(native / 'flame.npz', **profile)
     (comparison / 'validation.json').write_text(json.dumps(dict(passed=True, native_metadata=metadata)))
     covered = np.array([False, True, True, False])
+    if full_arrays:
+        lookup_Y = np.where(covered[None, :], Y, np.nan)
+        lookup_omega = np.where(covered[None, :], profile['omega_Y'], np.nan)
+    else:
+        lookup_Y, lookup_omega = Y[:, covered], profile['omega_Y'][:, covered]
     np.savez(comparison / 'comparison.npz', covered=covered, native_Z=profile['Z'],
-             Y=Y[:, covered], omega_Y=profile['omega_Y'][:, covered])
+             Y=lookup_Y, omega_Y=lookup_omega)
+    return native, comparison
+
+
+def test_fgm_pollutant_audit_accepts_full_arrays_of_the_heat_loss_validator(tmp_path):
+    # Review P1: NaN outside the (Z,C,h) table used to raise ValueError.
+    from kflame.pollutants import validate_diffusion_pollutants
+    native, comparison = _saved_native_and_comparison(tmp_path, full_arrays=True)
+    report = validate_diffusion_pollutants(native, comparison, tmp_path / 'audit', kind='fgm', species=('NO',))
+    assert report['pollutants']['NO']['passed']
+    assert report['coverage']['NO']['ppm']['fraction'] == .5
+
+
+def test_fgm_pollutant_tails_require_coverage_even_with_exact_covered_values(tmp_path):
+    from kflame.pollutants import validate_diffusion_pollutants
+    mech = load_mechanism(resolve_mechanism('gri30.yaml'))
+    assert mech.n_species > 0
+    native, comparison = _saved_native_and_comparison(tmp_path, full_arrays=False)
     report = validate_diffusion_pollutants(native, comparison, tmp_path / 'audit', kind='fgm', species=('NO',))
     assert report['pollutants']['NO']['passed']
     assert report['coverage']['NO']['ppm']['fraction'] == .5

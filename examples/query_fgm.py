@@ -13,17 +13,23 @@ def query_table(
     *,
     z: float | None = None,
     progress: tuple[float, ...] = (0.25, 0.5, 0.75),
-    species: str = "H2O",
+    species: str | None = None,
 ) -> dict[str, np.ndarray]:
-    """Return temperature and one mass fraction at a fixed inlet Z and several c."""
+    """Return temperature and one mass fraction at a fixed inlet Z and several c.
+
+    Without ``species`` H2O is reported when the table stores it, otherwise
+    the first stored species (published tables keep only a few species).
+    """
     with np.load(path, allow_pickle=False) as table:
         z_grid = table["Z_grid"]
         c_grid = table["c_grid"]
         names = table["species_names"].astype(str).tolist()
         temperature = table["T"]
         mass_fractions = np.moveaxis(table["Y"], 1, -1)
+    if species is None:
+        species = "H2O" if "H2O" in names else names[0]
     if species not in names:
-        raise ValueError(f"Species {species!r} is not present in the table.")
+        raise ValueError(f"Species {species!r} is not present in the table; stored: {', '.join(names)}.")
     z = float(0.5 * (z_grid[0] + z_grid[-1]) if z is None else z)
     c = np.asarray(progress, dtype=float)
     if c.ndim != 1 or c.size == 0 or not np.isfinite(c).all() or not np.isfinite(z):
@@ -40,6 +46,7 @@ def query_table(
         "c": c,
         "T": interpolate_temperature(points),
         "Y": interpolate_composition(points)[:, names.index(species)],
+        "species": species,
     }
 
 
@@ -48,10 +55,11 @@ def main() -> None:
     parser.add_argument("table", type=Path, help="Path to fgm_table.npz")
     parser.add_argument("--Z", type=float, default=None, help="Inlet mixture fraction; default: interval midpoint")
     parser.add_argument("--c", nargs="+", type=float, default=[0.25, 0.5, 0.75], help="Normalised progress values")
-    parser.add_argument("--species", default="H2O", help="Species mass fraction to report")
+    parser.add_argument("--species", default=None,
+                        help="Species mass fraction to report; default: H2O if stored, else the first stored species")
     args = parser.parse_args()
     result = query_table(args.table, z=args.Z, progress=tuple(args.c), species=args.species)
-    print(f"Z,c,T_K,Y_{args.species}")
+    print(f"Z,c,T_K,Y_{result['species']}")
     for z, c, temperature, mass_fraction in zip(
         result["Z"], result["c"], result["T"], result["Y"], strict=True
     ):

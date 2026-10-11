@@ -60,6 +60,15 @@ flampy reference-diffusion --native runs/ch4_diffusion --output runs/ch4_cantera
 python examples/example_diffusion.py --output runs/diffusion_example --reference
 ```
 
+`examples/example_diffusion.py` resuelve CH₄/aire y H₂/aire, construye sus
+tablas `(Z,C)` y valida un flamelet con una deformación reservada (×1,1). Sin
+`--reference` no usa Cantera y tarda unos 12 s en total. La figura se dibuja
+desde los archivos guardados (`--plot-only` la redibuja). En la ejecución
+mostrada, el error máximo de T del flamelet reservado es 0,12 K en CH₄ y
+1,8 K en H₂.
+
+![Llamas de contraflujo, familia de entrenamiento y flamelet reservado](assets/diffusion/example/diffusion_fgm.png)
+
 ## Ecuaciones y convergencia
 
 Las incógnitas son el caudal axial firmado `m=ρu`, la tasa de expansión radial

@@ -60,34 +60,42 @@ def _adaptive_mixture_grid(columns,lower,upper,mixture_points,tolerance,max_poin
     state by more than ``tolerance`` (relative to that field's family range),
     the physical knot of largest error. Controlled fields are T, h, qdot and
     every Y_k and omega_k, so the Z sampling error stays explicitly bounded.
+    Grid values are interpolated from the full profile, exactly as the table
+    stores them; the error is measured on the knots inside the shared domain.
+    Returns the grid and the largest relative error reached; a budget too
+    small for the tolerance is an error, never a silent coarser table.
     """
     data=[]
     for Z,order,profile in columns:
-        inside=(Z>=lower)&(Z<=upper)
         rows=np.vstack([profile['T'][order],profile['h'][order],profile['qdot'][order],
                         profile['Y'][:,order],profile['omega_Y'][:,order]])
-        data.append((Z[inside],rows[:,inside]))
-    scale=np.max([np.ptp(rows,axis=1) for _,rows in data],axis=0)
+        inside=(Z>=lower)&(Z<=upper)
+        data.append((Z,rows,inside))
+    scale=np.max([np.ptp(rows[:,inside],axis=1) for _,rows,inside in data],axis=0)
     scale=np.where(scale>0.,scale,1.)
     grid=np.unique(np.r_[np.linspace(lower,upper,mixture_points),lower,upper])
-    while len(grid)<max_points:
+    while True:
         worst=np.zeros(len(grid)-1);where=np.full(len(grid)-1,np.nan)
-        for Z,rows in data:
+        for Z,rows,inside in data:
             sampled=np.array([np.interp(grid,Z,row) for row in rows])
-            rebuilt=np.array([np.interp(Z,grid,row) for row in sampled])
-            error=np.max(abs(rebuilt-rows)/scale[:,None],axis=0)
-            interval=np.clip(np.searchsorted(grid,Z,side='right')-1,0,len(grid)-2)
+            knots,values=Z[inside],rows[:,inside]
+            rebuilt=np.array([np.interp(knots,grid,row) for row in sampled])
+            error=np.max(abs(rebuilt-values)/scale[:,None],axis=0)
+            interval=np.clip(np.searchsorted(grid,knots,side='right')-1,0,len(grid)-2)
             order=np.lexsort((-error,interval))
             first=order[np.r_[True,np.diff(interval[order])!=0]]
             better=error[first]>worst[interval[first]]
             worst[interval[first][better]]=error[first][better]
-            where[interval[first][better]]=Z[first][better]
+            where[interval[first][better]]=knots[first][better]
+        achieved=float(worst.max(initial=0.))
         insert=where[(worst>tolerance)&np.isfinite(where)]
         insert=insert[~np.isin(insert,grid)]
         if not len(insert):
-            break
+            return grid,achieved
+        if len(grid)+len(insert)>max_points:
+            raise ValueError(f'Mixture sampling needs more than {max_points} points to reach '
+                             f'tolerance {tolerance:g} (reached {achieved:.3g})')
         grid=np.unique(np.r_[grid,insert])
-    return grid
 
 
 def _mixture_columns(profiles,mixture_points,tolerance=None):
@@ -106,15 +114,17 @@ def _mixture_columns(profiles,mixture_points,tolerance=None):
         excluded_spatial.append(int(len(Z)-len(admissible)))
         if len(admissible)<3:
             raise ValueError('A flamelet must span a resolved mixture fraction range')
-        # A genuine fold (Z rising again by more than FOLD_TOLERANCE) is
-        # rejected. Smaller reversals, e.g. 1e-8 in the cold tails with Soret
-        # and multicomponent diffusion, are rounding-level: the monotone
-        # envelope is kept and the dropped states are counted.
-        if np.any(np.diff(Z[admissible])>FOLD_TOLERANCE):
-            raise ValueError('Local Bilger Z folds along a flamelet; a single Z trajectory cannot be tabulated')
+        # A genuine fold is rejected: Z drops below its running maximum by
+        # more than FOLD_TOLERANCE, in one step or accumulated over several.
+        # Smaller reversals, e.g. 1e-8 in the cold tails with Soret and
+        # multicomponent diffusion, are rounding-level: the monotone envelope
+        # is kept and the dropped states are counted.
         order=admissible[::-1]
         values=Z[order]
-        keep=np.r_[True,values[1:]>np.maximum.accumulate(values)[:-1]+1e-12]
+        envelope=np.maximum.accumulate(values)
+        if np.max(envelope-values)>FOLD_TOLERANCE:
+            raise ValueError('Local Bilger Z folds along a flamelet; a single Z trajectory cannot be tabulated')
+        keep=np.r_[True,values[1:]>envelope[:-1]+1e-12]
         dropped.append(int((~keep).sum()))
         order=order[keep]
         if len(order)<3:
@@ -125,11 +135,12 @@ def _mixture_columns(profiles,mixture_points,tolerance=None):
         raise ValueError('Flamelets have no shared mixture-fraction domain')
     # Union of physical knots resolves steep reaction fronts without hundreds
     # of uniform samples in chemically inactive tails.
+    sampling_error=None
     if tolerance is None:
         Zgrid=np.unique(np.r_[np.linspace(lower,upper,mixture_points),
                              *[Z[(Z>lower)&(Z<upper)] for Z,_,_ in columns]])
     else:
-        Zgrid=_adaptive_mixture_grid(columns,lower,upper,mixture_points,tolerance)
+        Zgrid,sampling_error=_adaptive_mixture_grid(columns,lower,upper,mixture_points,tolerance)
     field_rows={name:[] for name in ('Y','h','T','omega_Y','qdot')}
     for Z,order,profile in columns:
         for name in field_rows:
@@ -137,7 +148,8 @@ def _mixture_columns(profiles,mixture_points,tolerance=None):
             field_rows[name].append(np.array([np.interp(Zgrid,Z,row[order]) for row in values]).T
                 if name in ('Y','omega_Y') else np.interp(Zgrid,Z,values[order]))
     fields={name:np.asarray(rows) for name,rows in field_rows.items()}
-    return Zgrid,fields,dict(outside=excluded_spatial,nonmonotone=dropped),float(lower),float(upper)
+    return (Zgrid,fields,dict(outside=excluded_spatial,nonmonotone=dropped,sampling_error=sampling_error),
+            float(lower),float(upper))
 
 
 def build_diffusion_manifold(profiles,metadata,output, *, mixture_points=241,progress_weights=None):
@@ -346,9 +358,13 @@ def build_diffusion_heat_loss_manifold(profiles,metadata,output, *, mixture_poin
                             dropped_rounding_reversals_of_Z=excluded['nonmonotone']),
               structured_shape=[n_strain,n_loss,nz],mixture_fraction_range=[lower,upper],
               mixture_sampling=dict(points=int(nz),relative_tolerance=mixture_tolerance,
+                                    achieved_relative_error=excluded['sampling_error'],
                                     rule='adaptive physical-knot subset' if mixture_tolerance is not None
                                          else 'union of physical knots'),
               maximum_enthalpy_deficit_J_kg=float(deficit.max()),
+              maximum_enthalpy_deficit_definition=('h(adiabatic flamelet of the same strain, Z) - h(flamelet, Z) '
+                                                   'on the table Z grid; the lookup delta_h is h_adiabatic(Z,C) - h, '
+                                                   'which differs where radiation also changes the composition at fixed Z'),
               progress_rule=progress_rule,progress_candidates=selection,
               h_definition='total_sensible_plus_formation_J_kg',
               note='Native counterflow flamelets connected over strain, radiative loss level and Z. '

@@ -103,6 +103,19 @@ con RHS `[1,2,3]`. Mantener una columna de Λ en el momento del nodo interior
 y una fila de borde que seleccione ese momento. `BorderedFactor` devuelve
 `[0,1,2]`; LU devuelve `[-1,1,2]`. El sistema ampliado sigue bien condicionado.
 
+## Estado de los hallazgos (11 de octubre de 2026)
+
+| Prioridad | Hallazgo | Estado |
+|---|---|---|
+| P1 | Solución lineal inexacta sin fallback | **Corregido.** Las eliminaciones por bloques comprueban el error hacia atrás normado de su primera resolución con un producto matriz-vector. Si supera 10⁻⁸, pasan a LU pivotada: LU dispersa en difusión; Thomas por bloques y, si también falla, LU dispersa en la premezclada. Se aplica a la factorización densa y a la estructurada. Las factorizaciones por tramos o in situ ya no guardan A, así que no se verifican, pero sus pasos se aceptan sobre el residual completo. `tests/test_linear_backward_error.py` reproduce el caso de esta revisión: ahora sale `[-1,1,2]` en lugar de `[0,1,2]`. Coste medido: 0–6 % en llamas completas |
+| P1 | Contaminantes y FGM 3D con cobertura parcial | **Corregido.** La auditoría acepta las dos formas de comparación: estados cubiertos recortados (tabla `(Z,C)`) y arrays completos con NaN fuera de la tabla (`(Z,C,h)`). La auditoría de la tabla radiativa de CH₄ pasa con cobertura del 100 % en CO, NO, NO₂ y NOₓ. Hay prueba de regresión con el formato completo |
+| P2 | Muestreo adaptativo con dominios distintos | **Corregido.** El muestreador interpola desde el perfil completo, como la tabla, y mide el error en los nudos interiores. Devuelve el error alcanzado (`mixture_sampling.achieved_relative_error`) y falla si el presupuesto de puntos no basta. Con el código anterior, la prueba de regresión daba un error almacenado de 0,71 con tolerancia 10⁻³ |
+| P2 | Pliegues acumulados de Z | **Corregido.** Se rechaza cualquier caída de Z bajo su envolvente mayor que `FOLD_TOLERANCE`, en un paso o acumulada. Tres inversiones de 8·10⁻⁷ ya no pasan como redondeo |
+| P2 | Dos referencias para el déficit de entalpía | **Nombrado.** `maximum_enthalpy_deficit_definition` documenta el déficit de generación (adiabático de la misma deformación a igual Z) frente a `delta_h = h_ad(Z,C) − h` de la consulta |
+| P2 | Memoria sin presupuesto global | **Atendido en el camino de mecanismos grandes.** Factorización por tramos sin guardar A, inversas una sola vez y depósito de búferes acotado: Aramco 3.0 tiene un pico de 5,2 GB, frente a la estimación de 21 GiB ([detalle](../hpc-large-mechanisms.md)) |
+| P2 | Hilos según el orden de importación | Pendiente. Sigue documentado: fijar `NUMBA_NUM_THREADS` y `KFLAME_THREADS` antes de iniciar Python |
+| P2 | Ventanas de perfilado | Pendiente. Afecta solo a la instrumentación de `benchmark_diffusion_solver.py`; los tiempos de referencia se miden sin instrumentación |
+
 ## Orden propuesto para avanzar HPC
 
 1. **Cerrar P1.** Verificación lineal y compatibilidad de contaminantes/FGM 3D,

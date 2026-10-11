@@ -437,6 +437,19 @@ class PremixedStructuredJacobian:
             out[:-1] += b.upD*x[1:]+np.einsum('nar,nr->na', b.upP, np.einsum('nbr,nb->nr', b.upQ, x[1:]))
         return out.ravel()
 
+    def abs_row_sums(self):
+        """Absolute row sums. The part without the main diagonal is cached:
+        transient updates (setdiag) change only that diagonal."""
+        b = self.blocks
+        diagonal = abs(np.diagonal(b.diag, axis1=1, axis2=2))
+        if getattr(self, '_rows_off', None) is None:
+            rows = abs(b.diag).sum(axis=2)-diagonal
+            if self.n_blocks > 1:
+                rows[1:] += abs(b.lowD)+np.einsum('nar,nr->na', abs(b.lowP), abs(b.lowQ).sum(axis=1))
+                rows[:-1] += abs(b.upD)+np.einsum('nar,nr->na', abs(b.upP), abs(b.upQ).sum(axis=1))
+            self._rows_off = rows
+        return (self._rows_off+diagonal).ravel()
+
     def dense(self):
         """Equivalent :class:`BlockTridiagJacobian` (tests and fallback)."""
         from kflame.flame.equations import BlockTridiagJacobian
@@ -448,6 +461,23 @@ class PremixedStructuredJacobian:
         return out
 
 
+# Largest normwise backward error accepted from a block elimination.
+BACKWARD_ERROR_LIMIT = 1e-8
+
+
+def block_backward_error(jmat, x, b):
+    """Normwise backward error of x as a solution of ``jmat x = b``.
+
+    The infinity norm of the matrix is bounded by its absolute row sums
+    (``jmat`` offers ``matvec`` and ``abs_row_sums``).
+    """
+    if not np.isfinite(x).all():
+        return np.inf
+    residual = float(np.max(abs(jmat.matvec(x)-b)))
+    scale = float(np.max(jmat.abs_row_sums()))*float(np.max(abs(x)))+float(np.max(abs(b)))
+    return residual/scale if scale > 0. else (0. if residual == 0. else np.inf)
+
+
 class PremixedStructuredFactor:
     """Two-ended structured factorization; pivoted dense fallback if singular."""
 
@@ -456,6 +486,9 @@ class PremixedStructuredFactor:
         self.jmat = jmat
         self.fallback = None
         b = jmat.blocks
+        # Block elimination pivots only inside blocks: the first solve is
+        # verified against the matrix and falls back to pivoted LU if needed.
+        self.backward_error = None
         try:
             self.G, self.GP, self.k = factor_structured(b, np.zeros((b.n, b.nv)))
         except np.linalg.LinAlgError:
@@ -471,7 +504,15 @@ class PremixedStructuredFactor:
         rhs = np.asarray(rhs, dtype=np.float64)
         if rhs.ndim == 2:
             return np.column_stack([self.solve(column) for column in rhs.T])
-        return parallel_solve(self.jmat.blocks, self.G, self.GP, self.k, rhs)
+        out = parallel_solve(self.jmat.blocks, self.G, self.GP, self.k, rhs)
+        if self.backward_error is None:
+            from kflame.flame.equations import factorize, solve_linear
+            self.backward_error = block_backward_error(self.jmat, out, rhs)
+            if not self.backward_error <= BACKWARD_ERROR_LIMIT:
+                self.G = self.GP = None
+                self.fallback = factorize(self.jmat.dense())
+                return solve_linear(self.fallback, rhs)
+        return out
 
 
 def build_structured(x, problem, cache):

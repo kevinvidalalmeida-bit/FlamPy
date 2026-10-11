@@ -1976,6 +1976,29 @@ class BlockTridiagJacobian:
         idx = np.arange(self.block_size)
         self.diag[:, idx, idx] = d
 
+    def tocsc(self):
+        """Assembled sparse matrix (pivoted LU fallback)."""
+        from scipy.sparse import csc_matrix
+        n, nv = self.n_blocks, self.block_size
+        index = np.arange(nv)
+        rows, cols, values = [], [], []
+        for blocks, dr, dc in ((self.diag, 0, 0), (self.lower, 1, 0), (self.upper, 0, 1)):
+            count = blocks.shape[0]
+            r = (np.arange(count)[:, None, None]+dr)*nv+index[None, :, None]
+            c = (np.arange(count)[:, None, None]+dc)*nv+index[None, None, :]
+            rows.append(np.broadcast_to(r, blocks.shape).ravel())
+            cols.append(np.broadcast_to(c, blocks.shape).ravel())
+            values.append(blocks.ravel())
+        return csc_matrix((np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))), shape=self.shape)
+
+    def abs_row_sums(self) -> np.ndarray:
+        """Absolute row sums (an upper bound of the infinity norm per row)."""
+        rows = np.abs(self.diag).sum(axis=2)
+        if self.n_blocks > 1:
+            rows[1:] += np.abs(self.lower).sum(axis=2)
+            rows[:-1] += np.abs(self.upper).sum(axis=2)
+        return rows.ravel()
+
     def matvec(self, vector: np.ndarray) -> np.ndarray:
         """Return the block-tridiagonal product ``J @ vector``.
 
@@ -2767,6 +2790,9 @@ def factorize(jmat) -> dict:
                     "upper_blocks": upper,
                     "n_blocks": n,
                     "block_size": nv,
+                    # Pivoting only inside blocks: the first solve is verified
+                    # (solve_linear) and falls back to pivoted factorizations.
+                    "verify": jmat,
                 }
                 if problem is not None:
                     _profile_record(problem, "linear_factorize", t_profile)
@@ -2805,6 +2831,9 @@ def factorize(jmat) -> dict:
                 getattr(jmat, "use_compiled_substitution", True)
             ),
         }
+        # The block Thomas sweep also pivots only inside blocks: its first
+        # solve is verified and falls back to sparse LU of the assembled matrix.
+        out["verify"] = jmat
         if problem is not None:
             _profile_record(problem, "linear_factorize", t_profile)
         return out
@@ -2823,6 +2852,47 @@ def factorize(jmat) -> dict:
     if problem is not None:
         _profile_record(problem, "linear_factorize", t_profile)
     return out
+
+
+def _verified_block_solve(linear_state, rhs: np.ndarray, out: np.ndarray) -> np.ndarray:
+    """Check the first block-elimination solve; switch to a pivoted fallback.
+
+    Two-ended elimination falls back to the block Thomas sweep, and that to
+    sparse LU of the assembled matrix. Later solves reuse the decision.
+    """
+    jmat = linear_state.pop("verify", None)
+    if jmat is None or rhs.ndim != 1:
+        return out
+    from kflame.flame.premixed_structured import BACKWARD_ERROR_LIMIT, block_backward_error
+    error = block_backward_error(jmat, out, rhs)
+    if error <= BACKWARD_ERROR_LIMIT:
+        linear_state["backward_error"] = error
+        return out
+    if linear_state.get("method") == "block_twisted":
+        compiled = getattr(jmat, "use_compiled_substitution", True)
+        jmat.use_compiled_substitution = False   # pivoted block Thomas next
+        try:
+            fallback = factorize(jmat)
+        finally:
+            jmat.use_compiled_substitution = compiled
+    else:
+        fallback = factorize(_AssembledOnly(jmat))
+    problem = linear_state.get("profile_problem")
+    linear_state.clear()
+    linear_state.update(fallback)
+    if problem is not None:
+        linear_state["profile_problem"] = problem
+    return solve_linear(linear_state, rhs)
+
+
+class _AssembledOnly:
+    """Expose only tocsc, so factorize uses sparse LU of the same matrix."""
+
+    def __init__(self, jmat):
+        self._jmat = jmat
+
+    def tocsc(self):
+        return self._jmat.tocsc()
 
 
 def solve_linear(linear_state, rhs: np.ndarray) -> np.ndarray:
@@ -2856,6 +2926,8 @@ def solve_linear(linear_state, rhs: np.ndarray) -> np.ndarray:
                  linear_state["inverse"], linear_state["coupling"], int(linear_state["middle"]))
         if rhs_array.ndim == 1:
             out = twisted_solve(*state, np.ascontiguousarray(rhs_array, dtype=np.float64))
+            if "verify" in linear_state:
+                out = _verified_block_solve(linear_state, rhs_array, out)
         else:
             out = np.column_stack([twisted_solve(*state, np.ascontiguousarray(column, dtype=np.float64))
                                    for column in rhs_array.T])
@@ -2878,6 +2950,8 @@ def solve_linear(linear_state, rhs: np.ndarray) -> np.ndarray:
                 linear_state["cprime"],
                 rhs_array,
             )
+            if "verify" in linear_state:
+                out = _verified_block_solve(linear_state, rhs_array, out)
             if problem is not None:
                 _profile_record(problem, "linear_solve", t_profile)
             return out
@@ -2900,6 +2974,8 @@ def solve_linear(linear_state, rhs: np.ndarray) -> np.ndarray:
         for i in range(n - 2, -1, -1):
             x_b[i] = y[i] - cprime[i] @ x_b[i + 1]
         out = x_b.ravel()
+        if "verify" in linear_state and rhs_array.ndim == 1:
+            out = _verified_block_solve(linear_state, rhs_array, out)
         if problem is not None:
             _profile_record(problem, "linear_solve", t_profile)
         return out

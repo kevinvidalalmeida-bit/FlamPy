@@ -795,6 +795,52 @@ class BorderedBlocks:
         return csc_matrix((np.concatenate(vals),(np.concatenate(rows),np.concatenate(cols))),shape=(size,size))
 
 
+# Largest normwise backward error accepted from the block elimination; a
+# stable factorization gives ~1e-15, a pivot-free elimination breakdown O(1).
+BACKWARD_ERROR_LIMIT=1e-8
+
+
+def bordered_matvec(blocks,rdt,x):
+    """[[A + rdt M, c], [r, 0]] x for dense (BorderedBlocks) or structured blocks."""
+    n,nv=blocks.n,blocks.nv
+    u=x[:-1].reshape(n,nv)
+    y=np.einsum('nij,nj->ni',blocks.diag,u)+rdt*blocks.mass.reshape(n,nv)*u
+    if hasattr(blocks,'lowD'):
+        y[1:]+=blocks.lowD*u[:-1]+np.einsum('nar,nr->na',blocks.lowP,np.einsum('nbr,nb->nr',blocks.lowQ,u[:-1]))
+        y[:-1]+=blocks.upD*u[1:]+np.einsum('nar,nr->na',blocks.upP,np.einsum('nbr,nb->nr',blocks.upQ,u[1:]))
+    else:
+        y[1:]+=np.einsum('nij,nj->ni',blocks.lower,u[:-1])
+        y[:-1]+=np.einsum('nij,nj->ni',blocks.upper,u[1:])
+    y[1:-1,1]+=x[-1]
+    out=np.empty(n*nv+1)
+    out[:-1]=y.ravel()
+    out[-1]=blocks.border.ravel()@x[(n-2)*nv:n*nv]
+    return out
+
+
+def _matrix_norm(blocks,rdt):
+    """Upper bound of the infinity norm of the bordered matrix."""
+    n,nv=blocks.n,blocks.nv
+    rows=abs(blocks.diag).sum(axis=2)+abs(rdt*blocks.mass.reshape(n,nv))
+    if hasattr(blocks,'lowD'):
+        rows[1:]+=abs(blocks.lowD)+np.einsum('nar,nr->na',abs(blocks.lowP),abs(blocks.lowQ).sum(axis=1))
+        rows[:-1]+=abs(blocks.upD)+np.einsum('nar,nr->na',abs(blocks.upP),abs(blocks.upQ).sum(axis=1))
+    else:
+        rows[1:]+=abs(blocks.lower).sum(axis=2)
+        rows[:-1]+=abs(blocks.upper).sum(axis=2)
+    rows[1:-1,1]+=1.
+    return max(float(rows.max()),float(abs(blocks.border).sum()))
+
+
+def backward_error(blocks,rdt,x,b):
+    """Normwise backward error of x as a solution of the bordered system for b."""
+    if not np.isfinite(x).all():
+        return np.inf
+    residual=float(np.max(abs(bordered_matvec(blocks,rdt,x)-b)))
+    scale=_matrix_norm(blocks,rdt)*float(np.max(abs(x)))+float(np.max(abs(b)))
+    return residual/scale if scale>0. else (0. if residual==0. else np.inf)
+
+
 class BorderedFactor:
     """Block elimination of A with a Schur complement for Lambda.
 
@@ -823,10 +869,23 @@ class BorderedFactor:
         except (FloatingPointError,np.linalg.LinAlgError,ZeroDivisionError):
             self.inverse=self.coupling=None
             self.sparse=splu(blocks.tocsc(rdt))
+        # Block elimination pivots only inside blocks: the first solve is
+        # verified against the matrix and falls back to sparse LU if needed.
+        self.blocks=blocks;self.backward_error=None
 
     def solve(self,rhs):
         if self.sparse is not None:
             return self.sparse.solve(rhs)
+        out=self._eliminate(rhs)
+        if self.backward_error is None:
+            self.backward_error=backward_error(self.blocks,self.rdt,out,rhs)
+            if not self.backward_error<=BACKWARD_ERROR_LIMIT:
+                self.inverse=self.coupling=None
+                self.sparse=splu(self.blocks.tocsc(self.rdt))
+                return self.sparse.solve(rhs)
+        return out
+
+    def _eliminate(self,rhs):
         n,nv=self.n,self.nv
         u=block_linear.twisted_solve(self.lower,self.upper,self.inverse,self.coupling,self.k,
                                           np.ascontiguousarray(rhs[:-1]))

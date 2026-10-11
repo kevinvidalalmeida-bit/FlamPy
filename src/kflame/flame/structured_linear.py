@@ -468,6 +468,10 @@ class StructuredFactor:
                 self.schur = -float(self.r@self.v[(n-2)*nv:])
             if not np.isfinite(self.v).all() or not abs(self.schur) > 1e-300:
                 raise FloatingPointError('Lambda Schur complement')
+            # Block elimination pivots only inside blocks: the first solve is
+            # verified when A is still held (chunked and in-place factors no
+            # longer hold it; their steps are accepted on the full residual).
+            self.verify = not (blocks.lazy or inplace)
         except (FloatingPointError, np.linalg.LinAlgError, ZeroDivisionError):
             self.G = self.GP = None
             if getattr(blocks, 'consumed', False) or blocks.lazy:
@@ -481,6 +485,18 @@ class StructuredFactor:
     def solve(self, rhs):
         if self.fallback is not None:
             return self.fallback.solve(rhs)
+        out = self._bordered(rhs)
+        if getattr(self, 'verify', False):
+            from kflame.flame.diffusion import BACKWARD_ERROR_LIMIT, BorderedFactor, backward_error
+            self.verify = False
+            self.backward_error = backward_error(self.blocks, self.rdt, out, rhs)
+            if not self.backward_error <= BACKWARD_ERROR_LIMIT:
+                self.G = self.GP = None
+                self.fallback = BorderedFactor(self.blocks.dense(), self.rdt)
+                return self.fallback.solve(rhs)
+        return out
+
+    def _bordered(self, rhs):
         n, nv = self.n, self.nv
         u = self._solve(rhs[:-1])
         delta = (rhs[-1]-self.r@u[(n-2)*nv:])/self.schur

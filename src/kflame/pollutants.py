@@ -147,8 +147,14 @@ def validate_diffusion_pollutants(native, comparison, output, *, kind='cantera',
         covered = other['covered'].astype(bool)
         if not covered.any():
             raise ValueError('No covered FGM points')
-        predicted = pollutant_profiles(dict(other, species_names=profile['species_names']),
-                                        mech.molecular_weights, species)
+        # The (Z,C) validator stores covered states only; the (Z,C,h) one stores
+        # every native node with NaN outside the table. Use the covered states.
+        lookup = dict(other, species_names=profile['species_names'])
+        if lookup['Y'].shape[1] == len(covered) != int(covered.sum()):
+            lookup.update(Y=lookup['Y'][:, covered], omega_Y=lookup['omega_Y'][:, covered])
+        elif lookup['Y'].shape[1] != int(covered.sum()):
+            raise ValueError('FGM comparison arrays match neither all nor the covered native points')
+        predicted = pollutant_profiles(lookup, mech.molecular_weights, species)
         reference = {name: dict(source_unit=row['source_unit'],
             **{key: row[key][covered] for key in ('ppm', 'source')}) for name, row in ours.items()}
     report = compare_pollutant_profiles(predicted, reference, **limits)
