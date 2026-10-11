@@ -2715,6 +2715,12 @@ def build_jacobian_steady(fun, x: np.ndarray, problem,
 def factorize(jmat) -> dict:
     problem = getattr(jmat, "_profile_problem", None)
     t_profile = _profile_start(problem) if problem is not None else 0.0
+    from kflame.flame.premixed_structured import PremixedStructuredFactor, PremixedStructuredJacobian
+    if isinstance(jmat, PremixedStructuredJacobian):
+        out = PremixedStructuredFactor(jmat)
+        if problem is not None:
+            _profile_record(problem, "linear_factorize", t_profile)
+        return out
     if isinstance(jmat, BandedJacobian):
         gbtrf = get_lapack_funcs("gbtrf", dtype=np.float64)
         ab = np.array(jmat.ab, dtype=float, order="F", copy=True)

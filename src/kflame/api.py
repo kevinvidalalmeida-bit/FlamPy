@@ -77,6 +77,13 @@ def _output(path, label):
     return folder.resolve()
 
 
+# Large premixed mechanisms: pseudo-time steps rounded to a ratio-4 ladder
+# reuse the transient factorization while dt stays on a rung (AramcoMech 3.0,
+# 1,3-butadiene/air: 236 s -> 178 s with the same flame speed to 1e-14).
+AUTO_TIME_STEP_LADDER = 4.0
+AUTO_LADDER_MIN_SPECIES = 100
+
+
 def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 phi=None, fuel='CH4', oxidizer='O2:1, N2:3.76', X=None, Y=None,
                 diluent=None, dilution=0.0, width=0.03, grid=None, initial_points=8,
@@ -84,7 +91,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
                 species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None,
-                initial_solution=None, convection='upwind', time_step_ladder=None):
+                initial_solution=None, convection='upwind', time_step_ladder='auto'):
     """Solve an adiabatic premixed free flame on the native CPU backend.
 
     All arguments are keyword-only. Temperature, pressure and width use SI
@@ -105,6 +112,11 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     dated directory in runs/flame. A rejected solve saves diagnostics before
     raising RuntimeError. See docs/api.md for all parameters and defaults.
 
+    time_step_ladder='auto' rounds pseudo-time steps to a ratio-4 ladder for
+    mechanisms of at least 100 species (the transient factorization is then
+    reused while dt stays on a rung) and keeps continuous steps otherwise;
+    None always keeps continuous steps.
+
     A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
     solve_burner_flame provides the explicit entry point for that mode.
     initial_solution may reference an accepted native flame output directory
@@ -121,13 +133,16 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
 
     if mass_flux is not None and (not np.isfinite(mass_flux) or mass_flux <= 0):
         raise ValueError('mass_flux must be finite and positive [kg/(m^2 s)]')
-    if time_step_ladder is not None and not (np.isfinite(time_step_ladder) and time_step_ladder > 1.):
-        raise ValueError('time_step_ladder must be None or a finite ratio > 1')
+    if (time_step_ladder != 'auto' if isinstance(time_step_ladder, str) else
+            time_step_ladder is not None and not (np.isfinite(time_step_ladder) and time_step_ladder > 1.)):
+        raise ValueError("time_step_ladder must be 'auto', None or a finite ratio > 1")
     argv = _settings(mechanism, temperature, pressure, width, transport, soret,
                      initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
                      convection)
     args = build_argparser().parse_args(argv)
     mech = load_mechanism(args.mech)
+    if isinstance(time_step_ladder, str):
+        time_step_ladder = AUTO_TIME_STEP_LADDER if mech.n_species >= AUTO_LADDER_MIN_SPECIES else None
     if sum(value is not None for value in (phi, X, Y)) > 1:
         raise ValueError('Specify only one composition: phi, X, or Y')
     if not np.isfinite(rtol) or not np.isfinite(atol) or rtol <= 0 or atol <= 0:

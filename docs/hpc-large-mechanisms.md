@@ -4,6 +4,8 @@ Revisión del 11 de octubre de 2026. [Guía de lectura](README.md) · [Mecanismo
 
 **Resultado:** la llama de difusión completa CH₄/aire con AramcoMech 3.0 (581 especies, 3037 reacciones, ratio 3, slope 0,01, curve 0,02) pasa de **no terminar** (más de 640 s y agotamiento de los 32 GB de RAM a 1377 nodos) a **103–115 s** con 1438 nodos y solución aceptada (91 s con refinamiento multipunto), con un pico de memoria de 5,2 GB. El mismo camino acelera JetSurF, AramcoMech 2.0 y, en menor medida, los mecanismos pequeños. La física (residual, propiedades, criterios de malla y de convergencia) no cambia: sólo cambia cómo se calculan las direcciones de Newton.
 
+En la **llama premezclada** del artículo de AramcoMech 3.0 (1,3-butadieno/aire, φ = 1, 295 K, 1 atm) el tiempo baja de 580 s a **178 s**, con la misma velocidad de llama (0,5435 m/s) y de 9,6 a 2,6 GB de memoria ([sección propia](#llama-premezclada-el-caso-de-validación-de-aramcomech-30)).
+
 Llama completa CH₄/aire (H₂/aire para H2-O2), 300 K, 1 atm, mezcla promediada, 31 nodos iniciales, ratio 3, slope 0,01, curve 0,02. Tiempo del solver sin JIT, un proceso por caso, misma máquina (Ryzen 9 7845HX, 32 GiB). «Antes» es el camino anterior (`structured_jacobian=False`, `fast_transport=False`, `newton_krylov=False`).
 
 | Mecanismo | Especies | Antes (s) | Ahora (s) | Aceleración | Nodos finales |
@@ -100,6 +102,29 @@ Las caras y el ensamblaje analítico de mecanismos de al menos 100 especies usan
 
 `solve_diffusion_flame(..., refine_split=4)` (`--refine-split 4`) divide cada intervalo marcado en min(4, ⌈r⌉) partes. Aquí r es el peor cociente de los criterios de pendiente y curvatura. La malla final debe volver a superar los criterios sin cambios. Con Aramco 3.0 se resuelven 6 niveles en lugar de 10 y la suma de nodos factorizados baja de 6221 a 3949. Se obtienen 1352 nodos finales y unos 91 s; Tmax difiere 0,008 K de la secuencia de puntos medios. Por defecto se mantiene el punto medio (`refine_split=2`).
 
+## Llama premezclada: el caso de validación de AramcoMech 3.0
+
+AramcoMech 3.0 se publicó validado con velocidades de llama laminar de 1,3-butadieno/aire (Zhou et al., Combust. Flame 197, 2018, 423–438): 295, 359 y 399 K, 1 atm, φ de 0,6 a 1,7, y 5 atm, φ de 0,6 a 1,4. Las velocidades se calcularon con CHEMKIN-PRO y el artículo no da tiempos de cálculo. Aquí se resuelve su punto central con `solve_flame`: C4H6/aire, φ = 1, 295 K, 1 atm, ajustes por defecto, de una sola vez y sin semilla.
+
+| Camino | Tiempo del solver (s) | Pico de memoria | Su (m/s) | Nodos |
+|---|---:|---:|---:|---:|
+| Anterior: bloques analíticos densos | 580 | 9,6 GB | 0,543535494872 | 390 |
+| Jacobiano estructurado | 236 | 2,6 GB | 0,543535494872 | 390 |
+| Estructurado + escalera de Δt (por defecto) | **178** | 2,6 GB | 0,543535494872 | 390 |
+
+Su coincide en las tres variantes hasta 10⁻¹⁴. Con el mismo caso, USC Mech II (111 especies) baja de 9,0 a 4,1 s y GRI 3.0 con CH₄ de 3,05 a 1,81 s, con la misma Su y la misma malla.
+
+**Qué cambia.** `flame/premixed_structured.py` ensambla la misma derivada que `analytic_jacobian.assemble_blocks` (transporte de cara congelado, química analítica, mismas ramas de convección y de contorno), pero en forma estructurada. Los bloques diagonales son densos. Cada bloque fuera de la diagonal es `diag(D) + P Qᵀ` de rango 5: fila de continuidad, fila de energía, los dos términos de rango uno de la cara (gradiente molar y velocidad de corrección) y la columna de temperatura (Soret). La química se deriva por teselas, sin guardar el tensor nodos × ns × nv. La factorización es la de dos extremos de `structured_linear`: una inversa LAPACK por nodo y ningún producto denso. Se activa con transporte de mezcla promediada (con o sin Soret) a partir de 20 especies y sin umbral de poda (`jacobian_threshold = 0`). Para volver al camino anterior: `problem.structured_jacobian = False`.
+
+**Escalera de Δt.** El pseudo-transitorio PTC-SER cambia Δt en cada paso, y cada cambio obligaba a refactorizar. `time_step_ladder='auto'` (valor por defecto de `solve_flame`) redondea Δt hacia abajo a potencias de 4 cuando el mecanismo tiene al menos 100 especies. Mientras Δt sigue en el mismo peldaño, la factorización se reutiliza tal cual. Con USC Mech II las factorizaciones bajan de 458 a 240. Cambia la trayectoria del pseudo-transitorio, no la solución: la llama final pasa el mismo criterio de Newton estacionario. `time_step_ladder=None` conserva los pasos continuos.
+
+**Referencias de la literatura (no medidas aquí; otro hardware y otros casos).**
+
+- En el foro de usuarios de Cantera, una llama premezclada con AramcoMech 2.0 (493 especies) tardaba 1,5 h con Cantera 2.5.1, frente a unos 10 s con GRI 3.0 y 90 s con USC Mech II.
+- Lapointe et al. (2019) dan 30 000–70 000 s con Chemkin para un barrido de 8 dosados con un mecanismo de 2878 especies en 16 núcleos, y 500–1000 s con su resolvedor de Jacobiano aproximado.
+
+Sólo sirven como orden de magnitud: aquí la llama completa de Aramco 3.0, con 581 especies, tarda unos 3 minutos en un portátil.
+
 ## Qué se probó y se descartó
 
 | Estrategia | Resultado medido | Decisión |
@@ -115,6 +140,7 @@ Las caras y el ensamblaje analítico de mecanismos de al menos 100 especies usan
 | Malla inicial más gruesa o continuación desde GRI | 35–39 s frente a ≈ 25 s directos; el pseudo-transitorio no escala con n | Descartado |
 | Δt inicial 10⁻⁶–10⁻⁵ o crecimiento 2× | Sin cambio en GRI (100–119 Jacobianos) | Sin cambio |
 | Tolerancia de GMRES de Eisenstat–Walker (η entre 10⁻³ y 0,1) | Malla inicial de Aramco 3.0: 99 Jacobianos frente a 90 (medido con el pivotaje por columnas, ver §2) | Descartado |
+| Premezclada: reutilizar la factorización de un Δt cercano como precondicionador de GMRES (matriz desplazada exacta) | USC: factorizaciones de 458 a 157, pero 8,7 iteraciones por resolución y 4,9 → 6,3 s; para Aramco 3.0 cada resolución costaría ≈ 2,6 s frente a ≈ 2,3 s de refactorizar | Descartado; se usa la escalera de Δt |
 | No reconstruir el Jacobiano cuando GMRES no converge | 104 Jacobianos con 12 iteraciones y 109 con 25, frente a 90 (mismo pivotaje) | Descartado |
 
 ## Referencias
@@ -144,6 +170,7 @@ python -m pytest -q tests/test_structured_newton.py
 ## Validación
 
 - **Batería completa:** 1031 de 1043 pruebas pasaron con el camino nuevo por defecto. Las 12 restantes comparaban byte a byte las derivadas químicas con el núcleo denso anterior. Se cambiaron a tolerancia de redondeo, 10⁻¹³ del máximo, porque la acumulación dispersa reordena sumas. Tras el cambio pasan las 82 de ese archivo, y las 170 pruebas afectadas por los últimos cambios (Soret vectorizado y `refine_split`) volvieron a pasar.
+- **`tests/test_premixed_structured.py` (18 pruebas):** los bloques estructurados de la premezclada coinciden con el ensamblaje denso hasta 10⁻¹³ en todas las ramas: libre y quemador, upwind y exponencial, con y sin Soret, base molar y másica, ambas condiciones de salida, con y sin energía. Las resoluciones con la diagonal transitoria coinciden hasta 10⁻⁹. Además, la llama de GRI estructurada reproduce la densa: misma malla, Su hasta 10⁻⁹ y T hasta 10⁻⁶ K.
 - **`tests/test_structured_newton.py` (16 pruebas):**
   - el Jacobiano analítico coincide con diferencias centradas del residual con transporte congelado (H₂, con y sin Soret y radiación) dentro de 2·10⁻⁶ de la escala de cada columna;
   - la factorización estructurada, también in situ, resuelve igual que la densa;
@@ -171,6 +198,6 @@ python -m pytest -q tests/test_structured_newton.py
 ## Límites
 
 - El transporte **multicomponente** sigue con el Jacobiano por columnas y bloques densos. Con mecanismos grandes su residual es O(ns³) por cara (≈ 40 ms para Aramco 3.0) y una llama completa no es práctica. La reducción en el límite de especies traza, exacta a O(X_traza), es el siguiente paso natural.
-- La llama premezclada (`solve_flame`) no se ha modificado en esta revisión.
+- En la llama premezclada de Aramco 3.0 la factorización sigue siendo el coste principal: se refactoriza en cada cambio de peldaño de Δt y en cada Jacobiano nuevo (≈ 400 factorizaciones en total).
 - Los tiempos de este portátil varían hasta un 30 % entre procesos (temperatura y frecuencia). Las cifras de la tabla son ejecuciones individuales en procesos separados; Con la versión final, Aramco 3.0 midió 102 y 115 s en dos ejecuciones independientes.
 - La factorización es ahora ≈ 60 % del tiempo de Aramco 3.0. En esta máquina doce hilos sólo dan 5,7× de rendimiento agregado en inversiones y GEMM de 584×584, así que la eliminación en cadena está cerca de su límite práctico. Lo que queda es reducir nodos factorizados (`refine_split`) o el tamaño del sistema.

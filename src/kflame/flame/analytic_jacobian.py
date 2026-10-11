@@ -197,6 +197,14 @@ def build_analytic_blocks(x, problem, column_nodes=None):
     from kflame.chemistry.analytic import thermochemical_partials
     start = _profile_start(problem)
     cache = build_local_jacobian_cache(x, problem)
+    if column_nodes is None:
+        from kflame.flame import premixed_structured
+        if premixed_structured.eligible(problem, cache):
+            tic = _profile_start(problem)
+            result = premixed_structured.build_structured(x, problem, cache)
+            _profile_record(problem, 'jacobian_structured', tic)
+            _profile_record(problem, 'jacobian_build', start)
+            return result
     b = _jacobian_backend(problem)
     nodes, ns = problem.n_points, problem.n_species
     state = np.ascontiguousarray(x.reshape(nodes, ns+2))

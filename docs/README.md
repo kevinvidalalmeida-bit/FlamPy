@@ -8,7 +8,7 @@
 |---|---|
 | Instalar y resolver la primera llama | [README](../README.md) → [Compatibilidad](compatibility.md) → [Ejemplos](../examples/README.md) |
 | Elegir DRM, FFCM, USC, JetSurF o Aramco | [Mecanismos, instalación local y validación](mechanisms.md) |
-| Resolver llamas con JetSurF, Aramco 2.0 o Aramco 3.0 en minutos | [Jacobiano estructurado, Newton–Krylov y transporte vectorizado](hpc-large-mechanisms.md) → [Datos](assets/diffusion/hpc-large-mechanisms-2026-10-10.json) → [Benchmark](../examples/benchmark_diffusion_mechanisms.py) |
+| Resolver llamas de difusión y premezcladas con JetSurF, Aramco 2.0 o Aramco 3.0 en minutos | [Jacobiano estructurado, Newton–Krylov y transporte vectorizado](hpc-large-mechanisms.md) → [Datos](assets/diffusion/hpc-large-mechanisms-2026-10-10.json) → [Benchmark](../examples/benchmark_diffusion_mechanisms.py) |
 | Entender el núcleo numérico | [Arquitectura](architecture.md) → [API](api.md) → [Archivos de salida](outputs.md) |
 | Trabajar con difusión y radiación | [Llamas de difusión](diffusion-flames.md) → [Ejemplo básico](../examples/example_diffusion.py) → [Ejemplo con pérdidas](../examples/example_diffusion_heat_loss.py) |
 | Validar CO, NO y NO₂ | [Contaminantes](pollutants.md) → [Script de validación](../examples/validate_diffusion_pollutants.py) |

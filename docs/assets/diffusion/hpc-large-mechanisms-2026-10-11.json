@@ -303,5 +303,119 @@
     "peak_MB": 917
    }
   ]
+ },
+ "premixed": {
+  "case": "solve_flame defaults, phi=1, 295 K, 101325 Pa, fuel C4H6 (1,3-butadiene; CH4 for GRI), air; validation conditions of Zhou et al., Combust. Flame 197 (2018) 423-438",
+  "priority": "high",
+  "heavy_threads": 10,
+  "results": [
+   {
+    "mechanism": "aramcomech3",
+    "path": "dense analytic blocks (previous)",
+    "runtime_s": 580.31,
+    "Su": 0.5435354948720726,
+    "nodes": 390,
+    "peak_working_set_MB": 9629
+   },
+   {
+    "mechanism": "aramcomech3",
+    "path": "structured",
+    "runtime_s": 235.58,
+    "Su": 0.5435354948720755,
+    "nodes": 390,
+    "peak_working_set_MB": 2560
+   },
+   {
+    "mechanism": "aramcomech3",
+    "path": "structured + time_step_ladder 4 (default auto)",
+    "runtime_s": 177.62,
+    "Su": 0.5435354948720736,
+    "nodes": 390,
+    "peak_working_set_MB": 2563,
+    "factorizations": 402,
+    "jacobians": 162
+   },
+   {
+    "mechanism": "uscmech2",
+    "path": "dense analytic blocks (previous)",
+    "runtime_s": 9.03,
+    "Su": 0.5113317449025206,
+    "nodes": 350,
+    "peak_working_set_MB": 484
+   },
+   {
+    "mechanism": "uscmech2",
+    "path": "structured",
+    "runtime_s": 4.89,
+    "Su": 0.5113317449025226,
+    "nodes": 350,
+    "factorizations": 458,
+    "jacobians": 100
+   },
+   {
+    "mechanism": "uscmech2",
+    "path": "structured + time_step_ladder 2",
+    "runtime_s": 4.24,
+    "Su": 0.5113317449025218,
+    "nodes": 350,
+    "factorizations": 273,
+    "jacobians": 93
+   },
+   {
+    "mechanism": "uscmech2",
+    "path": "structured + time_step_ladder 4",
+    "runtime_s": 4.12,
+    "Su": 0.5113317449025228,
+    "nodes": 350,
+    "factorizations": 240,
+    "jacobians": 85
+   },
+   {
+    "mechanism": "gri30",
+    "fuel": "CH4",
+    "path": "dense analytic blocks (previous)",
+    "runtime_s": 3.05,
+    "Su": 0.3689778144507737,
+    "nodes": 262,
+    "peak_working_set_MB": 238
+   },
+   {
+    "mechanism": "gri30",
+    "fuel": "CH4",
+    "path": "structured",
+    "runtime_s": 1.81,
+    "Su": 0.3689778144507743,
+    "nodes": 262,
+    "peak_working_set_MB": 180
+   }
+  ],
+  "rejected": {
+   "gmres_shifted_factor_reuse": {
+    "uscmech2": {
+     "factorizations_before": 458,
+     "factorizations_after": 157,
+     "gmres_solves": 632,
+     "matvecs": 5497,
+     "runtime_s_before": 4.89,
+     "runtime_s_after": 6.28
+    },
+    "gri30": {
+     "factorizations_before": 349,
+     "factorizations_after": 121,
+     "runtime_s_before": 2.0,
+     "runtime_s_after": 2.64
+    }
+   }
+  },
+  "profile_aramcomech3_dense": {
+   "factorization_pct": 53.5,
+   "transient_refactorization_pct": 36.7,
+   "jacobian_pct": 11.5
+  },
+  "profile_aramcomech3_structured": {
+   "factorization_pct": 35.8,
+   "transient_refactorization_pct": 25.4,
+   "jacobian_pct": 12.3
+  }
  }
 }
