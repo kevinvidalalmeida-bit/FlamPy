@@ -60,13 +60,22 @@ def figures(folder, validation, output, pdf_path=None, export=None):
     folder, validation, output = Path(folder), Path(validation), Path(output)
     output.mkdir(parents=True, exist_ok=True)
     family = json.loads((folder / 'metadata.json').read_text(encoding='utf-8'))
-    report = json.loads((validation / 'validation.json').read_text(encoding='utf-8'))
+    # A freshly generated table has no validation yet: figures 1-2 need only
+    # the table, figures 3-4 need validate_nonadiabatic_3d.py output.
+    has_validation = (validation / 'validation.json').is_file()
+    report, profiles = dict(cases=[]), []
+    if has_validation:
+        report = json.loads((validation / 'validation.json').read_text(encoding='utf-8'))
+        for i in range(len(report['cases'])):
+            with np.load(validation / f'case_{i:02d}_comparison.npz', allow_pickle=False) as saved:
+                profiles.append({k: saved[k] for k in saved.files})
+    elif export is not None:
+        raise FileNotFoundError(f'--export-bundle needs a validation folder with validation.json: {validation}')
+    else:
+        print('No validation.json: drawing the family and table figures only; run '
+              'examples/validate_nonadiabatic_3d.py and pass --validation for figures 3-4.')
     summary = training_summary(folder, family)
     model = NonAdiabaticFGM(folder)
-    profiles = []
-    for i in range(len(report['cases'])):
-        with np.load(validation / f'case_{i:02d}_comparison.npz', allow_pickle=False) as saved:
-            profiles.append({k: saved[k] for k in saved.files})
     if export is not None:
         export_bundle(folder, validation, Path(export), family, summary)
     if pdf_path is not None:
@@ -160,6 +169,10 @@ def figures(folder, validation, output, pdf_path=None, export=None):
              'Cada columna comparte escala entre ambos cortes. Gris: estados fuera de las celdas calculadas o sin referencia adiabática.\n'
              'C conserva una definición común; no se normaliza por llama. La temperatura se recupera de la entalpía total y las especies.')
 
+        if not has_validation:
+            if pdf is not None:
+                pdf.close()
+            return output
         fig, axes = plt.subplots(2, 2, figsize=(11.7, 8.3))
         fig.suptitle('Validación: composiciones y caudales ausentes de la tabla', fontsize=16, y=.97)
         fig.text(.5, .915, 'Llama nativa detallada y referencia Cantera independientes; FGM consultado con sus controles locales',

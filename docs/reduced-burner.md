@@ -1,19 +1,107 @@
 # Transporte FGM con pérdidas hacia un quemador
 
-Esta versión de `feature/nonadiabatic-enthalpy` mejora la estabilidad y el
-rendimiento del solver, pero **sigue siendo experimental para pérdidas pequeñas**.
-Las **44 condiciones convergen numéricamente; 35 cumplen todas las tolerancias
-físicas**. Pasan las 33 condiciones ensayadas con `r ≤ 0.65`; nueve condiciones
-con pérdidas pequeñas exceden el límite de calor y una de ellas también los de
-temperatura y fuentes. No se han relajado los límites ni eliminado los fallos.
+**Estado actual (biblioteca regenerada con convección de segundo orden).**
+De las 44 condiciones independientes **convergen las 44 y pasan 43**. Las
+comprobaciones son:
+
+- T y especies, comparadas a igual progreso C;
+- fuentes ΩC y q̇: pico y L1 a igual C, e integral espacial;
+- calor hacia el quemador;
+- distancia del frente.
+
+La única que no pasa (φ/r = 1,275/0,935) supera el límite de calor por 0,002
+puntos: 2,002 % frente al 2 %. Al refinar la malla del propio modelo reducido,
+ese error baja a 1,995 % (62,5 µm) y 1,988 % (31 µm). La prueba de dominio a
+90 mm converge. Detalle en
+[Validación con la biblioteca regenerada](#validación-con-la-biblioteca-regenerada).
 La tesis conserva su alcance adiabático.
 
-Se mantienen **432 llamas físicas de entrenamiento**, 181 estados de llama y
-16 de continuación química por fila: 85 104 vértices y 459 816 tetraedros, sin
-plegamientos ni degeneraciones. La selección se ha redistribuido tras los
-fallos de desarrollo: 264 filas son idénticas a la biblioteca publicada de 450
-llamas y 168 son nuevas. El presupuesto corresponde a estas condiciones de
-CH₄-aire; no es una constante universal ni un criterio automático de precisión.
+La biblioteca anterior (convección upwind de primer orden, como Cantera) se
+conserva más abajo con sus resultados: 35 de 44, y nueve fallos de calor con
+pérdidas pequeñas. La causa de esos fallos estaba en las referencias y en las
+llamas de entrenamiento: el error de primer orden de la convección, amplificado
+unas 20 veces cerca del límite adiabático
+([revisión](heat-loss-review.md#convección-de-segundo-orden-y-biblioteca-regenerada)).
+
+La biblioteca regenerada mantiene **432 llamas físicas de entrenamiento**
+(24 φ y 17 fracciones de caudal, hasta r = 0,95), con 92 016 vértices y sin
+celdas plegadas. El presupuesto corresponde a estas condiciones de CH₄-aire;
+no es una constante universal ni un criterio automático de precisión.
+
+## Validación con la biblioteca regenerada
+
+Cada uno de los 44 casos se resuelve con el modelo reducido sobre la tabla
+regenerada y se compara con una referencia nativa detallada independiente,
+de segundo orden, calculada en dos mallas. La incertidumbre de malla de q en
+las referencias es como mucho 0,27 % (mediana 0,004 %). Las semillas son
+filas de entrenamiento; las referencias nunca entran en la resolución reducida.
+
+**Por qué se compara a igual progreso.** Cerca del límite adiabático la llama
+casi flota y su posición es muy sensible. Un frente desplazado unas micras
+produce, en el mismo punto z, decenas de kelvin de diferencia en una zona con
+gradientes de millones de K/m. Ese desplazamiento ya se mide y se limita
+aparte: la distancia del frente debe ser ≤ 20 µm. Por eso T, especies y fuentes
+se comparan a igual progreso C, en la rama ascendente y en la salida, para no
+contar dos veces la misma diferencia. La comparación a igual z se sigue
+calculando y publicando (`same_z_metrics`). Con ella, los dos casos más
+próximos al límite adiabático darían 74,7 K y 20,1 K. A igual C dan 1,7 K y
+1,2 K, con un desplazamiento de 17,5 y 7,3 µm.
+
+| Comprobación | Límite | Máximo en los 44 casos |
+|---|---:|---:|
+| T a igual C | 20 K | 3,8 K |
+| Especies a igual C | 0,005 | 0,00040 |
+| ΩC: pico / L1 / integral | 5 % / 5 % / 3 % | 1,62 % / 1,32 % / 0,08 % |
+| q̇: pico / L1 / integral | 5 % / 5 % / 3 % | 1,64 % / 1,80 % / 0,25 % |
+| Calor hacia el quemador | 2 % | 2,002 % (1,275/0,935); el resto ≤ 1,85 % |
+| Distancia del frente | 20 µm | 17,5 µm |
+
+El error de calor con signo va de −2,0 % a +1,5 % y ya no tiene sesgo
+sistemático. Todos los casos convergen; la validación de los 44 tarda 22,7 s
+con seis procesos.
+
+**Generación más rápida.** Las llamas de quemador de la biblioteca usan ahora
+el [Jacobiano estructurado de la llama premezclada](hpc-large-mechanisms.md#llama-premezclada-el-caso-de-validación-de-aramcomech-30).
+Dos familias de entrenamiento (36 llamas, φ = 0,975 y 1) pasan de 38,2 a
+20,2 s en serie (1,9×). Las llamas son las mismas dentro de la tolerancia de
+Newton: mismos nodos, ΔT ≤ 0,05 K y diferencia de pérdida de calor ≤ 1,7·10⁻⁴
+relativa.
+
+![Errores de la validación de los 44 casos](assets/reduced-burner-regen/01_validation_errors.png)
+
+![Casos próximos al límite adiabático: posición, estado y fuente](assets/reduced-burner-regen/02_near_adiabatic_profiles.png)
+
+**Dominio.** Con la tabla regenerada, el caso φ = 0,985, r = 0,285 converge a
+30, 60 y 90 mm, con la misma entalpía de salida y T de salida de 1913,5,
+1914,3 y 1914,3 K. Con la tabla anterior, la prueba a 90 mm se rechazaba
+porque el progreso alcanzaba el borde de la tabla. La cola química con la
+política `monotone_branch` cubre ahora esa relajación.
+
+Para regenerar los datos (biblioteca, referencias, tabla y validación) se usan
+los comandos de la [revisión](heat-loss-review.md#convección-de-segundo-orden-y-biblioteca-regenerada).
+La validación y las figuras:
+
+```sh
+python -m examples.validate_against_native_references --table runs/regen_table --profiles runs/regen_exponential --references runs/regen_references --output runs/regen_validation.json --profiles-out runs/regen_profiles --jobs 6
+python -m examples.plot_reduced_validation --validation runs/regen_validation.json --profiles runs/regen_profiles --output output/figures/reduced-burner-regen
+```
+
+Para redibujar las figuras publicadas sin resolver nada:
+
+```sh
+python -m examples.plot_reduced_validation --validation docs/assets/reduced-burner-regen/validation.json --profiles docs/assets/reduced-burner-regen/profiles --output output/figures/reduced-burner-regen
+```
+
+## Biblioteca anterior (convección upwind)
+
+Las secciones siguientes describen el modelo y la biblioteca anterior, con sus
+resultados originales: 44 convergen y 35 cumplen todas las tolerancias físicas.
+Pasaban las 33 condiciones con `r ≤ 0.65`; nueve condiciones con pérdidas
+pequeñas excedían el límite de calor y una también los de temperatura y
+fuentes. Esa biblioteca tenía 85 104 vértices y 459 816 tetraedros. Su
+selección se redistribuyó tras los fallos de desarrollo: 264 filas son
+idénticas a la biblioteca publicada de 450 llamas y 168 son nuevas. El
+modelo físico y el cierre siguen siendo los mismos.
 
 ## Física y relación con los artículos
 
@@ -148,9 +236,9 @@ región; más muestras o iteraciones no constituyen por sí mismas una solución
 
 Pasan los seis refinamientos espaciales de las tres condiciones principales;
 el mayor cambio de T es 0.604 K. A 60 mm, el caso φ=0.985/r=0.285 converge.
-A 90 mm el progreso alcanza el borde finito de la tabla y el residuo se estanca
-en 8.37e-7, por encima de 1e-7: **esa prueba se rechaza y no demuestra independencia
-del dominio**. Falta una parametrización que cubra la relajación química larga.
+A 90 mm el progreso alcanzaba el borde finito de la tabla y el residuo se estancaba
+en 8.37e-7, por encima de 1e-7, así que esa prueba se rechazó con esta biblioteca.
+Con la biblioteca regenerada sí converge (véase arriba).
 
 ## Rendimiento y reproducción
 
@@ -221,7 +309,7 @@ Cambiar tabla, condiciones o parámetros requiere otra carpeta: las cachés
 rechazan planes y huellas diferentes. Cantera se necesita solo para las
 referencias; construcción y transporte nativos funcionan sin él.
 
-## Figuras publicadas
+## Figuras de la biblioteca anterior
 
 ![Tabla en C y entalpía](assets/reduced-burner-hpc/01_mapas_C_h.png)
 

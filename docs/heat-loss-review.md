@@ -1,5 +1,13 @@
 # Revisión del cierre de entalpía y las pérdidas de calor
 
+**Estado actual.** La causa de los nueve fallos de calor con pérdidas pequeñas
+era la convección upwind de primer orden de las referencias y de las llamas de
+entrenamiento ([convección de segundo orden](#convección-de-segundo-orden-y-biblioteca-regenerada)).
+Con la biblioteca regenerada convergen los 44 casos y pasan 43. T, especies
+y fuentes se comparan a igual progreso C; la posición del frente se limita
+aparte a 20 µm ([detalle y figuras](reduced-burner.md#validación-con-la-biblioteca-regenerada)).
+Lo que sigue documenta la investigación en orden cronológico.
+
 La revisión conserva el contorno conservativo del FGM y añade una comprobación
 independiente del flujo de especies en la entrada. El balance global de energía
 puede cerrar aunque la composición reconstruida no satisfaga ese contorno.
@@ -373,6 +381,16 @@ corresponde a desplazamientos de 18 y 7 µm, por debajo del criterio de 20 µm
 de distancia de anclaje; la temperatura de salida coincide a menos de 1 K.
 Las referencias son nativas; Cantera solo dispone de upwind y exige mallas
 finas con extrapolación para servir de contraste.
+
+**Revalidación a igual progreso (11 de octubre de 2026).** En los dos casos
+restantes, toda la diferencia de T y de especies se explica por el
+desplazamiento del frente. A igual C los errores de T son 1,7 y 1,2 K (en lugar
+de 74,7 y 20,1 K) y los de especies 0,0004 y 0,0003. El validador compara ahora
+T, especies y fuentes (ΩC y q̇) a igual C, mantiene la integral espacial de las
+fuentes y sigue publicando la comparación a igual z. Resultado: **43 de 44**.
+El único fallo es el calor de 1,275/0,935: 2,002 % frente al 2 %. Refinando la
+malla del modelo reducido baja a 1,995 % y 1,988 %. Las fuentes cumplen con
+margen: pico ≤ 1,64 %, L1 ≤ 1,80 % e integral ≤ 0,25 %.
 
 Tiempos en esta máquina, con cargas solapadas: biblioteca 465 s con 6
 procesos, referencias 500 s, tabla 12 s, retabulación y selección 31 s,

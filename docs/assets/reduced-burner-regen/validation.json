@@ -1,0 +1,2177 @@
+{
+ "table": "runs/regen_table",
+ "limits": {
+  "temperature_K": 20.0,
+  "species_absolute": 0.005,
+  "heat_loss_relative": 0.02,
+  "stand_off_distance_m": 2e-05
+ },
+ "source_limits": {
+  "peak_relative": 0.05,
+  "L1_relative": 0.05,
+  "integral_relative": 0.03
+ },
+ "state_comparison": "equal progress C (rising branch) and outlet state",
+ "cases": 44,
+ "accepted": 44,
+ "passed": 43,
+ "wall_seconds": 22.702745100003085,
+ "results": [
+  {
+   "case": "case_0.725000_0.063000",
+   "phi": 0.725,
+   "mass_flux": 0.015249342314667475,
+   "seed_row": "phi_001_loss_016",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.38846007649726744,
+    "species_absolute": 8.260284412383285e-06,
+    "heat_loss_relative": 0.0005902354596206129,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.00432122290387385,
+     "L1_relative": 0.003044095799258494,
+     "integral_relative": 1.8312432089543139e-06
+    },
+    "qdot": {
+     "peak_relative": 0.004418004480002169,
+     "L1_relative": 0.0030803434712276495,
+     "integral_relative": 0.0002835983784048437
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.32855037991362224,
+    "species_absolute": 6.591178739892567e-05
+   },
+   "q_reduced_W_m2": 10737.732010304224,
+   "q_reference_W_m2": 10731.3979586977,
+   "reference_grid_uncertainty": 1.5315410323423346e-07,
+   "reference_wall_outlet_closure": 2.248948152131439e-07,
+   "reduced_seconds": 7.86480749999464,
+   "reduced_nodes": 1189
+  },
+  {
+   "case": "case_0.725000_0.625000",
+   "phi": 0.725,
+   "mass_flux": 0.1512831578836059,
+   "seed_row": "phi_001_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.0086911982252218,
+    "species_absolute": 3.8742656526098707e-05,
+    "heat_loss_relative": 0.00697629057184423,
+    "stand_off_distance_m": 1.763257262176951e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0024337999840295266,
+     "L1_relative": 0.002488307392637499,
+     "integral_relative": 1.4773115913885136e-05
+    },
+    "qdot": {
+     "peak_relative": 0.002587772386278933,
+     "L1_relative": 0.0025848279316777866,
+     "integral_relative": 0.0001264733816968388
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.3846129987573477,
+    "species_absolute": 0.0003739302247669912
+   },
+   "q_reduced_W_m2": 25007.69701039833,
+   "q_reference_W_m2": 24834.444707925442,
+   "reference_grid_uncertainty": 5.999960003372328e-05,
+   "reference_wall_outlet_closure": 1.9911401479168303e-05,
+   "reduced_seconds": 6.301581299994723,
+   "reduced_nodes": 735
+  },
+  {
+   "case": "case_0.735000_0.085000",
+   "phi": 0.735,
+   "mass_flux": 0.021339865209467478,
+   "seed_row": "phi_001_loss_015",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.9595503604620035,
+    "species_absolute": 1.7888774591579004e-05,
+    "heat_loss_relative": 0.0016406544212825898,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.008653871218547575,
+     "L1_relative": 0.006247157597470935,
+     "integral_relative": 2.3156083110614477e-06
+    },
+    "qdot": {
+     "peak_relative": 0.009060719655021206,
+     "L1_relative": 0.0068620995315880635,
+     "integral_relative": 0.0004000818134984785
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.8296753261852245,
+    "species_absolute": 0.0001655183842258212
+   },
+   "q_reduced_W_m2": 14250.12248862524,
+   "q_reference_W_m2": 14226.781257055232,
+   "reference_grid_uncertainty": 6.394752872301807e-07,
+   "reference_wall_outlet_closure": 1.3811763660377307e-07,
+   "reduced_seconds": 7.253205300003174,
+   "reduced_nodes": 1138
+  },
+  {
+   "case": "case_0.735000_0.615000",
+   "phi": 0.735,
+   "mass_flux": 0.15440020122144116,
+   "seed_row": "phi_001_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7189561816288688,
+    "species_absolute": 3.726841275429609e-05,
+    "heat_loss_relative": 0.004670916988156847,
+    "stand_off_distance_m": 2.919410895980967e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0012696928169692715,
+     "L1_relative": 0.0016849152681757758,
+     "integral_relative": 1.3748042743640512e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0011568586297232915,
+     "L1_relative": 0.001373636909198587,
+     "integral_relative": 5.0431627577990035e-05
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.574291687040386,
+    "species_absolute": 0.0002515414659350901
+   },
+   "q_reduced_W_m2": 26816.037988479504,
+   "q_reference_W_m2": 26691.364839015852,
+   "reference_grid_uncertainty": 3.304749253647685e-05,
+   "reference_wall_outlet_closure": 2.0069705156884504e-05,
+   "reduced_seconds": 6.246496899999329,
+   "reduced_nodes": 735
+  },
+  {
+   "case": "case_0.735000_0.825000",
+   "phi": 0.735,
+   "mass_flux": 0.20712222115071374,
+   "seed_row": "phi_001_loss_004",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7295000000475511,
+    "species_absolute": 4.5874373446038174e-05,
+    "heat_loss_relative": 0.011928238847995222,
+    "stand_off_distance_m": 1.1963143495257594e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0011971315951123562,
+     "L1_relative": 0.002101924871758941,
+     "integral_relative": 3.0432506881100504e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0013220606755911595,
+     "L1_relative": 0.0022669285605885266,
+     "integral_relative": 0.000570308916562311
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 4.475073476333819,
+    "species_absolute": 0.0005955473964793789
+   },
+   "q_reduced_W_m2": 14294.757295721178,
+   "q_reference_W_m2": 14467.327028003258,
+   "reference_grid_uncertainty": 1.8900804764140556e-05,
+   "reference_wall_outlet_closure": 6.953603483094784e-05,
+   "reduced_seconds": 7.360185900004581,
+   "reduced_nodes": 726
+  },
+  {
+   "case": "case_0.735000_0.925000",
+   "phi": 0.735,
+   "mass_flux": 0.23222794492655785,
+   "seed_row": "phi_001_loss_001",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.21906124803200555,
+    "species_absolute": 4.796855464857114e-05,
+    "heat_loss_relative": 0.0026280062522308855,
+    "stand_off_distance_m": 1.3876462833500164e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0010795908229441122,
+     "L1_relative": 0.0016312381954322979,
+     "integral_relative": 1.8641708179486658e-05
+    },
+    "qdot": {
+     "peak_relative": 0.001067329883999684,
+     "L1_relative": 0.0013693917121055715,
+     "integral_relative": 0.0004944185002226177
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.9020809766182083,
+    "species_absolute": 0.0003491873413475344
+   },
+   "q_reduced_W_m2": 6330.816886915904,
+   "q_reference_W_m2": 6314.223069212035,
+   "reference_grid_uncertainty": 0.0003160090499680523,
+   "reference_wall_outlet_closure": 0.00011332527918596218,
+   "reduced_seconds": 6.3897878999996465,
+   "reduced_nodes": 719
+  },
+  {
+   "case": "case_0.745000_0.075000",
+   "phi": 0.745,
+   "mass_flux": 0.01950060356209081,
+   "seed_row": "phi_002_loss_015",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.273799262539967,
+    "species_absolute": 9.829656564534588e-06,
+    "heat_loss_relative": 0.00038772585820247887,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0038881522776974833,
+     "L1_relative": 0.0026508037132276134,
+     "integral_relative": 2.275425586994334e-06
+    },
+    "qdot": {
+     "peak_relative": 0.004092335546837005,
+     "L1_relative": 0.0031803114302126406,
+     "integral_relative": 0.00019647942664330814
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.22581207932580583,
+    "species_absolute": 4.011715641817626e-05
+   },
+   "q_reduced_W_m2": 13718.626728637095,
+   "q_reference_W_m2": 13713.309723855617,
+   "reference_grid_uncertainty": 2.1002226259162974e-06,
+   "reference_wall_outlet_closure": 2.0542423313122637e-07,
+   "reduced_seconds": 2.792367000001832,
+   "reduced_nodes": 1133
+  },
+  {
+   "case": "case_0.745000_0.605000",
+   "phi": 0.745,
+   "mass_flux": 0.15730486873419922,
+   "seed_row": "phi_002_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7098963540829573,
+    "species_absolute": 3.819912087603842e-05,
+    "heat_loss_relative": 0.0044043392716273345,
+    "stand_off_distance_m": 1.04077412695254e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0010029086100792806,
+     "L1_relative": 0.0016518778643626524,
+     "integral_relative": 1.4968894440265874e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0009550725849571807,
+     "L1_relative": 0.001330957595449779,
+     "integral_relative": 9.204517524660072e-05
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.4438953388269056,
+    "species_absolute": 0.0002367779639219636
+   },
+   "q_reduced_W_m2": 28726.593000611603,
+   "q_reference_W_m2": 28600.62613971134,
+   "reference_grid_uncertainty": 4.656706622930604e-05,
+   "reference_wall_outlet_closure": 1.962192839969318e-05,
+   "reduced_seconds": 1.5949104000028456,
+   "reduced_nodes": 750
+  },
+  {
+   "case": "case_0.745000_0.875000",
+   "phi": 0.745,
+   "mass_flux": 0.22750704155772614,
+   "seed_row": "phi_002_loss_004",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.460448267898073,
+    "species_absolute": 4.7962541678040814e-05,
+    "heat_loss_relative": 0.008573998005031521,
+    "stand_off_distance_m": 1.1280075148112356e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.00237021429847847,
+     "L1_relative": 0.0023569211444047352,
+     "integral_relative": 1.9714897397821416e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0024623415132781286,
+     "L1_relative": 0.0025690283382800404,
+     "integral_relative": 0.00036533850121121873
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.2633424638406723,
+    "species_absolute": 0.0003065785366950513
+   },
+   "q_reduced_W_m2": 11228.122418937797,
+   "q_reference_W_m2": 11132.670920673272,
+   "reference_grid_uncertainty": 4.129615026574431e-05,
+   "reference_wall_outlet_closure": 6.816243361090403e-05,
+   "reduced_seconds": 1.6307180000003427,
+   "reduced_nodes": 738
+  },
+  {
+   "case": "case_0.745000_0.935000",
+   "phi": 0.745,
+   "mass_flux": 0.2431075244073988,
+   "seed_row": "phi_002_loss_002",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.5650815652761025,
+    "species_absolute": 4.779580846169706e-05,
+    "heat_loss_relative": 0.015067906144540804,
+    "stand_off_distance_m": 4.783221071722951e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.002679967666671909,
+     "L1_relative": 0.0026076251356278576,
+     "integral_relative": 2.8044733881493832e-05
+    },
+    "qdot": {
+     "peak_relative": 0.002758699514332673,
+     "L1_relative": 0.0027028236731765475,
+     "integral_relative": 0.0005542461132026931
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 10.239538052625448,
+    "species_absolute": 0.0012419855212654207
+   },
+   "q_reduced_W_m2": 5781.4511000719685,
+   "q_reference_W_m2": 5695.629883552557,
+   "reference_grid_uncertainty": 0.00047950206626503575,
+   "reference_wall_outlet_closure": 0.00013915878820247875,
+   "reduced_seconds": 1.914502799998445,
+   "reduced_nodes": 730
+  },
+  {
+   "case": "case_0.805000_0.075000",
+   "phi": 0.805,
+   "mass_flux": 0.023330110999306503,
+   "seed_row": "phi_003_loss_015",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.6319583354350016,
+    "species_absolute": 1.5156090375466336e-05,
+    "heat_loss_relative": 0.0008315645662664188,
+    "stand_off_distance_m": 8.188823581126159e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.006614787707805825,
+     "L1_relative": 0.0051771997037739475,
+     "integral_relative": 1.5967475776789933e-06
+    },
+    "qdot": {
+     "peak_relative": 0.006715740901068008,
+     "L1_relative": 0.006196472941393034,
+     "integral_relative": 0.0005695635160905981
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.5534388942678561,
+    "species_absolute": 0.00010174561072531785
+   },
+   "q_reduced_W_m2": 18387.67443494734,
+   "q_reference_W_m2": 18372.39660093661,
+   "reference_grid_uncertainty": 5.337379042561093e-07,
+   "reference_wall_outlet_closure": 3.7626212522379954e-07,
+   "reduced_seconds": 2.4285276000009617,
+   "reduced_nodes": 1112
+  },
+  {
+   "case": "case_0.805000_0.605000",
+   "phi": 0.805,
+   "mass_flux": 0.18819622872773914,
+   "seed_row": "phi_003_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.9728234604524459,
+    "species_absolute": 5.991567326329994e-05,
+    "heat_loss_relative": 0.004768920422806339,
+    "stand_off_distance_m": 2.1465025346213e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0016915157317146305,
+     "L1_relative": 0.003602533421686903,
+     "integral_relative": 7.541908415193437e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0015814316518617756,
+     "L1_relative": 0.005456468926796279,
+     "integral_relative": 0.00021652819742498994
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.5689301036873076,
+    "species_absolute": 0.0002751873211979533
+   },
+   "q_reduced_W_m2": 38272.505762113564,
+   "q_reference_W_m2": 38090.853512873895,
+   "reference_grid_uncertainty": 3.4684909350837484e-05,
+   "reference_wall_outlet_closure": 1.6529661425936984e-05,
+   "reduced_seconds": 1.4419165999934194,
+   "reduced_nodes": 769
+  },
+  {
+   "case": "case_0.815000_0.095000",
+   "phi": 0.815,
+   "mass_flux": 0.030316219129114,
+   "seed_row": "phi_003_loss_014",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.5604625936659886,
+    "species_absolute": 1.884119534330264e-05,
+    "heat_loss_relative": 0.0007335426448178271,
+    "stand_off_distance_m": 4.744031191781031e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.008816799876206337,
+     "L1_relative": 0.0069882857939982295,
+     "integral_relative": 4.984716119438651e-07
+    },
+    "qdot": {
+     "peak_relative": 0.008914568630675843,
+     "L1_relative": 0.008271205468499737,
+     "integral_relative": 0.0006867952154609128
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.5380821397554882,
+    "species_absolute": 8.662856611524328e-05
+   },
+   "q_reduced_W_m2": 22801.70391301305,
+   "q_reference_W_m2": 22784.990151075483,
+   "reference_grid_uncertainty": 3.5976928755688203e-07,
+   "reference_wall_outlet_closure": 9.53543381179256e-07,
+   "reduced_seconds": 2.1516900999995414,
+   "reduced_nodes": 1057
+  },
+  {
+   "case": "case_0.815000_0.285000",
+   "phi": 0.815,
+   "mass_flux": 0.090948657387342,
+   "seed_row": "phi_003_loss_009",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.4468542471502133,
+    "species_absolute": 5.614020656329044e-05,
+    "heat_loss_relative": 0.003762325727737612,
+    "stand_off_distance_m": 8.188823581126159e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0037663112276862948,
+     "L1_relative": 0.004562986046021794,
+     "integral_relative": 2.3639985455145192e-05
+    },
+    "qdot": {
+     "peak_relative": 0.00414297193900688,
+     "L1_relative": 0.005872632083992516,
+     "integral_relative": 0.00010249096382638707
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.6721065132217063,
+    "species_absolute": 0.00033653181518988884
+   },
+   "q_reduced_W_m2": 42181.677428566785,
+   "q_reference_W_m2": 42340.97797935609,
+   "reference_grid_uncertainty": 9.91583290985518e-06,
+   "reference_wall_outlet_closure": 2.9672253131574668e-06,
+   "reduced_seconds": 1.9061679000005824,
+   "reduced_nodes": 836
+  },
+  {
+   "case": "case_0.815000_0.575000",
+   "phi": 0.815,
+   "mass_flux": 0.18349290525516365,
+   "seed_row": "phi_003_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.884095769941041,
+    "species_absolute": 5.4570636515982596e-05,
+    "heat_loss_relative": 0.003702324288578972,
+    "stand_off_distance_m": 9.142525621286257e-08
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0017700593510422843,
+     "L1_relative": 0.003540819701261895,
+     "integral_relative": 7.856559402891631e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0016695000318969041,
+     "L1_relative": 0.0052080820168746746,
+     "integral_relative": 0.00013308910482564477
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.1614315727945268,
+    "species_absolute": 0.00021530471781669447
+   },
+   "q_reduced_W_m2": 41455.560776443686,
+   "q_reference_W_m2": 41302.64499071202,
+   "reference_grid_uncertainty": 2.5154598989395116e-05,
+   "reference_wall_outlet_closure": 1.5013009470087183e-05,
+   "reduced_seconds": 1.576631299998553,
+   "reduced_nodes": 769
+  },
+  {
+   "case": "case_0.835000_0.105000",
+   "phi": 0.835,
+   "mass_flux": 0.03513845383070761,
+   "seed_row": "phi_004_loss_014",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.4446186178568041,
+    "species_absolute": 2.9825914761735794e-05,
+    "heat_loss_relative": 0.0006926104347091196,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.009471008161784788,
+     "L1_relative": 0.008058753727018359,
+     "integral_relative": 1.9538639447237406e-06
+    },
+    "qdot": {
+     "peak_relative": 0.009436211048036807,
+     "L1_relative": 0.00936090105471803,
+     "integral_relative": 0.0004510519515966158
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.6172415289124729,
+    "species_absolute": 0.00010367659715314337
+   },
+   "q_reduced_W_m2": 26440.730624013046,
+   "q_reference_W_m2": 26459.056442597746,
+   "reference_grid_uncertainty": 8.156456724824183e-07,
+   "reference_wall_outlet_closure": 5.666828628075958e-07,
+   "reduced_seconds": 2.0403103999997256,
+   "reduced_nodes": 1063
+  },
+  {
+   "case": "case_0.835000_0.535000",
+   "phi": 0.835,
+   "mass_flux": 0.1790387885659864,
+   "seed_row": "phi_004_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.1208099482250873,
+    "species_absolute": 4.8589537477110485e-05,
+    "heat_loss_relative": 0.00449202537536267,
+    "stand_off_distance_m": 1.2290258802043902e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0013484448679933622,
+     "L1_relative": 0.003372070386668388,
+     "integral_relative": 8.426756799130983e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0014007606720550989,
+     "L1_relative": 0.004501710431410613,
+     "integral_relative": 8.79046127705761e-05
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.607801621251383,
+    "species_absolute": 0.0002955114562966238
+   },
+   "q_reduced_W_m2": 46755.076247200326,
+   "q_reference_W_m2": 46545.990476856896,
+   "reference_grid_uncertainty": 4.209492220963368e-05,
+   "reference_wall_outlet_closure": 1.4371546446504537e-05,
+   "reduced_seconds": 1.5664049999977578,
+   "reduced_nodes": 786
+  },
+  {
+   "case": "case_0.875000_0.135000",
+   "phi": 0.875,
+   "mass_flux": 0.049030682573335045,
+   "seed_row": "phi_005_loss_013",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.4664047706113479,
+    "species_absolute": 5.133591028325113e-05,
+    "heat_loss_relative": 0.002269114322591133,
+    "stand_off_distance_m": 3.88984400832848e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.016180805710541597,
+     "L1_relative": 0.012821034949561183,
+     "integral_relative": 9.311909266660757e-06
+    },
+    "qdot": {
+     "peak_relative": 0.016425354366135247,
+     "L1_relative": 0.014462322222023373,
+     "integral_relative": 0.0011018089234378352
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.425932503908598,
+    "species_absolute": 0.00023955958964472224
+   },
+   "q_reduced_W_m2": 35942.02900671564,
+   "q_reference_W_m2": 35860.65707612667,
+   "reference_grid_uncertainty": 3.2579996951785637e-06,
+   "reference_wall_outlet_closure": 1.01128990257454e-06,
+   "reduced_seconds": 1.912562400000752,
+   "reduced_nodes": 1007
+  },
+  {
+   "case": "case_0.875000_0.410000",
+   "phi": 0.875,
+   "mass_flux": 0.14890799892642492,
+   "seed_row": "phi_004_loss_008",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 3.7641697179094535,
+    "species_absolute": 0.00016913968096362447,
+    "heat_loss_relative": 0.01191549649609707,
+    "stand_off_distance_m": 5.695967413840014e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.004167860990171597,
+     "L1_relative": 0.0060855756924384635,
+     "integral_relative": 9.920510910707503e-05
+    },
+    "qdot": {
+     "peak_relative": 0.004537697781128024,
+     "L1_relative": 0.0074160274998717746,
+     "integral_relative": 0.0008276045649260117
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 4.5683531350623525,
+    "species_absolute": 0.0009381492795461494
+   },
+   "q_reduced_W_m2": 56969.90546879607,
+   "q_reference_W_m2": 56299.07404922897,
+   "reference_grid_uncertainty": 1.7076213662940707e-05,
+   "reference_wall_outlet_closure": 6.885661258792047e-06,
+   "reduced_seconds": 1.5427089999939199,
+   "reduced_nodes": 797
+  },
+  {
+   "case": "case_0.985000_0.095000",
+   "phi": 0.985,
+   "mass_flux": 0.03973267604530542,
+   "seed_row": "phi_007_loss_014",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 2.49444082777768,
+    "species_absolute": 0.0003492639505232875,
+    "heat_loss_relative": 0.00033066153085902536,
+    "stand_off_distance_m": 5.492628914264587e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.009069282903968745,
+     "L1_relative": 0.013228906709631413,
+     "integral_relative": 0.0007352430417360245
+    },
+    "qdot": {
+     "peak_relative": 0.007782096128672775,
+     "L1_relative": 0.017957718617971245,
+     "integral_relative": 0.0003633670712097496
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.4997291417541874,
+    "species_absolute": 0.0003519105201716666
+   },
+   "q_reduced_W_m2": 35866.790635066696,
+   "q_reference_W_m2": 35854.93478744103,
+   "reference_grid_uncertainty": 2.9606500388641973e-06,
+   "reference_wall_outlet_closure": 1.4627562764724623e-06,
+   "reduced_seconds": 2.063821200004895,
+   "reduced_nodes": 1018
+  },
+  {
+   "case": "case_0.985000_0.285000",
+   "phi": 0.985,
+   "mass_flux": 0.11919802813591625,
+   "seed_row": "phi_007_loss_009",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.3244190774319122,
+    "species_absolute": 0.0003970354688720146,
+    "heat_loss_relative": 0.0028593329218414044,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0018531729069998029,
+     "L1_relative": 0.007106997149771132,
+     "integral_relative": 0.0008022097082838878
+    },
+    "qdot": {
+     "peak_relative": 0.0018393864861061641,
+     "L1_relative": 0.00863098302611567,
+     "integral_relative": 0.0009504727561998981
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.4841583153436204,
+    "species_absolute": 0.0003970354688720146
+   },
+   "q_reduced_W_m2": 67074.04204942766,
+   "q_reference_W_m2": 67266.37902149689,
+   "reference_grid_uncertainty": 6.475650038859847e-06,
+   "reference_wall_outlet_closure": 2.8119800245746067e-06,
+   "reduced_seconds": 2.0045558999991044,
+   "reduced_nodes": 793
+  },
+  {
+   "case": "case_0.985000_0.575000",
+   "phi": 0.985,
+   "mass_flux": 0.2404872497479012,
+   "seed_row": "phi_007_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 2.1600008750469897,
+    "species_absolute": 0.0002381080469127106,
+    "heat_loss_relative": 0.0041899893120527195,
+    "stand_off_distance_m": 3.827803894112386e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.001420897010737902,
+     "L1_relative": 0.004723704960227447,
+     "integral_relative": 0.0005034173156879595
+    },
+    "qdot": {
+     "peak_relative": 0.0012843495288915828,
+     "L1_relative": 0.005911694038349917,
+     "integral_relative": 0.0008846587663774283
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.4965122165363027,
+    "species_absolute": 0.00029306313011857876
+   },
+   "q_reduced_W_m2": 66830.9396877469,
+   "q_reference_W_m2": 66552.08715387735,
+   "reference_grid_uncertainty": 1.2573487132235808e-05,
+   "reference_wall_outlet_closure": 8.959293564405002e-07,
+   "reduced_seconds": 1.6308749000017997,
+   "reduced_nodes": 752
+  },
+  {
+   "case": "case_0.985000_0.800000",
+   "phi": 0.985,
+   "mass_flux": 0.334590956170993,
+   "seed_row": "phi_007_loss_005",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.2448875319551007,
+    "species_absolute": 5.554834646320783e-05,
+    "heat_loss_relative": 0.0008387532958794501,
+    "stand_off_distance_m": 1.0716529630274557e-08
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0006577775779286207,
+     "L1_relative": 0.0033317040048884213,
+     "integral_relative": 0.00015510891630121111
+    },
+    "qdot": {
+     "peak_relative": 0.0006039482379794702,
+     "L1_relative": 0.0038621670699522824,
+     "integral_relative": 0.0017575201353631194
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.6114361186023416,
+    "species_absolute": 0.00025271659405326496
+   },
+   "q_reduced_W_m2": 38684.12251823134,
+   "q_reference_W_m2": 38716.59619089169,
+   "reference_grid_uncertainty": 0.000105925573124013,
+   "reference_wall_outlet_closure": 6.074645501572421e-06,
+   "reduced_seconds": 1.8072217000008095,
+   "reduced_nodes": 743
+  },
+  {
+   "case": "case_0.985000_0.900000",
+   "phi": 0.985,
+   "mass_flux": 0.3764148256923671,
+   "seed_row": "phi_007_loss_002",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.547799472126826,
+    "species_absolute": 0.00014190258610857764,
+    "heat_loss_relative": 0.009692411247557384,
+    "stand_off_distance_m": 3.827803894112386e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.001733354282062603,
+     "L1_relative": 0.004303266094180681,
+     "integral_relative": 0.0003218922111368087
+    },
+    "qdot": {
+     "peak_relative": 0.0016385082784787048,
+     "L1_relative": 0.005221241971553115,
+     "integral_relative": 0.0014613848224234427
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 3.3447526413101514,
+    "species_absolute": 0.00045998430858208705
+   },
+   "q_reduced_W_m2": 19905.76522080358,
+   "q_reference_W_m2": 20100.588389795354,
+   "reference_grid_uncertainty": 1.6820328801375569e-06,
+   "reference_wall_outlet_closure": 3.191924095713393e-05,
+   "reduced_seconds": 1.441571399998793,
+   "reduced_nodes": 727
+  },
+  {
+   "case": "case_0.985000_0.950000",
+   "phi": 0.985,
+   "mass_flux": 0.39732676045305415,
+   "seed_row": "phi_007_loss_001",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.6979127017999645,
+    "species_absolute": 0.0001286720793756968,
+    "heat_loss_relative": 0.01725863232195295,
+    "stand_off_distance_m": 1.7476284880061158e-05
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.001609690181774705,
+     "L1_relative": 0.004170452299535716,
+     "integral_relative": 0.00026327524901572844
+    },
+    "qdot": {
+     "peak_relative": 0.001522486939906353,
+     "L1_relative": 0.0047107717603537495,
+     "integral_relative": 0.0017114891847851677
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 74.74280062360003,
+    "species_absolute": 0.009469687969341709
+   },
+   "q_reduced_W_m2": 9303.17817696739,
+   "q_reference_W_m2": 9466.558021209887,
+   "reference_grid_uncertainty": 0.00032032144695038023,
+   "reference_wall_outlet_closure": 0.00012366480440659575,
+   "reduced_seconds": 1.8753656999979285,
+   "reduced_nodes": 725
+  },
+  {
+   "case": "case_1.165000_0.135000",
+   "phi": 1.165,
+   "mass_flux": 0.05357233297336975,
+   "seed_row": "phi_015_loss_013",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.6034105476608147,
+    "species_absolute": 8.629438775289988e-05,
+    "heat_loss_relative": 0.0023093765004415516,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.007943967388408755,
+     "L1_relative": 0.008822606019476048,
+     "integral_relative": 6.3511358424927126e-06
+    },
+    "qdot": {
+     "peak_relative": 0.009415353334661989,
+     "L1_relative": 0.010419450468432971,
+     "integral_relative": 0.0005450149858150391
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.394708667919076,
+    "species_absolute": 0.0003438308432646142
+   },
+   "q_reduced_W_m2": 35794.5114039268,
+   "q_reference_W_m2": 35712.03886059928,
+   "reference_grid_uncertainty": 1.6361006977281926e-05,
+   "reference_wall_outlet_closure": 1.6261112912260256e-05,
+   "reduced_seconds": 2.5392349000030663,
+   "reduced_nodes": 1030
+  },
+  {
+   "case": "case_1.165000_0.410000",
+   "phi": 1.165,
+   "mass_flux": 0.16270115940060442,
+   "seed_row": "phi_015_loss_008",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 2.618517223716708,
+    "species_absolute": 0.0002065807356492616,
+    "heat_loss_relative": 0.006210109657391521,
+    "stand_off_distance_m": 3.3495450758227324e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.007448243863004537,
+     "L1_relative": 0.009398052113531013,
+     "integral_relative": 6.236843548982925e-05
+    },
+    "qdot": {
+     "peak_relative": 0.007340415839104647,
+     "L1_relative": 0.008309278361834788,
+     "integral_relative": 0.00013264765319684823
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.295524221499136,
+    "species_absolute": 0.0006556721030919616
+   },
+   "q_reduced_W_m2": 63236.1676094924,
+   "q_reference_W_m2": 62845.88775501762,
+   "reference_grid_uncertainty": 7.637461572981674e-05,
+   "reference_wall_outlet_closure": 7.015875828953381e-05,
+   "reduced_seconds": 1.7345949999944423,
+   "reduced_nodes": 793
+  },
+  {
+   "case": "case_1.205000_0.105000",
+   "phi": 1.205,
+   "mass_flux": 0.03848775588414457,
+   "seed_row": "phi_017_loss_014",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.642302180309116,
+    "species_absolute": 0.0002634613159300664,
+    "heat_loss_relative": 0.0010789072976271667,
+    "stand_off_distance_m": 2.587039698341044e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0025223516234162877,
+     "L1_relative": 0.0050691763986869705,
+     "integral_relative": 8.576552090883349e-05
+    },
+    "qdot": {
+     "peak_relative": 0.003250897791562028,
+     "L1_relative": 0.0060441144106405595,
+     "integral_relative": 0.0004507258899256958
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.6676316464804586,
+    "species_absolute": 0.00032617465556157577
+   },
+   "q_reduced_W_m2": 25250.48649147612,
+   "q_reference_W_m2": 25223.272918254574,
+   "reference_grid_uncertainty": 8.09305139864551e-06,
+   "reference_wall_outlet_closure": 3.0016663975799647e-06,
+   "reduced_seconds": 2.427982200002589,
+   "reduced_nodes": 1094
+  },
+  {
+   "case": "case_1.205000_0.535000",
+   "phi": 1.205,
+   "mass_flux": 0.1961042799811176,
+   "seed_row": "phi_017_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7251433155508948,
+    "species_absolute": 0.00010992903734748094,
+    "heat_loss_relative": 0.0011393809301115682,
+    "stand_off_distance_m": 2.438216842384766e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.002401571607293342,
+     "L1_relative": 0.003933603500402499,
+     "integral_relative": 9.093815108675227e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0023926681309832196,
+     "L1_relative": 0.002608568180948813,
+     "integral_relative": 0.0024820241842386285
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.25129719080428,
+    "species_absolute": 0.00014061438274057259
+   },
+   "q_reduced_W_m2": 51379.37997542525,
+   "q_reference_W_m2": 51320.90591391089,
+   "reference_grid_uncertainty": 0.00020963681338686347,
+   "reference_wall_outlet_closure": 0.00016776144024794828,
+   "reduced_seconds": 1.661809600002016,
+   "reduced_nodes": 807
+  },
+  {
+   "case": "case_1.235000_0.095000",
+   "phi": 1.235,
+   "mass_flux": 0.03206566848524725,
+   "seed_row": "phi_019_loss_014",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.4340596333809117,
+    "species_absolute": 8.235071890451418e-05,
+    "heat_loss_relative": 0.0029338738147548647,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0009576516542497935,
+     "L1_relative": 0.002810558957202961,
+     "integral_relative": 2.0008887520685117e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0008976009995341617,
+     "L1_relative": 0.003106596844166016,
+     "integral_relative": 1.0168900960509225e-05
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.274797041831789,
+    "species_absolute": 0.0003110981057092843
+   },
+   "q_reduced_W_m2": 21320.37106792439,
+   "q_reference_W_m2": 21258.002770242787,
+   "reference_grid_uncertainty": 5.7781167095818886e-05,
+   "reference_wall_outlet_closure": 2.933624725504937e-05,
+   "reduced_seconds": 3.2870395999998436,
+   "reduced_nodes": 1060
+  },
+  {
+   "case": "case_1.235000_0.285000",
+   "phi": 1.235,
+   "mass_flux": 0.09619700545574174,
+   "seed_row": "phi_019_loss_009",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 2.248177825328412,
+    "species_absolute": 0.00013963480351836255,
+    "heat_loss_relative": 0.005236902381508097,
+    "stand_off_distance_m": 4.023751193380637e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.003239044116280268,
+     "L1_relative": 0.004256976695029728,
+     "integral_relative": 2.5094431733317805e-05
+    },
+    "qdot": {
+     "peak_relative": 0.003796494703292316,
+     "L1_relative": 0.004734802962788411,
+     "integral_relative": 0.0002884324178905228
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 2.538703151055415,
+    "species_absolute": 0.0004994725801390626
+   },
+   "q_reduced_W_m2": 39206.56937612527,
+   "q_reference_W_m2": 39412.97125917475,
+   "reference_grid_uncertainty": 0.00010023660819120226,
+   "reference_wall_outlet_closure": 2.3700371725025073e-05,
+   "reduced_seconds": 1.979744500000379,
+   "reduced_nodes": 871
+  },
+  {
+   "case": "case_1.235000_0.575000",
+   "phi": 1.235,
+   "mass_flux": 0.19408167767386492,
+   "seed_row": "phi_019_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.6427677390731787,
+    "species_absolute": 0.00011329717284283558,
+    "heat_loss_relative": 0.000800689250098175,
+    "stand_off_distance_m": 2.6654834826660145e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0020947661420963703,
+     "L1_relative": 0.0031677004505444514,
+     "integral_relative": 7.04105663590121e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0020988387982513166,
+     "L1_relative": 0.002482344911660873,
+     "integral_relative": 0.0010913472449681192
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.8643596463568883,
+    "species_absolute": 0.00010032501775897318
+   },
+   "q_reduced_W_m2": 41868.54151792505,
+   "q_reference_W_m2": 41835.0446473985,
+   "reference_grid_uncertainty": 0.00025128878446802744,
+   "reference_wall_outlet_closure": 0.0002072236780751437,
+   "reduced_seconds": 1.6778849999973318,
+   "reduced_nodes": 792
+  },
+  {
+   "case": "case_1.255000_0.075000",
+   "phi": 1.255,
+   "mass_flux": 0.023661735444320528,
+   "seed_row": "phi_020_loss_015",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.48259315648397205,
+    "species_absolute": 7.29571772975085e-05,
+    "heat_loss_relative": 0.0007258730833909446,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0006745876530169151,
+     "L1_relative": 0.0016453305046227758,
+     "integral_relative": 1.4499108084685344e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0006107977342284829,
+     "L1_relative": 0.0017051252791924747,
+     "integral_relative": 0.00015178218147652005
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.45061618629665645,
+    "species_absolute": 0.0001162783497181269
+   },
+   "q_reduced_W_m2": 17180.445137871495,
+   "q_reference_W_m2": 17192.925019367813,
+   "reference_grid_uncertainty": 0.00012516509602327326,
+   "reference_wall_outlet_closure": 4.8642184262819934e-05,
+   "reduced_seconds": 3.427531799999997,
+   "reduced_nodes": 1087
+  },
+  {
+   "case": "case_1.255000_0.605000",
+   "phi": 1.255,
+   "mass_flux": 0.1908713325841856,
+   "seed_row": "phi_020_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7721646744460031,
+    "species_absolute": 0.00013359600554278817,
+    "heat_loss_relative": 0.0007342521649144874,
+    "stand_off_distance_m": 3.404646316193527e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0022066335788682202,
+     "L1_relative": 0.0034950982395192246,
+     "integral_relative": 6.572261326021893e-05
+    },
+    "qdot": {
+     "peak_relative": 0.002234913054771078,
+     "L1_relative": 0.0028387935480174353,
+     "integral_relative": 0.001325766226330356
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.0228163211911578,
+    "species_absolute": 0.00011944730242079149
+   },
+   "q_reduced_W_m2": 35541.80821957526,
+   "q_reference_W_m2": 35515.73071740748,
+   "reference_grid_uncertainty": 0.00032184894144093846,
+   "reference_wall_outlet_closure": 0.00020371128341988465,
+   "reduced_seconds": 1.716061000006448,
+   "reduced_nodes": 796
+  },
+  {
+   "case": "case_1.275000_0.075000",
+   "phi": 1.275,
+   "mass_flux": 0.02189683309311843,
+   "seed_row": "phi_021_loss_016",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.40613445190894026,
+    "species_absolute": 8.986077208551768e-05,
+    "heat_loss_relative": 0.0005946026383689051,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0006212111196734832,
+     "L1_relative": 0.0014718826925566237,
+     "integral_relative": 1.4205320956236387e-06
+    },
+    "qdot": {
+     "peak_relative": 0.000516924847428525,
+     "L1_relative": 0.0014833918786822853,
+     "integral_relative": 0.00013900074401624753
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.38902886568484973,
+    "species_absolute": 9.883081260365911e-05
+   },
+   "q_reduced_W_m2": 15976.071248539825,
+   "q_reference_W_m2": 15985.57631439221,
+   "reference_grid_uncertainty": 0.00017838775873605148,
+   "reference_wall_outlet_closure": 4.3239415042820564e-05,
+   "reduced_seconds": 3.702115199994296,
+   "reduced_nodes": 1069
+  },
+  {
+   "case": "case_1.275000_0.605000",
+   "phi": 1.275,
+   "mass_flux": 0.17663445361782198,
+   "seed_row": "phi_021_loss_007",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.7716147281882968,
+    "species_absolute": 0.00012786753347930613,
+    "heat_loss_relative": 0.0008384240459663114,
+    "stand_off_distance_m": 1.3333651407623076e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0022007243796333125,
+     "L1_relative": 0.0035622942074086646,
+     "integral_relative": 7.399609447325912e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0022882134251101687,
+     "L1_relative": 0.002952053639490501,
+     "integral_relative": 0.0016654919692000397
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.029801484115751,
+    "species_absolute": 0.0001200921343992023
+   },
+   "q_reduced_W_m2": 30846.365315191415,
+   "q_reference_W_m2": 30820.524646218728,
+   "reference_grid_uncertainty": 0.00016127263668080604,
+   "reference_wall_outlet_closure": 0.0002840927564171137,
+   "reduced_seconds": 1.695782999995572,
+   "reduced_nodes": 791
+  },
+  {
+   "case": "case_1.275000_0.875000",
+   "phi": 1.275,
+   "mass_flux": 0.25546305275304837,
+   "seed_row": "phi_021_loss_004",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.715159170276138,
+    "species_absolute": 0.00010465732051988252,
+    "heat_loss_relative": 0.007084117594399068,
+    "stand_off_distance_m": 8.335929770238171e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0015253495441685274,
+     "L1_relative": 0.0028122214854286493,
+     "integral_relative": 7.010855473371061e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0015438156322805984,
+     "L1_relative": 0.0019173209189169618,
+     "integral_relative": 0.002000034693161739
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 4.099756895030623,
+    "species_absolute": 0.0005553532182067805
+   },
+   "q_reduced_W_m2": 12473.946088501569,
+   "q_reference_W_m2": 12562.94345728476,
+   "reference_grid_uncertainty": 0.0014123757673538823,
+   "reference_wall_outlet_closure": 0.0009589520900938908,
+   "reduced_seconds": 1.68127000000095,
+   "reduced_nodes": 758
+  },
+  {
+   "case": "case_1.275000_0.935000",
+   "phi": 1.275,
+   "mass_flux": 0.27298051922754313,
+   "seed_row": "phi_021_loss_003",
+   "accepted": true,
+   "reason": "converged",
+   "passed": false,
+   "metrics": {
+    "temperature_K": 1.1506598590290196,
+    "species_absolute": 0.00010502656019462098,
+    "heat_loss_relative": 0.020019639921787537,
+    "stand_off_distance_m": 7.3344673303925995e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.00171362454584902,
+     "L1_relative": 0.002898517602471243,
+     "integral_relative": 5.91093377925623e-05
+    },
+    "qdot": {
+     "peak_relative": 0.001762852442703792,
+     "L1_relative": 0.002010582447052512,
+     "integral_relative": 0.0015464387714850753
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": false,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 20.083427062327473,
+    "species_absolute": 0.0028072698901350224
+   },
+   "q_reduced_W_m2": 6316.336134157542,
+   "q_reference_W_m2": 6445.370123186381,
+   "reference_grid_uncertainty": 0.0026920691957808066,
+   "reference_wall_outlet_closure": 0.002055385803518987,
+   "reduced_seconds": 2.6205352999968454,
+   "reduced_nodes": 751
+  },
+  {
+   "case": "case_1.290000_0.063000",
+   "phi": 1.29,
+   "mass_flux": 0.01723034029724522,
+   "seed_row": "phi_022_loss_017",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.6625171809548647,
+    "species_absolute": 0.00023910646638858335,
+    "heat_loss_relative": 0.0013197589325712707,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0004875382532998874,
+     "L1_relative": 0.0010083651776918734,
+     "integral_relative": 7.243005052294014e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0004438731898054404,
+     "L1_relative": 0.0009668090320986747,
+     "integral_relative": 0.00012028518313293978
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.6625171809548647,
+    "species_absolute": 0.00023910646638858335
+   },
+   "q_reduced_W_m2": 13540.383282817014,
+   "q_reference_W_m2": 13522.536794091988,
+   "reference_grid_uncertainty": 1.5964976993653285e-05,
+   "reference_wall_outlet_closure": 0.00023542393885405145,
+   "reduced_seconds": 3.294923599998583,
+   "reduced_nodes": 1047
+  },
+  {
+   "case": "case_1.290000_0.625000",
+   "phi": 1.29,
+   "mass_flux": 0.170935915647274,
+   "seed_row": "phi_022_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.0222602999419905,
+    "species_absolute": 0.00015550433430830402,
+    "heat_loss_relative": 0.0013911898317010673,
+    "stand_off_distance_m": 7.487112403375268e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.002041054109516765,
+     "L1_relative": 0.0034074917869453495,
+     "integral_relative": 4.980955140779661e-05
+    },
+    "qdot": {
+     "peak_relative": 0.002070694470614679,
+     "L1_relative": 0.0029488833389698463,
+     "integral_relative": 0.0008453784377786317
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.4284938069708915,
+    "species_absolute": 0.00014498999546129487
+   },
+   "q_reduced_W_m2": 26810.20714719917,
+   "q_reference_W_m2": 26847.557195775946,
+   "reference_grid_uncertainty": 0.00014838790453528493,
+   "reference_wall_outlet_closure": 0.0002791528069165493,
+   "reduced_seconds": 1.6559235000022454,
+   "reduced_nodes": 775
+  },
+  {
+   "case": "case_1.295000_0.085000",
+   "phi": 1.295,
+   "mass_flux": 0.02273005822216287,
+   "seed_row": "phi_023_loss_015",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.9732999836866725,
+    "species_absolute": 8.65474420771728e-05,
+    "heat_loss_relative": 0.0018814980284533502,
+    "stand_off_distance_m": 0.0
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0009830111473997916,
+     "L1_relative": 0.0017395081794321548,
+     "integral_relative": 5.958093638924815e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0009051451661369906,
+     "L1_relative": 0.0017700758642094597,
+     "integral_relative": 5.6420600629277094e-05
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 0.896698796757164,
+    "species_absolute": 0.00020947092562272757
+   },
+   "q_reduced_W_m2": 15973.971553631696,
+   "q_reference_W_m2": 15943.972999866734,
+   "reference_grid_uncertainty": 0.0002029848146204728,
+   "reference_wall_outlet_closure": 4.9085674450688165e-05,
+   "reduced_seconds": 3.076788700003817,
+   "reduced_nodes": 1013
+  },
+  {
+   "case": "case_1.295000_0.615000",
+   "phi": 1.295,
+   "mass_flux": 0.16445865654859015,
+   "seed_row": "phi_023_loss_006",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.1115520456787635,
+    "species_absolute": 0.00013152853154246857,
+    "heat_loss_relative": 0.0037072736476348794,
+    "stand_off_distance_m": 7.732065674392885e-07
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0010927733919184504,
+     "L1_relative": 0.0020467679680273615,
+     "integral_relative": 4.0452514511649125e-05
+    },
+    "qdot": {
+     "peak_relative": 0.0010214801884923172,
+     "L1_relative": 0.0016558315398448968,
+     "integral_relative": 0.000732024520480483
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 1.4114879267599463,
+    "species_absolute": 0.00016224555935696883
+   },
+   "q_reduced_W_m2": 26103.205321894708,
+   "q_reference_W_m2": 26200.33714133794,
+   "reference_grid_uncertainty": 0.0001792003383922209,
+   "reference_wall_outlet_closure": 0.00025991644424109444,
+   "reduced_seconds": 1.6543404999974882,
+   "reduced_nodes": 773
+  },
+  {
+   "case": "case_1.295000_0.825000",
+   "phi": 1.295,
+   "mass_flux": 0.22061527097981606,
+   "seed_row": "phi_023_loss_004",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 1.1890979932684331,
+    "species_absolute": 0.00010879645255156001,
+    "heat_loss_relative": 0.016088202893521614,
+    "stand_off_distance_m": 2.838390295544814e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0005707353871313188,
+     "L1_relative": 0.0016728925461270549,
+     "integral_relative": 8.29544375782665e-05
+    },
+    "qdot": {
+     "peak_relative": 0.00034545808446520614,
+     "L1_relative": 0.0009626074348273877,
+     "integral_relative": 0.0018307799212354606
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 5.23659791081991,
+    "species_absolute": 0.0008028275610992563
+   },
+   "q_reduced_W_m2": 14478.342929587767,
+   "q_reference_W_m2": 14715.082156923187,
+   "reference_grid_uncertainty": 0.0007178590883934692,
+   "reference_wall_outlet_closure": 0.0006059180328451951,
+   "reduced_seconds": 1.6213452000010875,
+   "reduced_nodes": 757
+  },
+  {
+   "case": "case_1.295000_0.925000",
+   "phi": 1.295,
+   "mass_flux": 0.2473565159470665,
+   "seed_row": "phi_023_loss_001",
+   "accepted": true,
+   "reason": "converged",
+   "passed": true,
+   "metrics": {
+    "temperature_K": 0.9310830560602881,
+    "species_absolute": 0.0001263787665185534,
+    "heat_loss_relative": 0.018483266231511815,
+    "stand_off_distance_m": 3.5607096681398998e-06
+   },
+   "sources": {
+    "omega_C": {
+     "peak_relative": 0.0016911196243888532,
+     "L1_relative": 0.0028566361295810725,
+     "integral_relative": 5.015403689749638e-05
+    },
+    "qdot": {
+     "peak_relative": 0.00173146843112036,
+     "L1_relative": 0.0021961119674819667,
+     "integral_relative": 0.001284021650503132
+    }
+   },
+   "checks": {
+    "temperature_K": true,
+    "species_absolute": true,
+    "heat_loss_relative": true,
+    "stand_off_distance_m": true,
+    "omega_C_peak_relative": true,
+    "omega_C_L1_relative": true,
+    "omega_C_integral_relative": true,
+    "qdot_peak_relative": true,
+    "qdot_L1_relative": true,
+    "qdot_integral_relative": true
+   },
+   "same_z_metrics": {
+    "temperature_K": 12.610999394287091,
+    "species_absolute": 0.0017771384152241165
+   },
+   "q_reduced_W_m2": 6385.291722536886,
+   "q_reference_W_m2": 6505.535262777286,
+   "reference_grid_uncertainty": 0.002716782550927187,
+   "reference_wall_outlet_closure": 0.0016233979389166965,
+   "reduced_seconds": 1.5724967999994988,
+   "reduced_nodes": 744
+  }
+ ]
+}

@@ -273,11 +273,13 @@ sus comprobaciones independientes y la aceleración de consultas por lotes.
 Se ha validado numéricamente una biblioteca de CH₄ con pérdidas hacia un
 quemador plano a 300 K. El [estudio de transporte reducido](reduced-burner.md)
 añade los balances de Z, C y h, una corrección adaptativa y HPC.
-Conserva 432 llamas: 44 condiciones convergen y 35 cumplen los límites físicos;
-los fallos con pérdidas pequeñas permanecen publicados. Su auditoría de
+Con la biblioteca regenerada (432 llamas, convección de segundo orden) las
+44 condiciones independientes convergen y 43 pasan T, especies y fuentes a
+igual progreso, calor y distancia del frente. La restante supera el límite
+de calor por 0,002 puntos, dentro de la incertidumbre de malla del propio
+modelo reducido. La prueba de dominio a 90 mm converge. La auditoría de
 689 724 puntos no encuentra difusión negativa tras la corrección, aunque no
-demuestra validez en cada punto del espacio de estados. La relajación química
-larga alcanza el borde del progreso y la prueba FGM a 90 mm se rechaza.
+demuestra validez en cada punto del espacio de estados.
 Tampoco se han validado experimentalmente extinción, apagado
 transitorio, radiación, conducción dentro del sólido, una geometría de pared
 multidimensional o un FGM no adiabático de H₂. El caso nativo de H₂ con Soret

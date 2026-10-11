@@ -43,11 +43,12 @@ físicos `(Z,C,h)` con composición variable.
 La biblioteca publicada de CH₄-aire incluye 450 llamas y comprobaciones
 separadas de las fuentes químicas, la convergencia espacial y la interpolación.
 [Tolerancias editables, refinamiento y consulta acelerada](docs/adaptive-fgm.md).
-[Transporte reducido, HPC y doce figuras de validación](docs/reduced-burner.md):
-se mantienen 432 llamas; 44 condiciones convergen y 35 cumplen todos los límites.
-Pasan las 33 condiciones ensayadas con r ≤ 0.65; nueve con pérdidas pequeñas
-requieren revisar el cierre físico. La auditoría de 689 724 puntos no encuentra
-difusión negativa tras la corrección adaptativa. Los residuos del Jacobiano
+[Transporte reducido sobre la tabla, HPC y validación](docs/reduced-burner.md):
+con la biblioteca regenerada (432 llamas, convección de segundo orden) las
+44 condiciones independientes convergen y 43 pasan T, especies y fuentes a
+igual progreso, calor hacia el quemador y distancia del frente. La restante
+supera el límite de calor por 0,002 puntos. La auditoría de 689 724 puntos no
+encuentra difusión negativa tras la corrección adaptativa. Los residuos del Jacobiano
 mejoran 1.56× y las consultas grandes 2.98× con cuatro hilos, en la máquina medida.
 La rama sigue siendo experimental fuera de las condiciones verificadas.
 

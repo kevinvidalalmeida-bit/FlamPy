@@ -122,6 +122,16 @@ python examples/validate_nonadiabatic_3d.py runs/nonadiabatic --output runs/vali
 python examples/plot_nonadiabatic_3d.py runs/nonadiabatic --validation runs/validation3d --output output/figures/nonadiabatic3d
 ~~~
 
+Sin `--validation`, `plot_nonadiabatic_3d.py` dibuja la familia y los cortes
+de la tabla (figuras 1 y 2) de una tabla recién generada; las figuras 3 y 4
+necesitan la salida de `validate_nonadiabatic_3d.py`. Una prueba rápida de toda
+la cadena, con 12 llamas en menos de un minuto:
+
+~~~sh
+python examples/example_nonadiabatic_3d.py --output runs/na3d_small --phis 0.9 1.0 1.1 --mass-flux-fractions 0.45 0.2 0.1
+python examples/plot_nonadiabatic_3d.py runs/na3d_small --output output/figures/na3d_small
+~~~
+
 Para dibujar los datos publicados sin simular:
 
 ~~~sh
@@ -172,6 +182,18 @@ y el presupuesto de entalpía de las referencias adiabáticas de perfiles
 guardados, sin resolver nuevas llamas. `benchmark_reduced_burner.py`
 incluye una comparación intercalada de la inversión termodinámica.
 [Hallazgos y reproducción](../docs/heat-loss-review.md).
+
+`example_reduced_burner.py` resuelve un caso publicado con el modelo reducido
+y dibuja T, C y h frente a la llama detallada publicada. Con la biblioteca
+regenerada se le indica su biblioteca de entrenamiento:
+`--table runs/regen_table --profiles runs/regen_exponential`.
+
+`validate_against_native_references.py` valida el modelo reducido sobre la
+biblioteca regenerada: T, especies y fuentes a igual progreso, calor y
+distancia del frente. `plot_reduced_validation.py` dibuja sus figuras desde el
+JSON y los perfiles guardados, también los publicados en
+`docs/assets/reduced-burner-regen`
+([resultados](../docs/reduced-burner.md#validación-con-la-biblioteca-regenerada)).
 
 `refine_library_enthalpy.py` continúa referencias y reconstruye sus caudales
 contra el presupuesto de pérdida. `select_reduced_progress.py` selecciona
