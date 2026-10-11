@@ -490,6 +490,31 @@ zona de reacción ≥ 99%.
 | H2/aire, multicomp. + Soret | 0, 10, 30, 60 | 9.7 s | 13.0 MB | 158 640 / 142 | ×1.1, rad ×20 | 1.26 K | 7e-5 | 2.4% | 1.9% |
 | CH4/aire, mezcla | 0, 2, 4, 6, 8 | 32 s | 7.1 MB | 25 730 / 0 | ×1.1, rad ×5 | 0.61 K | 9e-5 | 1.4% | 1.2% |
 
+**Ejemplo y figura (11 de octubre de 2026).** `examples/example_diffusion_heat_loss.py`
+genera la familia, valida el flamelet reservado y dibuja la figura desde los
+archivos guardados. `--plot-only` la redibuja sin resolver. Hoy, en CH₄
+(Ryzen 9 7845HX), la familia tarda 15,5 s en serie frente a los 32 s de la
+tabla, porque los flamelets de GRI usan ya el Jacobiano estructurado. El
+validador da los mismos errores (0,61 K, 9·10⁻⁵, 1,4 % y 1,2 %). En H₂ tarda
+3,6 s.
+
+`jobs` reparte entre procesos las filas de pérdida de cada deformación, después
+de la cadena adiabática. La tabla es idéntica byte a byte a la de `jobs=1`. La
+ganancia crece con el coste de cada flamelet:
+
+- CH₄ con GRI: de 15,5 a 13,3 s con tres procesos;
+- USC Mech II: de 40,3 a 31,0 s con tres procesos.
+
+```sh
+python examples/example_diffusion_heat_loss.py --case CH4 --output runs/ch4_heat_loss
+python examples/example_diffusion_heat_loss.py --plot-only runs/ch4_heat_loss
+flampy diffusion-fgm --fuel CH4 --radiation-scales 0,2,4,6,8 --jobs 3 --output runs/ch4_heat_loss_cli
+```
+
+![Tabla (Z,C,h) con pérdidas radiativas de CH₄ y flamelet reservado](assets/diffusion/heat-loss-example/ch4_heat_loss_fgm.png)
+
+![Tabla (Z,C,h) con pérdidas radiativas de H₂ y flamelet reservado](assets/diffusion/heat-loss-example/h2_heat_loss_fgm.png)
+
 Las tres validaciones pasan con cobertura completa de la zona de reacción. Los
 defectos de entalpía tabulados llegan a 2.3 MJ/kg en H2 (≈1100 K equivalentes
 en el pico) y 0.66 MJ/kg en CH4. Con pérdidas espaciadas 0/3/8/15 en CH4, el

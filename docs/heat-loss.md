@@ -16,9 +16,10 @@ Su FGM incorpora la entalpía como segundo control junto al progreso de reacció
 La introducción de esta dimensión en sistemas con pérdidas ya aparece en
 [van Oijen, Lammers y de Goey (2001)](https://doi.org/10.1016/S0010-2180(01)00316-9).
 
-FlamPy añade un FGM de **composición de alimentación fija**, con controles
-`(c,h)`. Variar independientemente la composición requerirá construir y validar
-un tercer control `Z`. El modelo actual incluye la conducción hacia la cara del
+Este modelo es un FGM de **composición de alimentación fija**, con controles
+`(c,h)`. La composición variable con un tercer control `Z` está en el
+[FGM no adiabático `(Z,C,h)`](nonadiabatic-fgm.md), que usa estas mismas llamas
+de quemador. El modelo actual incluye la conducción hacia la cara del
 quemador; no resuelve la conducción en el sólido, radiación ni el apagado
 multidimensional junto a una pared lateral. Para ese último problema,
 [Steinhausen et al.](https://doi.org/10.1007/s10494-020-00146-w) muestran limitaciones

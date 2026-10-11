@@ -22,7 +22,7 @@ python -m pip install -e ".[reference]"
 | [`example_heat_loss.py`](example_heat_loss.py) | Resuelve una familia con pérdidas hacia un quemador y construye un FGM `(c,h)` |
 | [`validate_burner.py`](validate_burner.py) | Compara llamas de quemador con Cantera y comprueba una llama retenida |
 | [`example_diffusion.py`](example_diffusion.py) | Resuelve contraflujo y construye un FGM `(Z,C)`; la comparación opcional con `--reference` requiere el extra `reference` |
-| [`example_diffusion_heat_loss.py`](example_diffusion_heat_loss.py) | Genera una familia radiativa `(Z,C,h)` y valida un flamelet reservado |
+| [`example_diffusion_heat_loss.py`](example_diffusion_heat_loss.py) | Genera una familia radiativa `(Z,C,h)`, valida un flamelet reservado y dibuja familia, déficit de entalpía y comparación; `--jobs` reparte las filas de pérdida y `--plot-only` redibuja |
 | [`validate_diffusion_pollutants.py`](validate_diffusion_pollutants.py) | Resuelve y audita CO, NO y NO₂ frente a Cantera y FGM; requiere `reference` |
 | [`benchmark_diffusion_solver.py`](benchmark_diffusion_solver.py) | Mide resolución nativa/Cantera con repeticiones; requiere `reference` y una carpeta nueva indicada con `--output` |
 | [`benchmark_diffusion_mechanisms.py`](benchmark_diffusion_mechanisms.py) | Llamas de difusión completas para cada mecanismo instalado, camino nuevo frente al anterior (`--modes new legacy split4`), un proceso por caso; requiere `--output` nuevo |

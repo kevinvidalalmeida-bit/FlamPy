@@ -357,9 +357,21 @@ def build_diffusion_heat_loss_manifold(profiles,metadata,output, *, mixture_poin
     return meta
 
 
+def _heat_loss_row(task):
+    """Radiative flamelets of one strain, each continuing from the previous one."""
+    settings,fuel_flux,oxidizer_flux,losses,seed,folder,i=task
+    row=[]
+    for j,loss in losses:
+        flame=solve_diffusion_flame(**settings,fuel_mass_flux=fuel_flux,oxidizer_mass_flux=oxidizer_flux,
+            radiation=True,radiation_scale=float(loss),initial_solution=seed,
+            output=folder/f'flamelet_{i:03d}_{j:03d}')
+        row.append(flame);seed=flame['output']
+    return row
+
+
 def generate_diffusion_heat_loss_fgm(*,flow_scales=(.75,1.,1.25),radiation_scales=(0.,2.,4.,6.,8.),
                                      mixture_points=241,mixture_tolerance=1e-3,progress_weights=None,
-                                     initial_solution=None,output=None,**flame_settings):
+                                     initial_solution=None,output=None,jobs=1,**flame_settings):
     """Generate a strain x radiative-loss flamelet family and its (Z,C,h) FGM.
 
     Loss level 0 must be adiabatic (radiation scale 0). Positive levels use
@@ -367,7 +379,13 @@ def generate_diffusion_heat_loss_fgm(*,flow_scales=(.75,1.,1.25),radiation_scale
     scales above one deepen the enthalpy defect for tabulation. Each flamelet
     continues from its neighbour (lower loss, or adiabatic lower strain). An
     extinguished or rejected flamelet aborts the family instead of being hidden.
+
+    ``jobs`` > 1 solves the loss rows of different strains in separate
+    processes after the adiabatic strain chain; every flamelet and its seed
+    are the same as with ``jobs=1``.
     """
+    if not isinstance(jobs,int) or isinstance(jobs,bool) or jobs<1:
+        raise ValueError('jobs must be a positive integer')
     scales=np.asarray(flow_scales,dtype=float);losses=np.asarray(radiation_scales,dtype=float)
     if scales.ndim!=1 or len(scales)<2 or not np.isfinite(scales).all() or np.any(scales<=0.) or np.any(np.diff(scales)<=0.):
         raise ValueError('flow_scales must be finite, positive and strictly increasing')
@@ -380,18 +398,23 @@ def generate_diffusion_heat_loss_fgm(*,flow_scales=(.75,1.,1.25),radiation_scale
     folder=_output(output,'diffusion_heat_loss_fgm')
     settings=dict(flame_settings)
     fuel_flux=settings.pop('fuel_mass_flux',.12);oxidizer_flux=settings.pop('oxidizer_mass_flux',.24)
-    grid=[];previous=initial_solution;started=time.perf_counter()
+    previous=initial_solution;started=time.perf_counter()
+    # Adiabatic strain chain first: each loss row continues from its own one.
+    adiabatic=[]
     for i,scale in enumerate(scales):
-        row=[];seed=previous
-        for j,loss in enumerate(losses):
-            flame=solve_diffusion_flame(**settings,fuel_mass_flux=float(fuel_flux*scale),
-                oxidizer_mass_flux=float(oxidizer_flux*scale),radiation=bool(loss>0.),
-                radiation_scale=float(loss) if loss>0. else 1.,initial_solution=seed,
-                output=folder/f'flamelet_{i:03d}_{j:03d}')
-            row.append(flame);seed=flame['output']
-            if j==0:
-                previous=flame['output']
-        grid.append(row)
+        flame=solve_diffusion_flame(**settings,fuel_mass_flux=float(fuel_flux*scale),
+            oxidizer_mass_flux=float(oxidizer_flux*scale),radiation=False,radiation_scale=1.,
+            initial_solution=previous,output=folder/f'flamelet_{i:03d}_000')
+        adiabatic.append(flame);previous=flame['output']
+    tasks=[(settings,float(fuel_flux*scale),float(oxidizer_flux*scale),list(enumerate(losses))[1:],
+            adiabatic[i]['output'],folder,i) for i,scale in enumerate(scales)]
+    if jobs>1 and len(tasks)>1:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=min(jobs,len(tasks))) as pool:
+            rows=list(pool.map(_heat_loss_row,tasks))
+    else:
+        rows=[_heat_loss_row(task) for task in tasks]
+    grid=[[adiabatic[i],*row] for i,row in enumerate(rows)]
     meta=json.loads((grid[0][0]['output']/'metadata.json').read_text(encoding='utf-8'))
     for key in ('radiation','radiation_scale','fuel_mass_flux','oxidizer_mass_flux','report','runtime_s'):
         meta.pop(key,None)
@@ -616,11 +639,12 @@ def main(argv=None):
     parser.add_argument('--initial-solution',type=Path)
     parser.add_argument('--radiation-scales',help='Comma list starting at 0: build the (Z,C,h) heat-loss table')
     parser.add_argument('--mixture-tolerance',type=float,default=1e-3,help='Z sampling tolerance of the (Z,C,h) table')
+    parser.add_argument('--jobs',type=int,default=1,help='(Z,C,h) table: processes for the loss rows of different strains')
     args=vars(parser.parse_args(argv));args['flow_scales']=[float(v) for v in args['flow_scales'].split(',')]
-    radiation=args.pop('radiation_scales');tolerance=args.pop('mixture_tolerance')
+    radiation=args.pop('radiation_scales');tolerance=args.pop('mixture_tolerance');jobs=args.pop('jobs')
     if radiation is None:
         result=generate_diffusion_fgm(**args)
     else:
         result=generate_diffusion_heat_loss_fgm(**args,radiation_scales=[float(v) for v in radiation.split(',')],
-                                                mixture_tolerance=tolerance)
+                                                mixture_tolerance=tolerance,jobs=jobs)
     print(result['metadata']);print(result['output'])

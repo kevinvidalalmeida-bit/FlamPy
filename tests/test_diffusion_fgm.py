@@ -181,6 +181,17 @@ def test_native_hydrogen_heat_loss_table_predicts_a_withheld_strain_and_loss(tmp
     assert report['reaction_coverage']>=.99 and report['metrics']['temperature_K']<10.
 
 
+def test_parallel_heat_loss_rows_build_the_serial_table(tmp_path):
+    from kflame.fgm.diffusion import generate_diffusion_heat_loss_fgm
+    base=dict(mechanism='h2o2.yaml',fuel='H2',fuel_mass_flux=.05,oxidizer_mass_flux=.15,max_time=120.,
+              flow_scales=(.9,1.1),radiation_scales=(0.,15.,30.))
+    serial=generate_diffusion_heat_loss_fgm(**base,output=tmp_path/'serial')
+    parallel=generate_diffusion_heat_loss_fgm(**base,output=tmp_path/'parallel',jobs=2)
+    assert parallel['metadata']['table_sha256']==serial['metadata']['table_sha256']
+    with pytest.raises(ValueError,match='jobs'):
+        generate_diffusion_heat_loss_fgm(**base,output=tmp_path/'bad',jobs=0)
+
+
 def test_rounding_level_reversals_of_z_are_dropped_and_counted(tmp_path):
     profiles,metadata=synthetic_family()
     for profile in profiles:
