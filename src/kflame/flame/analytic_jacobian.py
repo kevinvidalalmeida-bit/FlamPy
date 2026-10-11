@@ -8,6 +8,9 @@ With exponential convection the Peclet blending weights are frozen as well.
 import numpy as np
 from numba import njit, prange
 
+from kflame.flame.diffusion_kernels import radiative_loss
+from kflame.flame.structured_jacobian import _radiation_derivatives
+
 
 @njit(cache=True, parallel=True)
 def face_partials(x, invW, z, coeff, multi, thermal, is_multi, molar):
@@ -74,13 +77,19 @@ def _dflux(df, face, col, k, v):
 def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     flux, df, lam, invW, yin, energy, has_profile, fixed,
                     outlet_flux, threshold, active_columns, inlet_mass_flux,
-                    convection, conv_w, conv_wy):
+                    convection, conv_w, conv_wy, radiation):
     nodes, nv = x.shape
     ns = nv-2
     blocks = np.zeros((nodes, 3, nv, nv))
+    T_all = np.ascontiguousarray(x[:, 1])
+    Y_all = np.ascontiguousarray(x[:, 2:].T)
     for jj in prange(nodes):
         j = np.int64(jj)
         u = x[j, 0]
+        # Local radiative loss and its derivatives (energy row, own node).
+        dq_dY = np.zeros(ns)
+        q_rad = radiative_loss(T_all, Y_all, j, radiation)
+        dq_dT = _radiation_derivatives(T_all, Y_all, j, radiation, dq_dY)
         close = np.argmax(x[j, 2:])
         for col in range(max(0, j-1), min(nodes, j+2)):
             if not active_columns[col]:
@@ -178,6 +187,9 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     ddiff = 2*(dfp-dfm)/dz2
                     blocks[j, side, k+2, v] = (-du*gradY-u*dgradY+(dw-ddiff)/rho[j]
                                              -(omega[k, j]-diff)*rr/rho[j]**2)
+                en += q_rad
+                if col == j:
+                    den += dq_dT if v == 1 else (dq_dY[v-2] if v >= 2 else 0.0)
                 if energy:
                     blocks[j, side, 1, v] = (-du*gradT-u*dgradT-(dcond+den)/(rho[j]*cp[j])
                         +(cond+en)/(rho[j]*cp[j])*(rr/rho[j]+cc/cp[j]))
@@ -188,6 +200,14 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                         if not (side == 1 and row == v) and abs(blocks[j, side, row, v]) <= threshold:
                             blocks[j, side, row, v] = 0.0
     return blocks
+
+
+def _radiation_of(problem):
+    """The problem's radiation tuple, or an inert one."""
+    radiation = getattr(problem, 'radiation', None)
+    if radiation is None:
+        return (False, 1.0, 101325.0, -1, -1, 0.0, np.ones(int(problem.n_species)))
+    return radiation
 
 
 def build_analytic_blocks(x, problem, column_nodes=None):
@@ -236,7 +256,7 @@ def build_analytic_blocks(x, problem, column_nodes=None):
         cache['Y_in'], cache['solve_energy'], cache['has_T_prof'], cache['j_fixed'],
         _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active,
         float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']), cache['conv_w'],
-        cache['conv_wy'])
+        cache['conv_wy'], _radiation_of(problem))
     result = BlockTridiagJacobian(np.ascontiguousarray(blocks[1:, 0]),
         np.ascontiguousarray(blocks[:, 1]), np.ascontiguousarray(blocks[:-1, 2]))
     result.use_compiled_substitution = bool(getattr(problem, 'use_compiled_block_substitution', True))

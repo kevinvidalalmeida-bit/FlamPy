@@ -26,6 +26,13 @@ class FlameCase:
     soret_enabled: bool = False
     outlet_species_bc: str = "zero_gradient"  # "zero_gradient" | "cantera_flux"
 
+    # Optically thin H2O/CO2 radiation (Cantera Flow1D model), off by default.
+    # radiation_scale multiplies the loss (1 = physical model); the burner
+    # (or inlet) surface radiates back at T_in with inlet_emissivity.
+    radiation_enabled: bool = False
+    radiation_scale: float = 1.0
+    inlet_emissivity: float = 0.0
+
     # Discretizacion convectiva:
     # 1.0 = upwind puro (robusto, default actual), 0.0 = central.
     upwind_factor: float = 1.0

@@ -297,9 +297,9 @@ adoptar ese layout.
 | Primer helper químico serial con `np.dot` | **Rechazado por diferencias en los últimos bits**; sustituido por acumulaciones ordenadas validadas contra el kernel original |
 | Ajustar tamaño de bloque y número de hilos por mecanismo | **Explorado, sin política automática**: se probaron bloques e hilos; falta un ajuste aceptado por tiempo completo sobre el código final |
 | Optimizar factorización en mallas pequeñas | **Pendiente**: falta medir coste agrupado por tamaño; el porcentaje de llamadas no equivale al porcentaje de tiempo |
-| Paralelizar flamelets/familias independientes con procesos | **Pendiente**: no hay campaña de aceleración validada; deben respetarse las dependencias de continuación |
-| Presupuesto global de memoria y límite de caché de factores | **Pendiente como política global**: las derivadas por bloques atienden solo una parte de la propuesta original |
-| Política de hilos efectivos independiente del orden de importación | **Pendiente de solución general**: configurar los benchmarks antes de iniciar Python no resuelve por sí solo ese caso límite |
+| Paralelizar flamelets/familias independientes con procesos | **Integrado (11 de octubre)** respetando las continuaciones. En las tablas `(Z,C,h)` de difusión, `jobs` reparte las filas de pérdida de cada deformación tras la cadena adiabática: la tabla es idéntica byte a byte; USC baja de 40,3 a 31,0 s y GRI de 15,5 a 13,3 s. Las familias premezcladas no adiabáticas ya usaban procesos (`jobs`) |
+| Presupuesto global de memoria y límite de caché de factores | **Atendido en mecanismos grandes**: depósito de búferes acotado, una factorización grande a la vez y ensamblaje por tramos sin guardar A. Aramco 3.0 tiene un pico de 5,2 GB en contraflujo y 2,6 GB en premezcla ([detalle](hpc-large-mechanisms.md)). No hay un límite global configurable |
+| Política de hilos efectivos independiente del orden de importación | **Resuelto (11 de octubre)**: la política se aplica en tiempo de ejecución si NumPy o Numba ya estaban cargados (BLAS 1 y Numba 4, salvo valores explícitos del usuario). Los hilos efectivos se guardan en los metadatos |
 
 ## Estrategias de papers que permanecen en investigación
 

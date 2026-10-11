@@ -217,6 +217,9 @@ las corrientes `fuel` u `oxidizer`.
 | `transport` | `"mixture-averaged"` | `"mixture-averaged"` o `"multicomponent"` |
 | `soret` | `False` | Termodifusión; disponible con los dos modelos de transporte |
 | `time_step_ladder` | `'auto'` (`solve_flame`), `None` (resto) | Solo `solve_flame`/`solve_burner_flame`. Razón > 1 (p. ej. `2**0.5`) que redondea hacia abajo el paso de pseudo-tiempo PTC-SER a una escalera geométrica; evita refactorizar el Jacobiano por cambios pequeños de Δt. `'auto'` usa razón 4 con mecanismos de al menos 100 especies y pasos continuos en el resto; `None` siempre pasos continuos. Cambia la trayectoria, no la solución convergida (diferencias medidas ≤ 1,5e-4 en q) |
+| `radiation` | `False` | Solo `solve_flame`/`solve_burner_flame`. Pérdida radiativa ópticamente delgada de H₂O y CO₂ (el mismo modelo que en contraflujo, con los polinomios de Cantera Flow1D). Necesita el Jacobiano analítico, que es el valor por defecto |
+| `radiation_scale` | `1.0` | Multiplica la pérdida radiativa; 1 es el modelo físico |
+| `inlet_emissivity` | `0.0` | Emisividad de la entrada o del quemador, que radia a la temperatura de entrada |
 | `convection` | `"upwind"` | Solo `solve_flame`/`solve_burner_flame`. `"upwind"`: primer orden, como Cantera. `"exponential"`: Il'in–Allen–Southwell, segundo orden donde la difusión resuelve el perfil; recomendado para el calor al quemador cerca del límite adiabático |
 | `ratio` | `2.5` | Criterio de relación entre tamaños de intervalos, al menos 2 |
 | `slope` | `0.04` | Umbral normalizado de variación, en `(0, 1]` |

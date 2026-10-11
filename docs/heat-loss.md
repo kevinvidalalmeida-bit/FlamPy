@@ -19,9 +19,10 @@ La introducción de esta dimensión en sistemas con pérdidas ya aparece en
 Este modelo es un FGM de **composición de alimentación fija**, con controles
 `(c,h)`. La composición variable con un tercer control `Z` está en el
 [FGM no adiabático `(Z,C,h)`](nonadiabatic-fgm.md), que usa estas mismas llamas
-de quemador. El modelo actual incluye la conducción hacia la cara del
-quemador; no resuelve la conducción en el sólido, radiación ni el apagado
-multidimensional junto a una pared lateral. Para ese último problema,
+de quemador. El modelo incluye la conducción hacia la cara del quemador y, opcionalmente,
+radiación ópticamente delgada ([Radiación](#radiación)). No resuelve la
+conducción en el sólido ni el apagado multidimensional junto a una pared
+lateral. Para ese último problema,
 [Steinhausen et al.](https://doi.org/10.1007/s10494-020-00146-w) muestran limitaciones
 de las tablas construidas únicamente con llamas premezcladas estacionarias.
 
@@ -125,6 +126,83 @@ interpoladas usando la termodinámica NASA. Fuera de esa región produce
 Los pesos de progreso deben ser adecuados y monótonos para cada combustible.
 Si las trayectorias se cruzan en `(c,h)`, la construcción falla e indica que se
 debe revisar la familia o los controles.
+
+## Radiación
+
+`radiation=True` añade a la energía de las llamas libres y de quemador la
+pérdida radiativa ópticamente delgada de H₂O y CO₂. Es la misma función que en
+las llamas de difusión: polinomios de absorción media de Planck de Cantera
+Flow1D, contrastados con Cantera a 3·10⁻¹¹.
+
+- `radiation_scale` multiplica la pérdida.
+- `inlet_emissivity` deja que la entrada o el quemador radien a la temperatura
+  de entrada. La salida no tiene emisividad: los gases radian al entorno a 0 K,
+  como en Cantera con su valor por defecto.
+
+La pérdida y sus derivadas entran en los dos Jacobianos analíticos (denso y
+estructurado). Es local a cada nodo, así que solo cambia el bloque diagonal.
+Las filas locales por diferencias finitas no la evalúan, por lo que esos modos
+de Jacobiano rechazan la radiación.
+
+```python
+from kflame import solve_flame, solve_burner_flame
+
+free = solve_flame(phi=1.0, radiation=True)
+burner = solve_burner_flame(phi=1.0, mass_flux=0.08, radiation=True, radiation_scale=3.)
+print(burner["heat_loss"]["radiative_heat_loss_W_m2"], burner["heat_loss"]["relative_energy_closure_error"])
+```
+
+**Tres ajustes del resolvedor para radiación:**
+
+- **Comprobación de anchura.** Los productos que radian se siguen enfriando
+  aguas abajo, así que la pendiente de T en la salida nunca se anula. Además,
+  la condición de gradiente nulo la aplana en la última celda. Con el criterio
+  de temperatura de Cantera, el dominio de una llama de CH₄ con radiación
+  crecía hasta 30,7 m y la salida bajaba a 228 K. Con radiación, el lado de
+  salida exige que la química haya terminado: liberación de calor en la salida
+  ≤ 10⁻³ del pico (`RADIATING_OUTLET_HEAT_RELEASE`). La pendiente de referencia
+  usa el máximo de T. La entrada se comprueba como siempre. La Su resultante
+  coincide hasta 10⁻⁷ con la del dominio de 30 m.
+- **Refinamiento.** Aguas abajo, la radiación hace caer la entalpía casi
+  linealmente, y T, u e Y apenas tienen curvatura. Con radiación, la entalpía
+  total entra también en los criterios de refinamiento. En el quemador de
+  0,08 kg/(m² s), el cierre energético pasa de 5,3 % a 1,2 %, con 15 nodos
+  más, y la pérdida radiativa integrada coincide con la malla fina a 0,1 %.
+- **Arranque adiabático de respaldo.** Si la resolución directa no se acepta
+  (por ejemplo, cae en la rama fría), se resuelve primero la llama adiabática
+  y se activa la radiación desde ella, como en contraflujo. Una llama que se
+  apaga de verdad se sigue rechazando. Ejemplo: con 0,08 kg/(m² s) y radiación
+  ×10, la pérdida (~520 kW/m²) supera el calor químico disponible
+  (~216 kW/m²).
+
+**Balance de energía.** Con radiación,
+`ṁ (h_entrada − h_salida) = q_pared + ∫ q_rad dz`. `heat_loss` añade
+`radiative_heat_loss_W_m2` (integral sobre los volúmenes de control interiores)
+y `total_heat_loss_W_m2`, y el cierre usa la suma. Los perfiles guardan
+`radiative_heat_loss` (W/m³, `qrad_W_m3` en el CSV).
+
+CH₄/aire, φ = 1, 300 K, 1 atm, GRI-Mech 3.0
+([`examples/example_premixed_radiation.py`](../examples/example_premixed_radiation.py),
+unos 14 s en total):
+
+| Caso | Resultado |
+|---|---|
+| Llama libre adiabática | Su = 37,883 cm/s |
+| Llama libre con radiación | Su = 37,813 cm/s (−0,19 %); con ×10, 37,140 cm/s |
+| Quemador 0,08, sin radiación | pared 56,7 kW/m²; cierre 0,27 % |
+| Quemador 0,08, radiación ×1 | pared 54,3 + radiación 55,9 kW/m²; cierre 1,20 % |
+| Quemador 0,08, radiación ×3 | pared 49,7 + radiación 115,1 kW/m²; cierre 1,37 % |
+
+![Llamas premezcladas con radiación](assets/premixed-radiation/premixed_radiation.png)
+
+```sh
+python examples/example_premixed_radiation.py
+python examples/example_premixed_radiation.py --plot-only docs/assets/premixed-radiation/summary.json
+```
+
+Límites: el gradiente nulo de salida aplana T en la última celda (igual que en
+Cantera), y no se modela la emisividad de la salida. La radiación cambia la
+física: es otro caso, no una optimización.
 
 ## Salidas y reproducción
 

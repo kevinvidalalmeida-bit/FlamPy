@@ -91,8 +91,9 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
                 species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None,
-                initial_solution=None, convection='upwind', time_step_ladder='auto'):
-    """Solve an adiabatic premixed free flame on the native CPU backend.
+                initial_solution=None, convection='upwind', time_step_ladder='auto',
+                radiation=False, radiation_scale=1.0, inlet_emissivity=0.0):
+    """Solve a premixed free flame on the native CPU backend (adiabatic by default).
 
     All arguments are keyword-only. Temperature, pressure and width use SI
     units (K, Pa and m). Specify at most one of phi with fuel/oxidizer, X
@@ -116,6 +117,11 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     mechanisms of at least 100 species (the transient factorization is then
     reused while dt stays on a rung) and keeps continuous steps otherwise;
     None always keeps continuous steps.
+
+    radiation=True adds the optically thin H2O/CO2 radiative loss of the
+    counterflow solver (Cantera's Flow1D model) to the energy equation;
+    radiation_scale multiplies it and inlet_emissivity lets the inlet or
+    burner surface radiate back at the inlet temperature.
 
     A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
     solve_burner_flame provides the explicit entry point for that mode.
@@ -222,13 +228,18 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         initial_grid=None if grid is None else tuple(grid), steady_rtol=rtol, steady_atol=atol,
         inlet_mass_flux=mass_flux, cantera_seed_grid=mass_flux is None,
         transport_model=transport, soret_enabled=soret, ratio=ratio, slope=slope, curve=curve, prune=prune,
-        convection_scheme=convection,
+        convection_scheme=convection, radiation_enabled=bool(radiation),
+        radiation_scale=float(radiation_scale), inlet_emissivity=float(inlet_emissivity),
     )
     folder = _output(output, 'burner' if mass_flux is not None else 'flame')
     started = time.perf_counter()
-    problem = FreeFlameProblem(case, n_points=initial_points, mech_data=mech)
-    problem.assume_finite_y = True
-    problem.backend_factory = NativeSpeciesBackend
+    def new_problem():
+        created = FreeFlameProblem(case, n_points=initial_points, mech_data=mech)
+        created.assume_finite_y = True
+        created.backend_factory = NativeSpeciesBackend
+        return created
+
+    problem = new_problem()
     options = replace(make_solve_options(args), refine_ratio=ratio, refine_slope=slope,
                       refine_curve=curve, refine_prune=prune, refine_max_points=max_points,
                       time_step_ladder=time_step_ladder)
@@ -241,6 +252,20 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         seed_u = float(seed_flux) / problem._thermo.density(seed_T, pressure, seed_Y)
         initial_state = pack_state(seed_u, seed_T, seed_Y)
     state, ok, report = solve_free_flame(problem, x0=initial_state, options=options)
+    if radiation and not _burning_and_accepted(problem, state, ok, report, temperature):
+        # As in the counterflow solver: starting cold with strong radiation
+        # (and wall loss) can settle on the unburnt branch. Solve the
+        # adiabatic flame first and switch radiation on from it.
+        first_report = report
+        problem = new_problem()
+        enabled = problem.radiation
+        problem.radiation = (False,)+tuple(enabled[1:])
+        adiabatic_state, adiabatic_ok, _ = solve_free_flame(problem, x0=initial_state, options=options)
+        problem.radiation = enabled
+        if adiabatic_ok:
+            state, ok, report = solve_free_flame(problem, x0=adiabatic_state, options=options)
+        report['adiabatic_start'] = dict(used=True, adiabatic_solved=bool(adiabatic_ok),
+                                         direct_attempt_accepted=bool(first_report.get('final_accepted')))
     elapsed = time.perf_counter() - started
     u, T, y = unpack_state(state, problem.n_points, problem.n_species)
     rho, cp, conductivity, qdot, _ = tabulated_properties(problem, T, y, {})
@@ -251,10 +276,16 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         from kflame.flame.enthalpy import enthalpy_diagnostics
         enthalpy_fields, heat_loss = enthalpy_diagnostics(problem, state)
         fields.update(enthalpy_fields)
+    if radiation:
+        from kflame.flame.equations import radiative_heat_loss
+        fields['radiative_heat_loss'] = radiative_heat_loss(problem, T, y)
     np.savez_compressed(folder / 'flame.npz', **fields)
     indices = [problem.species_names.index(name) for name in species]
     extra_columns = [fields['h_mass'], fields['enthalpy_departure_from_feed']] if problem.is_burner else []
     extra_headers = ['h_total_J_kg', 'h_feed_minus_h_J_kg'] if problem.is_burner else []
+    if radiation:
+        extra_columns.append(fields['radiative_heat_loss'])
+        extra_headers.append('qrad_W_m3')
     np.savetxt(folder / 'profiles.csv', np.column_stack([problem.z, T, u, rho, cp, conductivity, qdot, *extra_columns, *y[indices]]),
                delimiter=',', header=','.join(['z_m', 'T_K', 'u_m_s', 'rho_kg_m3', 'cp_J_kg_K',
                                              'conductivity_W_m_K', 'qdot_W_m3', *extra_headers, *['Y_' + name for name in species]]), comments='')
@@ -266,10 +297,14 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         accepted = accepted and reacting
         report['reacting_branch'] = reacting
     velocity = {'inlet_velocity': float(u[0]), 'mass_flux': float(mass_flux)} if problem.is_burner else {'Su': float(u[0])}
-    metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech,
+    from kflame import effective_threads
+    metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech, threads=effective_threads(),
                     species_names=problem.species_names, temperature=temperature,
                     pressure=pressure, transport=transport, soret=soret, convection=convection,
                     time_step_ladder=time_step_ladder,
+                    radiation=dict(enabled=bool(radiation), scale=float(radiation_scale),
+                                   inlet_emissivity=float(inlet_emissivity),
+                                   model='optically thin H2O/CO2 (Planck-mean polynomials of Cantera Flow1D)'),
                     inlet_Y=problem.Y_in,
                     initial_grid=case.initial_grid, initial_points=initial_points,
                     refinement=dict(ratio=ratio, slope=slope, curve=curve, prune=prune, max_points=max_points),
@@ -304,6 +339,15 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 fig.savefig(folder / f'profiles.{extension}', dpi=200)
             plt.close(fig)
     return dict(**fields, **velocity, heat_loss=heat_loss, accepted=accepted, output=folder, report=report, runtime_s=elapsed)
+
+
+def _burning_and_accepted(problem, state, ok, report, temperature):
+    """Accepted, mesh-converged and, for a burner, on the reacting branch."""
+    from kflame.flame.state import unpack_state
+    if not (ok and report.get('final_accepted') and report.get('grid_converged')):
+        return False
+    _, T, _ = unpack_state(state, problem.n_points, problem.n_species)
+    return not problem.is_burner or float(np.max(T)) - temperature > 50.0
 
 
 def solve_burner_flame(*, mass_flux, **kwargs):
@@ -494,7 +538,11 @@ def generate_burner_fgm(*, mass_fluxes=(.12, .08, .04),
               *[dict(kind='isothermal_burner', output=r['output'].name,
                      mass_flux_kg_m2_s=r['mass_flux'], inlet_velocity_m_s=r['inlet_velocity'],
                      heat_loss=r['heat_loss']) for r in burners]],
-        limitations='Fixed-composition planar gas flamelets; no solid conduction, radiation, multidimensional wall quenching, or independent Z control.',
+        limitations=('Fixed-composition planar gas flamelets; no solid conduction, multidimensional wall quenching, '
+                     'or independent Z control; '
+                     + (f"optically thin radiation included (scale {float(flame_settings.get('radiation_scale', 1.)):g}) "
+                        'in every flamelet, also in the free-flame reference.'
+                        if flame_settings.get('radiation') else 'no radiation.')),
     )
     (folder / 'metadata.json').write_text(json.dumps(json_safe(metadata), indent=2), encoding='utf-8')
     return folder

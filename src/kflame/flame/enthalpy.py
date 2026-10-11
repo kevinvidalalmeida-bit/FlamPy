@@ -75,12 +75,23 @@ def enthalpy_diagnostics(problem, state):
         wall_definition = 'first_face_conduction'
     deficit = float(h_feed - h[-1])
     flux_outlet = float(mdot[-1] * deficit)
-    closure = abs(wall_flux - flux_outlet) / max(abs(wall_flux), abs(flux_outlet), 1.0)
+    # Optically thin radiation of the interior control volumes (W/m2): with
+    # it, mdot (h_feed - h_out) = wall loss + radiative loss.
+    from kflame.flame.equations import radiative_heat_loss
+    q_rad = radiative_heat_loss(problem, T, Y)
+    volumes = np.zeros_like(problem.z)
+    volumes[1:-1] = .5 * (problem.z[2:] - problem.z[:-2])
+    radiative_flux = float(np.sum(q_rad * volumes))
+    if np.any(q_rad):
+        fields['radiative_heat_loss'] = q_rad
+    total_loss = wall_flux + radiative_flux
+    closure = abs(total_loss - flux_outlet) / max(abs(total_loss), abs(flux_outlet), 1.0)
     diagnostics = dict(
         enthalpy_definition='total_sensible_plus_formation', h_feed_J_kg=h_feed,
         burned_enthalpy_deficit_J_kg=deficit, burner_heat_loss_W_m2=wall_flux,
         burner_heat_loss_definition=wall_definition, first_face_conductive_heat_flux_W_m2=face_wall_flux,
         outlet_enthalpy_loss_W_m2=flux_outlet, relative_energy_closure_error=closure,
+        radiative_heat_loss_W_m2=radiative_flux, total_heat_loss_W_m2=total_loss,
         mass_flux_relative_spread=float(np.ptp(mdot) / max(abs(mdot[0]), 1e-300)),
         outlet_gradient_T_K_m=float((T[-1] - T[-2]) / dz[-1]),
         outlet_diffusive_enthalpy_flux_W_m2=float(q_diffusion[-1]),

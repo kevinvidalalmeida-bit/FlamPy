@@ -81,6 +81,17 @@ class FreeFlameProblem:
             self.n_points = int(self.z.size)
         self.width = float(case.width)
 
+        # ---- Radiación ópticamente delgada (misma física que contraflujo) ----
+        from kflame.flame.diffusion_kernels import STEFAN_BOLTZMANN
+        scale = float(getattr(case, 'radiation_scale', 1.0))
+        emissivity = float(getattr(case, 'inlet_emissivity', 0.0))
+        if not (np.isfinite(scale) and scale >= 0.) or not 0. <= emissivity <= 1.:
+            raise ValueError('radiation_scale must be >= 0 and inlet_emissivity within [0, 1]')
+        self.radiation = (bool(getattr(case, 'radiation_enabled', False)), scale, float(case.P),
+                          self.species_names.index('H2O') if 'H2O' in self.species_names else -1,
+                          self.species_names.index('CO2') if 'CO2' in self.species_names else -1,
+                          float(STEFAN_BOLTZMANN*emissivity*case.T_in**4),
+                          np.ascontiguousarray(self.mech_data.inv_molecular_weights, dtype=float))
         # ---- Modelo de transporte ----
         self.transport_model = str(getattr(case, "transport_model",
                                            "mixture-averaged"))

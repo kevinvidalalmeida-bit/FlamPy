@@ -148,7 +148,8 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     fields['Z']=coeff@fields['Y']+offset
     folder=_output(output,'diffusion')
     np.savez_compressed(folder/'flame.npz',**fields)
-    metadata=dict(backend='native_cpu',flow_type='counterflow_diffusion',accepted=accepted,
+    from kflame import effective_threads
+    metadata=dict(backend='native_cpu',flow_type='counterflow_diffusion',accepted=accepted,threads=effective_threads(),
         mechanism=mechanism,mechanism_sha256=hashlib.sha256(Path(mechanism).read_bytes()).hexdigest(),
         fuel=fuel,oxidizer=oxidizer,fuel_Y=feeds[0].tolist(),oxidizer_Y=feeds[1].tolist(),
         fuel_temperature=fuel_temperature,oxidizer_temperature=oxidizer_temperature,pressure=pressure,

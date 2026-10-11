@@ -20,6 +20,7 @@ python -m pip install -e ".[reference]"
 | [`example_fgm.py`](example_fgm.py) | Construye una familia o lee una tabla guardada y dibuja los mapas FGM de la tesis |
 | [`query_fgm.py`](query_fgm.py) | Carga una tabla y consulta temperatura y composición por lotes |
 | [`example_heat_loss.py`](example_heat_loss.py) | Resuelve una familia con pérdidas hacia un quemador y construye un FGM `(c,h)` |
+| [`example_premixed_radiation.py`](example_premixed_radiation.py) | Llama libre adiabática frente a radiante y quemador con distintas escalas de radiación; dibuja perfiles y el reparto del calor entre pared y radiación (`--plot-only` redibuja) |
 | [`validate_burner.py`](validate_burner.py) | Compara llamas de quemador con Cantera y comprueba una llama retenida |
 | [`example_diffusion.py`](example_diffusion.py) | Resuelve contraflujo de CH₄ y H₂, construye su FGM `(Z,C)`, valida un flamelet reservado y dibuja llama, familia y comparación (`--plot-only` redibuja); la comparación opcional con `--reference` requiere el extra `reference` |
 | [`example_diffusion_heat_loss.py`](example_diffusion_heat_loss.py) | Genera una familia radiativa `(Z,C,h)`, valida un flamelet reservado y dibuja familia, déficit de entalpía y comparación; `--jobs` reparte las filas de pérdida y `--plot-only` redibuja |

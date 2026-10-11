@@ -170,6 +170,7 @@ if _NUMBA_AVAILABLE:
         F, u, T, Y, z, rho, cp_n, omega, hk_n, lam_face, flux,
         invW, Y_in, T_prof, has_T_prof, solve_energy, j_fixed,
         T_fixed, T_in, outlet_species_flux, inlet_mass_flux, convection, conv_w, conv_wy,
+        q_rad,
     ):
         n_pts = z.shape[0]
         n_sp = Y.shape[0]
@@ -245,6 +246,8 @@ if _NUMBA_AVAILABLE:
                     flx = 0.5 * (flux[k, j - 1] + flux[k, j])
                     en_sum += hk_n[k, j] * omega[k, j] * invW[k]
                     en_sum += flx * dhk_dz * invW[k]
+                # Optically thin radiative loss (zero when disabled).
+                en_sum += q_rad[j]
 
                 cp_j = cp_n[j]
                 F[b + C_T] = (-cp_j * rho_u_j * dTdz - cond - en_sum) / (rho_j * cp_j)
@@ -469,6 +472,7 @@ def residual(
     _profile_record(problem, "residual_face_transport_and_flux", t_faces)
     convection, conv_w, conv_wy = _convection_weights(
         problem, u, rho, cp_n, lam_face, z, n_sp, rho_diffusivity_face)
+    q_rad = radiative_heat_loss(problem, T, Y)
     # OPT-3: Cache nodal properties for the Jacobian cache builder.
     # build_local_jacobian_cache() evaluates the exact same thermo/kinetics at
     # the same state.  Storing these here avoids that redundant evaluation.
@@ -510,7 +514,7 @@ def residual(
                 j_fixed, T_fixed, float(problem.T_in),
                 bool(_outlet_species_flux_bc(problem)),
                 float(getattr(problem, "inlet_mass_flux", -1.0)),
-                convection, conv_w, conv_wy,
+                convection, conv_w, conv_wy, q_rad,
             )
             _profile_record(problem, "residual_assembly_numba", t_assembly)
             _apply_transient_terms(F_numba, x, problem, rdt, x_old)
@@ -556,7 +560,7 @@ def residual(
         if problem.solve_energy:
             F[b + C_T] = _energy_residual(
                 u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face, fm, fp,
-                j, z, dzm, dzp, dz2, n_sp, W, invW, problem, convection, conv_w[j])
+                j, z, dzm, dzp, dz2, n_sp, W, invW, problem, convection, conv_w[j], q_rad[j])
         else:
             T_prof = getattr(problem, "T_profile_fixed", None)
             F[b + C_T] = T[j] - (T_prof[j] if T_prof is not None else problem.T_in)
@@ -661,9 +665,18 @@ def _right_bc(F: np.ndarray, u, T, Y, rho, flux_last, problem, nv, n_sp, n_pts):
 # ---------------------------------------------------------------------------
 #  Ecuación de energía interior
 # ---------------------------------------------------------------------------
+def radiative_heat_loss(problem, T, Y):
+    """Optically thin radiative loss [W/m3] at every node (zeros when off)."""
+    radiation = getattr(problem, 'radiation', None)
+    if radiation is None or not radiation[0]:
+        return np.zeros(np.asarray(T).shape[0])
+    from kflame.flame.diffusion_kernels import radiation_profile
+    return radiation_profile(np.ascontiguousarray(T, dtype=float), np.ascontiguousarray(Y, dtype=float), radiation)
+
+
 def _energy_residual(u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face,
                      fm, fp, j, z, dzm, dzp, dz2, n_sp, W, invW, problem,
-                     convection=0, weights=None):
+                     convection=0, weights=None, q_rad_j=0.0):
     """Residual de la ecuación de energía en el punto interior j."""
     rho_u_j = rho[j] * u[j]
 
@@ -692,7 +705,7 @@ def _energy_residual(u, T, Y, rho, cp_n, lam_n, hk_n, omega, lam_face,
 
     flx = 0.5 * (fm + fp)
     en_sum = float(np.dot(hk_n[:, j] * omega[:, j], invW) +
-                   np.dot(flx * dhk_dz, invW))
+                   np.dot(flx * dhk_dz, invW)) + float(q_rad_j)
 
     return (-cp_n[j] * rho_u_j * dTdz - cond - en_sum) / (rho[j] * cp_n[j])
 

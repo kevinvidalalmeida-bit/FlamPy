@@ -20,6 +20,8 @@ import numpy as np
 from numba import njit
 
 from kflame.chemistry.mechanism import R_UNIV
+from kflame.flame.diffusion_kernels import radiative_loss
+from kflame.flame.structured_jacobian import _radiation_derivatives
 
 RANK = 5
 # Columns of P/Q: continuity row, energy row, two face rank-one terms, T column.
@@ -222,7 +224,7 @@ def _offdiag(j, col, x, z, rho, cp, h, drho, cp_molar, flux, face, lam, invW,
 @njit(cache=True)
 def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux, FM, FP,
                 lam, invW, yin, energy, fixed, outlet_flux, inlet_mass_flux, convection,
-                conv_w, conv_wy, B, a, g):
+                conv_w, conv_wy, B, a, g, T_all, Y_all, radiation, dq_dY):
     """Dense block A[j, j] (as ``analytic_jacobian.assemble_blocks``, column j).
 
     dy[k, b, v] and dt[k, b] are the chemistry partials of node j.
@@ -331,6 +333,11 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
             a[v] += hk*dw+gk*(fm_row[v]+fp_row[v])
         row[k+2] -= u*cY
         g[k] = gk
+    # Optically thin radiative loss: local to the node.
+    en += radiative_loss(T_all, Y_all, j, radiation)
+    den_t += _radiation_derivatives(T_all, Y_all, j, radiation, dq_dY)
+    for k in range(ns):
+        a[k+2] += dq_dY[k]
     if energy:
         rc = 1./(rho[j]*cp[j])
         base = (cond+en)*rc
@@ -350,7 +357,7 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
 def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt, first,
                         cp_molar, flux, face, lam, invW, yin, energy, has_profile, fixed,
                         outlet_flux, inlet_mass_flux, convection, conv_w, conv_wy,
-                        diag, diag_offset, lowD, lowP, lowQ, upD, upP, upQ):
+                        diag, diag_offset, lowD, lowP, lowQ, upD, upP, upQ, radiation):
     """Rows of nodes [start, stop); dy/dt hold the chemistry tile from ``first``."""
     nodes, nv = x.shape
     ns = nv-2
@@ -358,6 +365,9 @@ def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt,
     FP = np.zeros((ns, nv))
     a = np.empty(nv)
     g = np.empty(ns)
+    dq_dY = np.empty(ns)
+    T_all = np.ascontiguousarray(x[:, 1])
+    Y_all = np.ascontiguousarray(x[:, 2:].T)
     for j in range(start, stop):
         if j > 0:
             _dense_face(face[j-1], False, FM)
@@ -369,7 +379,7 @@ def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt,
             FP[:, :] = 0.
         _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, j-first, cp_molar, flux,
                     FM, FP, lam, invW, yin, energy, fixed, outlet_flux, inlet_mass_flux,
-                    convection, conv_w, conv_wy, diag[j-diag_offset], a, g)
+                    convection, conv_w, conv_wy, diag[j-diag_offset], a, g, T_all, Y_all, radiation, dq_dY)
         if j > 0:
             _offdiag(j, j-1, x, z, rho, cp, h, drho, cp_molar, flux, face, lam, invW,
                      energy, has_profile, fixed, outlet_flux, inlet_mass_flux, convection,
@@ -515,6 +525,13 @@ class PremixedStructuredFactor:
         return out
 
 
+def _radiation_of(problem):
+    radiation = getattr(problem, 'radiation', None)
+    if radiation is None:
+        return (False, 1.0, 101325.0, -1, -1, 0.0, np.ones(int(problem.n_species)))
+    return radiation
+
+
 def build_structured(x, problem, cache):
     """Structured analytic Jacobian of the premixed residual at ``x``."""
     from kflame.chemistry.analytic import prepare_species_partials, species_partials_range_into
@@ -564,7 +581,7 @@ def build_structured(x, problem, cache):
             int(cache['j_fixed']), bool(_outlet_species_flux_bc(problem)),
             float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']),
             np.ascontiguousarray(cache['conv_w'], dtype=float), np.ascontiguousarray(cache['conv_wy'], dtype=float),
-            diag, 0, lowD, lowP, lowQ, upD, upP, upQ)
+            diag, 0, lowD, lowP, lowQ, upD, upP, upQ, _radiation_of(problem))
 
     def rows(start, stop):
         dy = np.empty((tile, ns, ns)).transpose(1, 0, 2)

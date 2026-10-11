@@ -355,6 +355,12 @@ def build_freeflame_refiner_profiles(problem, u: np.ndarray, T: np.ndarray, Y: n
                 key = f"Y_{k}"
             profiles[key] = np.asarray(Y[k, :], dtype=float)
 
+    if getattr(problem, "radiation", (False,))[0] and getattr(problem, "_thermo", None) is not None:
+        # Radiation keeps lowering the total enthalpy downstream, where T, u
+        # and Y vary almost linearly: refining on h resolves that cooling and
+        # the enthalpy balance it changes.
+        profiles["h"] = np.asarray(problem._thermo.enthalpy_mass(T, Y), dtype=float)
+
     return profiles
 
 
@@ -1413,6 +1419,10 @@ def _hybrid_newton(problem, x0: np.ndarray, opts: SolveOptions,
         "block_tridiag", "block_tridiagonal", "block_thomas"
     ):
         raise ValueError("analytic_spatial requires block_tridiag")
+    if getattr(problem, "radiation", (False,))[0] and not problem.analytic_spatial:
+        # The local finite-difference row kernels do not evaluate radiation;
+        # the analytic block Jacobians (dense and structured) do.
+        raise ValueError("radiation requires the analytic block Jacobian (analytic_spatial)")
     if problem.analytic_chemistry and not problem.analytic_spatial and (
         not problem.precompute_jacobian_thermo
         or problem.jacobian_mode not in ("numba_local", "batched_local", "native_local",
@@ -2244,6 +2254,10 @@ def _solve_refine_energy_on(
     return x_ref, bool(ok_ref), report
 
 
+# Radiating free flames: outlet heat release below this fraction of its peak.
+RADIATING_OUTLET_HEAT_RELEASE = 1e-3
+
+
 def _domain_too_narrow(problem, x: np.ndarray, slope_tol: float = 0.02, strict_mode: bool = False) -> tuple[bool, dict[str, float]]:
     """
     Mimic Cantera FreeFlame.solve(auto=True) width check:
@@ -2271,17 +2285,35 @@ def _domain_too_narrow(problem, x: np.ndarray, slope_tol: float = 0.02, strict_m
     if span <= 0.0:
         return False, metrics
 
-    m_ref = float((T[-1] - T[0]) / span)
+    radiating = bool(getattr(problem, "radiation", (False,))[0])
+    # Radiating products cool downstream, so the outlet temperature no longer
+    # measures the flame's temperature rise; use the peak instead.
+    m_ref = float(((np.max(T) if radiating else T[-1]) - T[0]) / span)
     metrics["m_ref"] = m_ref
     if abs(m_ref) < 1.0:
         return False, metrics
 
     m_left = float(abs((T[1] - T[0]) / (z[1] - z[0]) / m_ref))
 
-    if strict_mode:
-        m_right = float(abs((T[-3] - T[-1]) / (z[-3] - z[-1]) / m_ref))
-    else:
-        m_right = float(abs((T[-2] - T[-1]) / (z[-2] - z[-1]) / m_ref))
+    k = -3 if strict_mode else -2
+    m_right = float(abs((T[k] - T[-1]) / (z[k] - z[-1]) / m_ref))
+    if radiating:
+        # Radiating products keep cooling downstream (to 0 K surroundings),
+        # so the outlet temperature slope never vanishes and the zero-gradient
+        # outlet condition flattens it. The outlet is far enough when the
+        # chemistry has finished: heat release there below a fraction of its
+        # peak. The temperature slope is still reported.
+        from kflame.flame.equations import _residual_backend
+        _, T_all, Y_all = unpack_state(x, problem.n_points, problem.n_species)
+        omega = np.empty_like(Y_all)
+        hk = np.empty_like(Y_all)
+        _residual_backend(problem).eval_grid_thermo_kinetics_into(
+            np.ascontiguousarray(T_all), np.ascontiguousarray(Y_all), omega, hk)
+        qdot = -np.sum(hk * omega * problem.radiation[6][:, None], axis=0)
+        peak = float(np.max(np.abs(qdot)))
+        metrics["outlet_temperature_slope_ratio"] = m_right
+        metrics["outlet_heat_release_ratio"] = float(abs(qdot[-1]) / peak) if peak > 0.0 else 0.0
+        m_right = metrics["outlet_heat_release_ratio"] * slope_tol / RADIATING_OUTLET_HEAT_RELEASE
 
     metrics["m_left"] = m_left
     metrics["m_right"] = m_right

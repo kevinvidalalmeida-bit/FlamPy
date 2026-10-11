@@ -28,7 +28,15 @@ from kflame.reference.diffusion import compare_diffusion_flame
 
 @contextmanager
 def instrument_native():
+    """Inclusive timings in the same window as native_s.
+
+    solve_diffusion_problem compiles and warms the kernels before starting the
+    clock reported as native_s; calls made during compile_kernels are recorded
+    under 'preparation:<name>' so the solve categories share native_s's window.
+    Inclusive categories overlap and must not be summed.
+    """
     timings={};originals=[];matrices=[];newton_calls=[]
+    phase=dict(preparation=False)
     def measured(name,fun):
         @wraps(fun)
         def call(*args,**kwargs):
@@ -36,9 +44,20 @@ def instrument_native():
             try:
                 return fun(*args,**kwargs)
             finally:
-                entry=timings.setdefault(name,dict(calls=0,time_s=0.))
+                label=('preparation:'+name) if phase['preparation'] else name
+                entry=timings.setdefault(label,dict(calls=0,time_s=0.))
                 entry['calls']+=1;entry['time_s']+=time.perf_counter()-started
         return call
+    original_compile=diffusion.DiffusionFlameProblem.compile_kernels
+    def compile_kernels(self,*args,**kwargs):
+        phase['preparation']=True;started=time.perf_counter()
+        try:
+            return original_compile(self,*args,**kwargs)
+        finally:
+            phase['preparation']=False
+            entry=timings.setdefault('preparation:compile_kernels',dict(calls=0,time_s=0.))
+            entry['calls']+=1;entry['time_s']+=time.perf_counter()-started
+    diffusion.DiffusionFlameProblem.compile_kernels=compile_kernels
     targets=[(diffusion.DiffusionFlameProblem,'residual','residual_inclusive'),
              (diffusion.DiffusionFlameProblem,'properties','properties_inclusive'),
              (diffusion.DiffusionFlameProblem,'jacobian_blocks','compiled_jacobian_inclusive'),
@@ -73,6 +92,7 @@ def instrument_native():
     try:
         yield timings,matrices,newton_calls
     finally:
+        diffusion.DiffusionFlameProblem.compile_kernels=original_compile
         diffusion._newton=original_newton
         diffusion.BorderedFactor.__init__=original_init
         for owner,attribute,original in reversed(originals):

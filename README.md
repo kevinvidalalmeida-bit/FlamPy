@@ -22,6 +22,9 @@
 - **Contaminantes**: [CO, NO y NO₂ con GRI-Mech 3.0](docs/pollutants.md) en perfiles y en FGM.
 - **Llamas no adiabáticas y pérdidas hacia el quemador**: FGM `(Z,C,h)` validado
   ([modelo](docs/nonadiabatic-fgm.md), [pérdidas](docs/heat-loss.md)).
+- **Radiación en llamas premezcladas y de quemador** (`radiation=True`), con el
+  mismo modelo que en contraflujo y el balance de energía cerrado con pérdida
+  radiativa ([radiación](docs/heat-loss.md#radiación)).
 - Notas HPC por tema:
   - [estado y prioridades](docs/reviews/repository-hpc-2026-10-08.md);
   - [transporte multicomponente](docs/hpc-multicomponent.md);

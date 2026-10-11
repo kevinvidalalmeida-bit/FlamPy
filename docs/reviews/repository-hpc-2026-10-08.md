@@ -113,8 +113,8 @@ y una fila de borde que seleccione ese momento. `BorderedFactor` devuelve
 | P2 | Pliegues acumulados de Z | **Corregido.** Se rechaza cualquier caída de Z bajo su envolvente mayor que `FOLD_TOLERANCE`, en un paso o acumulada. Tres inversiones de 8·10⁻⁷ ya no pasan como redondeo |
 | P2 | Dos referencias para el déficit de entalpía | **Nombrado.** `maximum_enthalpy_deficit_definition` documenta el déficit de generación (adiabático de la misma deformación a igual Z) frente a `delta_h = h_ad(Z,C) − h` de la consulta |
 | P2 | Memoria sin presupuesto global | **Atendido en el camino de mecanismos grandes.** Factorización por tramos sin guardar A, inversas una sola vez y depósito de búferes acotado: Aramco 3.0 tiene un pico de 5,2 GB, frente a la estimación de 21 GiB ([detalle](../hpc-large-mechanisms.md)) |
-| P2 | Hilos según el orden de importación | Pendiente. Sigue documentado: fijar `NUMBA_NUM_THREADS` y `KFLAME_THREADS` antes de iniciar Python |
-| P2 | Ventanas de perfilado | Pendiente. Afecta solo a la instrumentación de `benchmark_diffusion_solver.py`; los tiempos de referencia se miden sin instrumentación |
+| P2 | Hilos según el orden de importación | **Corregido.** Si NumPy o Numba se importaron antes que FlamPy, la política se aplica en tiempo de ejecución: BLAS a 1 hilo con `threadpoolctl` (nueva dependencia ligera) y Numba a 4 con `numba.set_num_threads`. Se respetan los valores explícitos del usuario. Antes quedaban 24 y 24. `kflame.effective_threads()` informa los hilos reales, que se guardan en los metadatos de cada llama. Hay pruebas para ambos órdenes de importación |
+| P2 | Ventanas de perfilado | **Corregido.** `benchmark_diffusion_solver.py` registra bajo `preparation:` lo que ocurre durante `compile_kernels`. Las categorías de resolución comparten ventana con `native_s`; en H₂, la preparación son 0,57 s y la resolución 0,505 s |
 
 ## Orden propuesto para avanzar HPC
 
