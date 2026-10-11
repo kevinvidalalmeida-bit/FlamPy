@@ -16,6 +16,7 @@ module so the mature mixture-averaged fast path remains unchanged.
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -23,11 +24,110 @@ import numpy as np
 from kflame.chemistry.mechanism import MechanismData, R_UNIV
 from kflame.chemistry.transport import NativeTransport
 from kflame.chemistry.collision_integrals import native_transport_fits
-from kflame.chemistry.multicomponent_kernels import thermal_system, evaluate_faces
+from kflame.chemistry.multicomponent_kernels import (
+    thermal_system, evaluate_faces, temperature_terms,
+    _temperature_terms_symmetric, _evaluate_faces_symmetric,
+    _evaluate_faces_blocked,
+)
 
 
 _TINY_X = 1.0e-20
 _MIN_C_INTERNAL = 1.0e-3
+
+
+def _certifiable_temperature_inputs(inputs: tuple[np.ndarray, ...]) -> bool:
+    """Check actual pair coefficient bits, never floating-point tolerances."""
+    if len(inputs) != 10 or not all(type(x) is np.ndarray for x in inputs):
+        return False
+    n = inputs[0].size
+    shapes = ((n,), (n, n), (n,), (n,), (n,), (n, 5),
+              (n, n, 5), (n, n, 9), (n, n, 9), (n, n, 9))
+    if n < 1 or not all(x.dtype == np.dtype(np.float64) and x.dtype.isnative
+                       and x.flags.c_contiguous and x.flags.aligned
+                       and x.shape == shape and np.isfinite(x).all()
+                       for x, shape in zip(inputs, shapes)):
+        return False
+    if np.any(inputs[0] <= 0.0) or np.any(inputs[2] <= 0.0):
+        return False
+    return all(np.array_equal(inputs[i].view(np.uint64),
+                              inputs[i].view(np.uint64).swapaxes(0, 1))
+               for i in (1, 6, 7, 8, 9))
+
+
+def _separate_temperature_outputs(inputs, outputs) -> bool:
+    n = inputs[0].size
+    shapes = ((n,), (n,), (n, n), (n, n), (n, n), (n, n))
+    if len(outputs) != 6 or not all(type(x) is np.ndarray
+            and x.dtype == np.dtype(np.float64) and x.shape == shape
+            and x.flags.c_contiguous and x.flags.aligned and x.flags.writeable
+            for x, shape in zip(outputs, shapes)):
+        return False
+    return all(not np.shares_memory(out, other)
+               for i, out in enumerate(outputs) for other in (*inputs, *outputs[:i]))
+
+
+@dataclass(frozen=True, init=False, eq=False)
+class TemperatureMechanismSnapshot:
+    """Owned immutable temperature inputs, certified once for their lifetime.
+
+    Explicit construction opts into isolation from subsequent caller mutation.
+    Bytes-backed arrays cannot have WRITEABLE re-enabled, even through .base.
+    Raw-array Numba APIs always retain their original ordered-pair behavior.
+    """
+
+    _inputs: tuple[np.ndarray, ...]
+    certified: bool
+
+    def __init__(self, inputs: tuple[np.ndarray, ...]) -> None:
+        if len(inputs) != 10:
+            raise ValueError("Expected ten temperature input arrays")
+        # Remember unsupported layouts before normalization; check values only
+        # after copying so certification never belongs to caller-owned storage.
+        layout_ok = all(type(x) is np.ndarray and x.flags.c_contiguous
+                        and x.flags.aligned for x in inputs)
+        copies = tuple(np.array(x, copy=True, order="C") for x in inputs)
+        frozen = tuple(np.frombuffer(x.tobytes(), dtype=x.dtype).reshape(x.shape)
+                       for x in copies)
+        object.__setattr__(self, "_inputs", frozen)
+        object.__setattr__(self, "certified",
+                           layout_ok and _certifiable_temperature_inputs(frozen))
+
+    @property
+    def inputs(self) -> tuple[np.ndarray, ...]:
+        # Expose views with independent ndarray metadata. Changing a returned
+        # view's shape/dtype/strides cannot invalidate the private certificate.
+        return tuple(x.view() for x in self._inputs)
+
+    def _matches_bindings(self, current, bound) -> bool:
+        return all(x is saved and x.dtype == owned.dtype and x.shape == owned.shape
+                   and x.strides == owned.strides and not x.flags.writeable
+                   and x.flags.aligned
+                   for x, saved, owned in zip(current, bound, self._inputs))
+
+    def evaluate(self, temperature: float, outputs: tuple[np.ndarray, ...]) -> bool:
+        """Fill six outputs; return whether the certified route was selected.
+
+        Unusual/overlapping buffers take the original route, including its
+        existing exceptions. No buffer copying or domain clamping is added.
+        This Python boundary checks buffers; compiled face loops allocate their
+        own independent buffers and bypass this per-call Python check.
+        """
+        symmetric = (self.certified and math.isfinite(temperature) and temperature > 0.0
+                     and _separate_temperature_outputs(self._inputs, outputs))
+        kernel = _temperature_terms_symmetric if symmetric else temperature_terms
+        kernel(temperature, *self._inputs, *outputs)
+        return symmetric
+
+    def evaluate_faces(self, temperature, pressure, y, cp_r, inv_w, crot, dense):
+        mw, log_eps, epsilon, zrot, frot, visc, diff, astar, bstar, cstar = self._inputs
+        if mw.size >= 24 and temperature.size >= 32 and not dense:
+            return _evaluate_faces_blocked(
+                temperature, pressure, y, cp_r, mw, inv_w, log_eps,
+                epsilon, crot, zrot, frot, visc, diff, astar, bstar, cstar,
+                dense, self.certified, 4)
+        kernel = _evaluate_faces_symmetric if self.certified else evaluate_faces
+        return kernel(temperature, pressure, y, cp_r, mw, inv_w, log_eps,
+                      epsilon, crot, zrot, frot, visc, diff, astar, bstar, cstar, dense)
 
 
 def _frot(reduced_temperature: np.ndarray) -> np.ndarray:
@@ -89,6 +189,34 @@ class NativeMulticomponentTransport:
         stars, self._viscosity_fit, self._diffusion_fit = native_transport_fits(mech, self.base_transport)
         self._astar_poly, self._bstar_poly, self._cstar_poly = stars
         self._log_eps_pair = np.log(np.maximum(self.base_transport._eps_pair, 1.0e-300))
+        self._temperature_snapshot = TemperatureMechanismSnapshot(self._temperature_inputs())
+        self._temperature_snapshot_bindings = self._temperature_snapshot.inputs
+        (self.mw, self._log_eps_pair, self.epsilon_k, self.zrot, self.frot_298,
+         self._viscosity_fit, self._diffusion_fit, self._astar_poly,
+         self._bstar_poly, self._cstar_poly) = self._temperature_snapshot_bindings
+
+    def _temperature_inputs(self) -> tuple[np.ndarray, ...]:
+        return (self.mw, self._log_eps_pair, self.epsilon_k, self.zrot, self.frot_298,
+                self._viscosity_fit, self._diffusion_fit, self._astar_poly,
+                self._bstar_poly, self._cstar_poly)
+
+    def export_temperature_snapshot(self) -> tuple[tuple[np.ndarray, ...], bool]:
+        """Export immutable kernel arrays and their snapshot-bound certificate.
+
+        Order: mw, log_eps_pair, epsilon, zrot, frot298, viscosity_fit,
+        diffusion_fit, astar_fit, bstar_fit, cstar_fit. Keep this complete set
+        together: the flag does not certify caller arrays or later replacements.
+        A compiled consumer must also establish independent writable outputs.
+
+        Rebound/metadata-edited transport arrays export their current values as
+        new immutable copies with certified=False, even when still symmetric.
+        This preserves the original route for arbitrary user modifications.
+        """
+        current = self._temperature_inputs()
+        snapshot = self._temperature_snapshot
+        if snapshot._matches_bindings(current, self._temperature_snapshot_bindings):
+            return snapshot.inputs, snapshot.certified
+        return TemperatureMechanismSnapshot(current).inputs, False
 
     def _viscosities(self, temperature: float) -> np.ndarray:
         values = np.polynomial.polynomial.polyval(math.log(temperature), self._viscosity_fit.T)
@@ -205,6 +333,13 @@ class NativeMulticomponentTransport:
             raise ValueError("cp_R debe tener la misma forma que Y_face.")
 
         if self.use_compiled_faces:
+            snapshot = self._temperature_snapshot
+            if snapshot._matches_bindings(self._temperature_inputs(),
+                                          self._temperature_snapshot_bindings):
+                return snapshot.evaluate_faces(
+                    temperature, float(pressure), mass_fractions, cp_r,
+                    self.inv_w, self.crot, self.linear_solver == "dense",
+                )
             return evaluate_faces(
                 temperature, float(pressure), mass_fractions, cp_r, self.mw,
                 self.inv_w, self._log_eps_pair, self.epsilon_k, self.crot,

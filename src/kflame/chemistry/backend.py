@@ -5,7 +5,7 @@ Provides the exact same interface as SpeciesBackend but uses:
   - mechanism_data.py   → YAML parser
   - thermo_native.py    → NASA-7 thermodynamics
   - transport_native.py → mixture-averaged transport (Neufeld collision integrals)
-  - kinetics_native.py  → full chemical kinetics (Arrhenius/3-body/Troe)
+  - kinetics_native.py  → chemical kinetics (Arrhenius/3-body/Troe/SRI/PLOG)
 
 ZERO Cantera dependency. CPU backend via NumPy and Numba.
 """
@@ -17,9 +17,10 @@ import numpy as np
 
 from kflame.chemistry.mechanism import MechanismData, load_mechanism, R_UNIV
 from kflame.chemistry.thermo import NativeThermo
-from kflame.chemistry.transport import NativeTransport
+from kflame.chemistry.transport import NativeTransport, _species_columns
 from kflame.chemistry.multicomponent import NativeMulticomponentTransport
 from kflame.chemistry.kinetics import NativeKinetics, _mass_action_product
+from kflame.chemistry.pressure_rates import plog_rate, sri_falloff, troe_temperature_scale
 
 try:
     from numba import njit, prange
@@ -38,7 +39,7 @@ if njit is not None:
         troe_A, troe_T3, troe_T1, troe_T2,
         r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
         net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-        delta_nu, rho_out, cp_out, omega_out, hk_out,
+        delta_nu, rho_out, cp_out, omega_out, hk_out, plog_data=None, sri_data=None,
     ):
         n_sp = Y.shape[0]
         n_pts = Y.shape[1]
@@ -114,6 +115,8 @@ if njit is not None:
                 # T**b * exp(-Ea / RT) as one exponential. ``logT`` is already
                 # required by the NASA polynomials above for this grid point.
                 kf = A_hi[r] * math.exp(b_hi[r] * logT - Ea_hi[r] * inv_RT)
+                if plog_data is not None and plog_data[0][r] >= 0:
+                    kf = plog_rate(T, P, r, plog_data)[0]
 
                 delta_g = 0.0
                 for ii in range(net_count[r]):
@@ -157,8 +160,8 @@ if njit is not None:
                     F = 1.0
 
                     if has_troe[r]:
-                        t3 = max(troe_T3[r], 1.0e-300)
-                        t1 = max(troe_T1[r], 1.0e-300)
+                        t3 = troe_temperature_scale(troe_T3[r])
+                        t1 = troe_temperature_scale(troe_T1[r])
                         Fcent = (
                             (1.0 - troe_A[r]) * math.exp(-T / t3)
                             + troe_A[r] * math.exp(-T / t1)
@@ -174,6 +177,9 @@ if njit is not None:
                             n_troe - d_troe * (logPr + c_troe)
                         )
                         F = 10.0 ** (logFcent / (1.0 + f1 * f1))
+
+                    if sri_data is not None and sri_data[r, 0] != 0.:
+                        F = sri_falloff(T, Pr, sri_data[r])[0]
 
                     kf_falloff = kf * F_lind * F
                     Rf = kf_falloff * (Rf / max(kf, 1.0e-300))
@@ -389,9 +395,12 @@ class NativeSpeciesBackend:
             and getattr(self.kinetics, "_sparse_numba_available", False)
         ):
             T_work = np.asarray(T, dtype=np.float64).reshape(-1)
-            Y_work = np.ascontiguousarray(self._safe_Y(Y), dtype=np.float64)
+            Y_work = self._safe_Y(Y)
             if Y_work.ndim == 1:
-                Y_work = np.ascontiguousarray(Y_work[:, None], dtype=np.float64)
+                Y_work = Y_work[:, None]
+            # Preserve existing contiguous layouts; pack strided node columns
+            # once instead of imposing an extra transpose on C-order callers.
+            Y_work = _species_columns(Y_work)
             if Y_work.shape[1] != T_work.size:
                 raise ValueError("T and Y sizes do not match for thermo/kinetics evaluation.")
 
@@ -448,6 +457,8 @@ class NativeSpeciesBackend:
                 cp,
                 omega_out,
                 hk_out,
+                self.kinetics._plog_data,
+                self.kinetics._sri_data,
             )
             return rho, cp
 

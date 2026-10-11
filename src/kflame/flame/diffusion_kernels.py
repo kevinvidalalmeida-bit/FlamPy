@@ -7,16 +7,24 @@ the same finite-difference steps as a column-by-column evaluation of the full
 residual. Face quantities that depend only on temperature (pure-species fits,
 binary diffusion, Wilke factors, Soret collision ratios) are reused by the
 composition columns of the same face.
+
+Large-species thermal blocks use contiguous rows while preserving the original
+order of every column reduction in the shared multicomponent kernels.
 """
 import math
 
 import numpy as np
 from numba import njit
+from kflame.flame.frozen_transport_columns import frozen_composition_columns
+from kflame.flame.algebraic_frozen_transport import frozen_composition_columns as algebraic_composition_columns
+from kflame.flame.frozen_transport_derivatives import frozen_face_derivatives
+from kflame.flame.analytic_frozen_rows import composition_row_derivative
 
 from kflame.chemistry.jacobian import grouped_node
 from kflame.chemistry.mechanism import R_UNIV
 from kflame.chemistry.multicomponent_kernels import (composition_terms, composition_terms_ws,
-                                                     composition_workspace, temperature_terms)
+                                                     composition_workspace, temperature_terms,
+                                                     _temperature_terms_symmetric)
 
 
 @njit(cache=True)
@@ -33,6 +41,8 @@ def boundary_rows(out, o, j, face, m, V, T, Y, J, feed, target, Tfeed, mref, are
 
 
 STEFAN_BOLTZMANN = 5.670374419e-8
+# Relative axial mass flux below which the enthalpy-flux gradient is blended.
+STAGNATION = 1e-4
 ONE_ATMOSPHERE = 101325.
 
 
@@ -93,11 +103,20 @@ def interior_rows(out, o, j, m, V, T, Y, rho, cp, omega, hk, lam, J, mu, hm, hp,
                 -(mu[j]*(V[j+1]-V[j])/hp-mu[j-1]*(V[j]-V[j-1])/hm)/volume)/lref
     enthalpy_diffusion = 0.
     reaction_enthalpy = 0.
+    # sum J_k dh_k/dz is not proportional to m: a pure donor switch would make
+    # the residual jump at stagnation, where no discrete root may then exist.
+    # Within |m| < STAGNATION*mref the two one-sided gradients are blended
+    # linearly; elsewhere the upwind (Cantera) gradient is unchanged.
+    backward = .5+m[j]/(2.*STAGNATION*mref)
     for k in range(ns):
         gradY = direction*(Y[k, j]-Y[k, donor])/spacing
         out[o+3+k] = (m[j]*gradY+(J[k, j]-J[k, j-1])/volume-omega[k, j])/species_scale
         if not fixed:
-            gradH = direction*(hk[k, j]-hk[k, donor])/spacing
+            if backward >= 1. or backward <= 0.:
+                gradH = direction*(hk[k, j]-hk[k, donor])/spacing
+            else:
+                gradH = (backward*(hk[k, j]-hk[k, j-1])/hm
+                         +(1.-backward)*(hk[k, j+1]-hk[k, j])/hp)
             enthalpy_diffusion += .5*(J[k, j-1]+J[k, j])*gradH
             reaction_enthalpy += hk[k, j]*omega[k, j]
     if fixed:
@@ -116,7 +135,8 @@ def assemble_residual(m, V, T, Y, L, rho, cp, omega, hk, lam, J, mu, dz,
                       transient, oldV, oldT, oldY, dt, fixed, temperature, radiation):
     ns, n = Y.shape
     nv = ns+3
-    residual = np.zeros(n*nv+1)
+    # Every row, including both boundaries and the border, is overwritten.
+    residual = np.empty(n*nv+1)
     for j in range(n):
         offset = j*nv
         if j == 0:
@@ -180,16 +200,55 @@ def face_temperature_data(Tf, P, mw, cond_poly, diff_poly, visc_poly, quarter_ra
             phi[k, j] = (1.+ratio*quarter_ratio[k, j])**2/wilke_den[k, j]
 
 
-@njit(cache=True)
-def face_viscosity(X, root, phi):
-    ns = X.size
-    value = 0.
-    for k in range(ns):
-        total = 0.
+@njit(cache=True,fastmath=False)
+def face_viscosity(X,root,phi):
+    """Eight independent ordered Wilke sums; scalar fallback for small/strided inputs."""
+    ns=X.size;value=0.;k=0
+    if ns<24 or not phi.flags.c_contiguous:
+        for k in range(ns):
+            total=0.
+            for j in range(ns):total+=X[j]*phi[k,j]
+            value+=max(X[k],1e-300)*root[k]**2/max(total,1e-300)
+        return value
+    while k+8<=ns:
+        t0,t1,t2,t3,t4,t5,t6,t7=0.,0.,0.,0.,0.,0.,0.,0.
         for j in range(ns):
-            total += X[j]*phi[k, j]
-        value += max(X[k], 1e-300)*root[k]**2/max(total, 1e-300)
+            t0+=X[j]*phi[k,j];t1+=X[j]*phi[k+1,j]
+            t2+=X[j]*phi[k+2,j];t3+=X[j]*phi[k+3,j]
+            t4+=X[j]*phi[k+4,j];t5+=X[j]*phi[k+5,j]
+            t6+=X[j]*phi[k+6,j];t7+=X[j]*phi[k+7,j]
+        value+=max(X[k],1e-300)*root[k]**2/max(t0,1e-300)
+        value+=max(X[k+1],1e-300)*root[k+1]**2/max(t1,1e-300)
+        value+=max(X[k+2],1e-300)*root[k+2]**2/max(t2,1e-300)
+        value+=max(X[k+3],1e-300)*root[k+3]**2/max(t3,1e-300)
+        value+=max(X[k+4],1e-300)*root[k+4]**2/max(t4,1e-300)
+        value+=max(X[k+5],1e-300)*root[k+5]**2/max(t5,1e-300)
+        value+=max(X[k+6],1e-300)*root[k+6]**2/max(t6,1e-300)
+        value+=max(X[k+7],1e-300)*root[k+7]**2/max(t7,1e-300)
+        k+=8
+    for k in range(k,ns):
+        total=0.
+        for j in range(ns):total+=X[j]*phi[k,j]
+        value+=max(X[k],1e-300)*root[k]**2/max(total,1e-300)
     return value
+
+
+@njit(cache=True)
+def face_viscosity_temperature_data(Tf, visc_poly, quarter_ratio, wilke_den, root, phi):
+    """Only the mixture temperature data consumed by multicomponent viscosity.
+
+    Keep the original root/phi expressions and pair order. Conductivity,
+    binary diffusion and Soret come from the full multicomponent closure.
+    """
+    ns = root.size
+    logT = math.log(Tf)
+    quarter = Tf**.25
+    for k in range(ns):
+        root[k] = abs(quarter*_poly4(visc_poly[k], logT))
+    for k in range(ns):
+        for j in range(ns):
+            ratio = root[k]/max(root[j], 1e-150)
+            phi[k, j] = (1.+ratio*quarter_ratio[k, j])**2/wilke_den[k, j]
 
 
 @njit(cache=True)
@@ -255,28 +314,34 @@ def mixture_rank1(l, Ynew, delta, inv, wm, X, sum1, sum2, SD, Smu, invW, cond, i
 
 @njit(cache=True)
 def face_mixture(Tf, Yf, P, invW, mw, cond, invB, diagB, root, phi, soret, scale, tiny, X, D, DT):
+    """Mixture face state; standalone calls own their scratch arrays."""
+    return _face_mixture_ws(Tf, Yf, P, invW, mw, cond, invB, diagB, root, phi,
+                            soret, scale, tiny, X, D, DT, np.empty((5 if soret else 2, Yf.size)))
+
+
+@njit(cache=True)
+def _face_mixture_ws(Tf, Yf, P, invW, mw, cond, invB, diagB, root, phi, soret, scale, tiny, X, D, DT, ws):
     """Mixture-averaged face state with the arithmetic of the grid kernels."""
     ns = Yf.size
     inv_wmix = 0.
     for k in range(ns):
         inv_wmix += Yf[k]*invW[k]
     wm = 1./max(inv_wmix, 1e-300)
-    SD = np.empty(ns)
-    Smu = np.empty(ns)
+    SD, Smu = ws[0], ws[1]
     sum1, sum2 = mixture_sums(wm, Yf, invW, cond, invB, phi, X, SD, Smu)
     rho, lam, mu = mixture_from_sums(Tf, P, wm, X, sum1, sum2, SD, Smu, mw, diagB, root, D)
     if soret:
+        Xs, a, diffusion = ws[2], ws[3], ws[4]
         # Same clipped mole fractions and mixture diffusivities as the
         # fused mixture-averaged Soret kernel.
         denom = 0.
         for k in range(ns):
             denom += Yf[k]/mw[k]
         wmix = 1./max(denom, 1e-300)
-        Xs = np.empty(ns)
         for k in range(ns):
             Xs[k] = max(Yf[k]*wmix/mw[k], 1e-20)
-        a = np.zeros(ns)
-        diffusion = np.empty(ns)
+        # Reset the absent-species entries on every reuse.
+        a[:] = 0.
         for k in range(ns):
             total = 0.
             for j in range(ns):
@@ -342,7 +407,31 @@ def multicomponent_flux(YL, YR, TL, TR, spacing, Tf, rho, wm, multi, thermal, in
         scratch[k] = mw[k]*(YR[k]*WR*invW[k]-YL[k]*WL*invW[k])/spacing
     gradT = (TR-TL)/spacing
     factor = rho/wm**2
-    for k in range(ns):
+    # Independent row accumulators expose SIMD across species while each
+    # dot product retains its original ascending l order (no fastmath).
+    k = 0
+    while k+8 <= ns and ns > 20:
+        v0, v1, v2, v3 = 0., 0., 0., 0.
+        v4, v5, v6, v7 = 0., 0., 0., 0.
+        for l in range(ns):
+            v0 += multi[k, l]*scratch[l]
+            v1 += multi[k+1, l]*scratch[l]
+            v2 += multi[k+2, l]*scratch[l]
+            v3 += multi[k+3, l]*scratch[l]
+            v4 += multi[k+4, l]*scratch[l]
+            v5 += multi[k+5, l]*scratch[l]
+            v6 += multi[k+6, l]*scratch[l]
+            v7 += multi[k+7, l]*scratch[l]
+        out[k] = factor*mw[k]*v0-thermal[k]/Tf*gradT
+        out[k+1] = factor*mw[k+1]*v1-thermal[k+1]/Tf*gradT
+        out[k+2] = factor*mw[k+2]*v2-thermal[k+2]/Tf*gradT
+        out[k+3] = factor*mw[k+3]*v3-thermal[k+3]/Tf*gradT
+        out[k+4] = factor*mw[k+4]*v4-thermal[k+4]/Tf*gradT
+        out[k+5] = factor*mw[k+5]*v5-thermal[k+5]/Tf*gradT
+        out[k+6] = factor*mw[k+6]*v6-thermal[k+6]/Tf*gradT
+        out[k+7] = factor*mw[k+7]*v7-thermal[k+7]/Tf*gradT
+        k += 8
+    for k in range(k, ns):
         value = 0.
         for l in range(ns):
             value += multi[k, l]*scratch[l]
@@ -359,9 +448,15 @@ def _cp_r(T, nasa_lo, nasa_hi, nasa_tmid, out):
 @njit(cache=True)
 def _multi_temperature(Tf, multi_data, mw, mdata):
     (log_eps_pair, epsilon, crot, zrot, frot298, viscosity_fit, diffusion_fit,
-     astar_fit, bstar_fit, cstar_fit, dense, nasa_lo, nasa_hi, nasa_tmid) = multi_data
+     astar_fit, bstar_fit, cstar_fit, dense, nasa_lo, nasa_hi, nasa_tmid) = multi_data[:14]
     mu, rot_relax, bdiff, a, b, c, cp_r = mdata
     _cp_r(Tf, nasa_lo, nasa_hi, nasa_tmid, cp_r)
+    if len(multi_data) == 15:
+        if multi_data[14]:
+            _temperature_terms_symmetric(Tf, mw, log_eps_pair, epsilon, zrot, frot298,
+                viscosity_fit, diffusion_fit, astar_fit, bstar_fit, cstar_fit,
+                mu, rot_relax, bdiff, a, b, c)
+            return
     temperature_terms(Tf, mw, log_eps_pair, epsilon, zrot, frot298, viscosity_fit, diffusion_fit,
                       astar_fit, bstar_fit, cstar_fit, mu, rot_relax, bdiff, a, b, c)
 
@@ -375,6 +470,16 @@ def _mdata(ns):
 @njit(cache=True)
 def face_state(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, multicomponent, soret,
                tdata, mdata, reuse, X, D, DT, Yf, multi, thermal, flux, cws):
+    """Standalone face evaluation with the same caller-owned outputs."""
+    mix_ws = np.empty((5 if soret else 2, 0 if multicomponent else mw.size))
+    return _face_state_ws(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data,
+                          multicomponent, soret, tdata, mdata, reuse, X, D, DT, Yf,
+                          multi, thermal, flux, cws, mix_ws)
+
+
+@njit(cache=True)
+def _face_state_ws(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, multicomponent, soret,
+                   tdata, mdata, reuse, X, D, DT, Yf, multi, thermal, flux, cws, mix_ws):
     """lambda, mu and the species fluxes at one face; fills ``flux``.
 
     With ``reuse``, temperature-only data in ``tdata``/``mdata`` belong to
@@ -386,11 +491,13 @@ def face_state(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, multic
     for k in range(mw.size):
         Yf[k] = .5*(YL[k]+YR[k])
     if not reuse:
-        face_temperature_data(Tf, P, mw, cond_poly, diff_poly, visc_poly, quarter_ratio, wilke_den,
-                              soret and not multicomponent, eps_pair, cstar_poly,
-                              cond, invB, diagB, root, phi, scale)
         if multicomponent:
+            face_viscosity_temperature_data(Tf, visc_poly, quarter_ratio, wilke_den, root, phi)
             _multi_temperature(Tf, multi_data, mw, mdata)
+        else:
+            face_temperature_data(Tf, P, mw, cond_poly, diff_poly, visc_poly, quarter_ratio, wilke_den,
+                                  soret, eps_pair, cstar_poly,
+                                  cond, invB, diagB, root, phi, scale)
     if multicomponent:
         crot, dense = multi_data[2], multi_data[10]
         mu, rot_relax, bdiff, a, b, c, cp_r = mdata
@@ -403,16 +510,12 @@ def face_state(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, multic
         if not soret:
             thermal[:] = 0.
         multicomponent_flux(YL, YR, TL, TR, spacing, Tf, rho, wm, multi, thermal, invW, mw, flux, X)
-        wsum = 0.
         for k in range(mw.size):
-            wsum += Yf[k]*invW[k]
-        wsum = 1./max(wsum, 1e-300)
-        for k in range(mw.size):
-            X[k] = Yf[k]*wsum*invW[k]
+            X[k] = Yf[k]*wm*invW[k]
         mu = face_viscosity(X, root, phi)
     else:
-        rho, wm, lam, mu = face_mixture(Tf, Yf, P, invW, mw, cond, invB, diagB, root, phi,
-                                        soret, scale, tiny, X, D, DT)
+        rho, wm, lam, mu = _face_mixture_ws(Tf, Yf, P, invW, mw, cond, invB, diagB, root, phi,
+                                        soret, scale, tiny, X, D, DT, mix_ws)
         mixture_flux(YL, YR, TL, TR, spacing, Tf, rho, wm, D, DT, soret, mw, flux)
     return lam, mu
 
@@ -433,9 +536,12 @@ def _frozen_face(TL, TR, YL, YR, P, invW, mw, multi_data, soret, mdata, cws, Yf,
 
 
 @njit(cache=True)
-def _tdata(ns):
-    return (np.empty(ns), np.empty((ns, ns)), np.empty(ns), np.empty(ns),
-            np.empty((ns, ns)), np.zeros((ns, ns)))
+def _tdata(ns, multicomponent=False):
+    # Multicomponent faces consume only root and phi. Keep typed empty arrays
+    # for the mixture-only tuple entries without reserving their O(ns**2) data.
+    nmix = 0 if multicomponent else ns
+    return (np.empty(nmix), np.empty((nmix, nmix)), np.empty(nmix), np.empty(ns),
+            np.empty((ns, ns)), np.zeros((nmix, nmix)))
 
 
 @njit(cache=True, nogil=True)
@@ -446,32 +552,68 @@ def face_range(start, stop, T, Y, dz, P, invW, mw, mixture, multi_data, multicom
     owns its scratch arrays; outputs of different ranges never overlap.
     """
     ns = Y.shape[0]
-    tdata = _tdata(ns)
+    tdata = _tdata(ns, multicomponent)
     mdata = _mdata(ns if multicomponent else 1)
     cws = composition_workspace(ns if multicomponent else 1)
     flux = np.empty(ns)
-    X, D, DT, Yf = np.empty(ns), np.empty(ns), np.zeros(ns), np.empty(ns)
+    nmix = 0 if multicomponent else ns
+    X, D, DT, Yf = np.empty(ns), np.empty(nmix), np.zeros(nmix), np.empty(ns)
     multi, thermal = np.empty((ns, ns)), np.empty(ns)
+    mix_ws = np.empty((5 if soret else 2, nmix))
     for f in range(start, stop):
-        lam[f], mu[f] = face_state(T[f], T[f+1], Y[:, f], Y[:, f+1], dz[f], P, invW, mw, mixture,
+        lam[f], mu[f] = _face_state_ws(T[f], T[f+1], Y[:, f], Y[:, f+1], dz[f], P, invW, mw, mixture,
                                    multi_data, multicomponent, soret, tdata, mdata, False,
-                                   X, D, DT, Yf, multi, thermal, flux, cws)
+                                   X, D, DT, Yf, multi, thermal, flux, cws, mix_ws)
         for k in range(ns):
             J[k, f] = flux[k]
 
 
 @njit(cache=True)
-def _node_workspace(ns, multicomponent):
-    """Scratch arrays of one node's columns, reused by all nodes of a chunk."""
+def _node_workspace(ns, multicomponent, base_bank=False):
+    """Private scratch of one range; mixture-only payloads are empty in multi mode."""
     nb, nv, nm = ns+2, ns+3, ns if multicomponent else 1
-    return (np.zeros((8, 5)), np.zeros((ns, 5)), np.zeros((ns, 5)), np.zeros((ns, 5)), np.zeros((ns, 4)),
-            np.empty(nb), np.empty((ns, nb)), np.empty(nv), np.empty(nb), np.empty(nb),
-            np.empty((ns, nb)), np.empty((ns, nb)), np.zeros((3, nv)), np.empty(nv),
-            _tdata(ns), _tdata(ns), _tdata(ns), _mdata(nm), _mdata(nm), _mdata(nm),
-            np.empty(ns), np.empty(ns), np.zeros(ns), np.empty(ns), np.empty((ns, ns)), np.empty(ns),
-            np.empty(ns), np.zeros((2, 3, ns)), np.zeros((2, 4)), np.zeros((2, ns)), np.empty(ns),
-            np.empty(ns), np.empty(ns), np.empty((ns, 2)), composition_workspace(nm),
-            np.zeros((2, nm, nm)), np.zeros((2, nm)), np.zeros(2))
+    nmix = 0 if multicomponent else ns
+    # Transposed backing arrays keep species columns contiguous at each node/face.
+    window = (
+        np.zeros((8, 5)), np.zeros((5, ns)).T, np.zeros((5, ns)).T,
+        np.zeros((5, ns)).T, np.zeros((4, ns)).T,
+    )
+    node = (
+        np.empty(nb), np.empty((nb, ns)).T, np.empty(nv),
+        np.empty(nb), np.empty(nb), np.empty((nb, ns)).T,
+        np.empty((nb, ns)).T, np.zeros((3, nv)), np.empty(nv),
+    )
+    face_data = (
+        _tdata(ns, multicomponent), _tdata(ns, multicomponent), _tdata(ns, multicomponent),
+        _mdata(0 if base_bank else nm), _mdata(0 if base_bank else nm), _mdata(nm),
+    )
+    transport = (
+        np.empty(ns), np.empty(nmix), np.zeros(nmix),
+        np.empty(ns), np.empty((ns, ns)), np.empty(ns),
+        np.empty(ns), np.zeros((2, 3, nmix)), np.zeros((2, 0 if multicomponent else 4)),
+        np.zeros((2, nmix)), np.empty(nmix), np.empty(nmix),
+        np.empty(nmix), np.empty((2, ns)).T, composition_workspace(nm),
+        (np.zeros((nm, nm)), np.zeros((nm, nm))),
+        (np.zeros(nm), np.zeros(nm)), (np.zeros(1), np.zeros(1)),
+        np.empty((5, nmix)), np.empty((2, ns)),
+    )
+    return window+node+face_data+transport
+
+
+@njit(cache=True)
+def _rotate_face_workspace(ws):
+    """Exchange complete private base-face slots; perturbation scratch stays put.
+
+    The previous right face becomes the next node's left face. Its temperature
+    data, multicomponent data and frozen coefficients must move together. Only
+    array references are exchanged; neither slot aliases the other or tpert.
+    """
+    return (ws[:14]
+            + (ws[15], ws[14], ws[16], ws[18], ws[17], ws[19])
+            + ws[20:35]
+            + ((ws[35][1], ws[35][0]), (ws[36][1], ws[36][0]),
+               (ws[37][1], ws[37][0]))
+            + ws[38:])
 
 
 @njit(cache=True)
@@ -493,6 +635,13 @@ def _window_rows(out, w, n, j, mW, VW, TW, YW, rhoW, cpW, omegaW, hkW, lamW, JW,
 @njit(cache=True)
 def _analytic_node(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, jt,
                    rhob, cpb, omegab, hkb):
+    return _analytic_node_ws(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, jt,
+                             rhob, cpb, omegab, hkb, np.empty((2, invW.size)))
+
+
+@njit(cache=True)
+def _analytic_node_ws(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, jt,
+                      rhob, cpb, omegab, hkb, thermo_ws, partials_start=0):
     """[base, T, Y...] node states with exact ideal-gas thermo and analytic rates.
 
     Production rates are linear in the column step through d(omega)/dY and
@@ -501,8 +650,7 @@ def _analytic_node(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, j
     """
     ns = invW.size
     nb = ns+2
-    cpk = np.empty(ns)
-    hkk = np.empty(ns)
+    cpk, hkk = thermo_ws[0], thermo_ws[1]
     for it in range(2):
         T = Tb[0] if it == 0 else Tb[1]
         for k in range(ns):
@@ -524,28 +672,84 @@ def _analytic_node(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, j
             cpb[col] = cp_mix
     for k in range(ns):
         omegab[k, 0] = omega[k, j]
-        omegab[k, 1] = omega[k, j]+jt[k, j]*(Tb[1]-Tb[0])
+        omegab[k, 1] = omega[k, j]+jt[k, j-partials_start]*(Tb[1]-Tb[0])
         for l in range(ns):
-            omegab[k, 2+l] = omega[k, j]+jy[k, j, l]*(Yb[l, 2+l]-Yb[l, 0])
+            omegab[k, 2+l] = omega[k, j]+jy[k, j-partials_start, l]*(Yb[l, 2+l]-Yb[l, 0])
+
+
+@njit(cache=True)
+def _node_workspace_temperature_cache(ns, base_bank=False):
+    # valid, geometric face index, exact perturbed Tf, conductivity.
+    return _node_workspace(ns, True, base_bank)+(np.zeros(4),)
+
+
+@njit(cache=True)
+def _temperature_coefficients_finite(multi, thermal):
+    for k in range(thermal.size):
+        if not math.isfinite(thermal[k]):
+            return False
+        for l in range(thermal.size):
+            if not math.isfinite(multi[k, l]):
+                return False
+    return True
+
+
+@njit(cache=True)
+def temperature_face_flux_cached(TL, TR, YL, YR, spacing, P, invW, mw,
+                                 tdata, Yf, multi, thermal, flux, X, lam):
+    # Same Yf/denominator/rho/flux/viscosity arithmetic as the full face.
+    Tf = .5*(TL+TR)
+    for k in range(mw.size):
+        Yf[k] = .5*(YL[k]+YR[k])
+    denom = 0.0
+    for k in range(mw.size):
+        denom += Yf[k]*invW[k]
+    wm = 1.0/max(denom, 1e-300)
+    rho = P*wm/(R_UNIV*Tf)
+    multicomponent_flux(YL, YR, TL, TR, spacing, Tf, rho, wm,
+                        multi, thermal, invW, mw, flux, X)
+    for k in range(mw.size):
+        X[k] = Yf[k]*wm*invW[k]
+    mu = face_viscosity(X, tdata[3], tdata[4])
+    return lam, mu
+
+
+@njit(cache=True, nogil=True)
+def _temperature_cache_eligible(start, stop, x, T, Tref, nv):
+    """Exact face-temperature screen; ranges with no possible hits stay legacy."""
+    for j in range(start+1, stop):
+        previous = x[(j-1)*nv+2]
+        current = x[j*nv+2]
+        Tp_previous = (previous+1e-7*max(abs(previous), 1.))*Tref
+        Tp_current = (current+1e-7*max(abs(current), 1.))*Tref
+        left = .5*(T[j-1]+Tp_current)
+        right = .5*(Tp_previous+T[j])
+        if left == right and math.isfinite(left) and left > 0.:
+            return True
+    return False
 
 
 @njit(cache=True)
 def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
                   fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
                   multicomponent, soret, kinetics, analytic, jy, jt, lower, diag, upper, border, ws,
-                  radiation, frozen):
+                  radiation, frozen, reuse_left=False, partials_start=0, temperature_meta=None, base_bank=None,
+                  analytic_transport=False, algebraic_transport=False, thermal_bank=None):
+    """One node's columns; reuse_left requires an already rotated workspace."""
+    if temperature_meta is not None and not reuse_left:
+        temperature_meta[0] = 0.
     ns, n = Y.shape
     nv = ns+3
     mref, aref, Tref = scalars[0], scalars[1], scalars[2]
     (nasa_lo, nasa_hi, nasa_tmid, W, A_hi, b_hi, Ea_hi, A_lo, b_lo, Ea_lo,
      is_three_body, is_falloff, is_reversible, has_troe, troe_A, troe_T3, troe_T1, troe_T2,
      r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
-     net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count, delta_nu) = kinetics
+     net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count, delta_nu) = kinetics[:33]
     # Window of global nodes j-2..j+2 and faces j-2..j+1. Slots outside
     # the grid are never read: only rows of existing nodes are formed.
     (window, YW, omegaW, hkW, JW, Tb, Yb, steps, rhob, cpb, omegab, hkb, base, trial,
      tleft, tright, tpert, mleft, mright, mpert, X, D, DT, Yf, multi, thermal, flux,
-     sums, face_scalars, YfB, Xn, SDn, Smun, saved_J, cws, frozen_multi, frozen_thermal, frozen_lam) = ws
+     sums, face_scalars, YfB, Xn, SDn, Smun, saved_J, cws, frozen_multi, frozen_thermal, frozen_lam, mix_ws, thermo_ws) = ws
     mW, VW, TW, rhoW, cpW = window[0, :5], window[1, :5], window[2, :5], window[3, :5], window[4, :5]
     lamW, muW, dzW = window[5, :4], window[6, :4], window[7, :4]
     for w in range(5):
@@ -575,16 +779,25 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
             Yb[k, c] = Y[k, j]
         Yb[k, 2+k] += steps[3+k]
     if analytic:
-        _analytic_node(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, jt,
-                       rhob, cpb, omegab, hkb)
+        _analytic_node_ws(j, Tb, Yb, P, invW, nasa_lo, nasa_hi, nasa_tmid, omega, jy, jt,
+                       rhob, cpb, omegab, hkb, thermo_ws, partials_start)
     else:
-        grouped_node(0, Tb, Yb, P, nasa_lo, nasa_hi, nasa_tmid, W, invW,
-                     A_hi, b_hi, Ea_hi, A_lo, b_lo, Ea_lo,
-                     is_three_body, is_falloff, is_reversible, has_troe,
-                     troe_A, troe_T3, troe_T1, troe_T2,
-                     r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
-                     net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-                     delta_nu, rhob, cpb, omegab, hkb)
+        if len(kinetics)>33:
+            grouped_node(0, Tb, Yb, P, nasa_lo, nasa_hi, nasa_tmid, W, invW,
+                         A_hi, b_hi, Ea_hi, A_lo, b_lo, Ea_lo,
+                         is_three_body, is_falloff, is_reversible, has_troe,
+                         troe_A, troe_T3, troe_T1, troe_T2,
+                         r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
+                         net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
+                         delta_nu, rhob, cpb, omegab, hkb, kinetics[33],kinetics[34])
+        else:
+            grouped_node(0, Tb, Yb, P, nasa_lo, nasa_hi, nasa_tmid, W, invW,
+                         A_hi, b_hi, Ea_hi, A_lo, b_lo, Ea_lo,
+                         is_three_body, is_falloff, is_reversible, has_troe,
+                         troe_A, troe_T3, troe_T1, troe_T2,
+                         r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
+                         net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
+                         delta_nu, rhob, cpb, omegab, hkb)
         for k in range(ns):
             for c in range(nb):
                 hkb[k, c] *= invW[k]
@@ -608,23 +821,36 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
     mixture_data = mixture
     soret_mix = soret and not multicomponent
     if has_left:
-        face_temperature_data(.5*(TW[1]+TW[2]), P, mw, mixture_data[0], mixture_data[1], mixture_data[2],
-                              mixture_data[3], mixture_data[4], soret_mix, mixture_data[5],
-                              mixture_data[6], tleft[0], tleft[1], tleft[2], tleft[3], tleft[4], tleft[5])
-        if multicomponent:
-            _multi_temperature(.5*(TW[1]+TW[2]), multi_data, mw, mleft)
-            if frozen:
-                _frozen_face(TW[1], TW[2], YW[:, 1], YW[:, 2], P, invW, mw, multi_data, soret, mleft, cws, Yf,
-                             frozen_multi[0], frozen_thermal[0], frozen_lam, 0)
+        # With reuse_left the range driver has already rotated every base
+        # buffer into the left slot; tpert/mpert never enter that rotation.
+        if not reuse_left:
+            if multicomponent:
+                face_viscosity_temperature_data(.5*(TW[1]+TW[2]), mixture_data[2], mixture_data[3], mixture_data[4], tleft[3], tleft[4])
+                if frozen and base_bank is not None:
+                    _copy_frozen_bank(j-1,base_bank,frozen_multi[0],frozen_thermal[0],frozen_lam[0],0)
+                else:
+                    _multi_temperature(.5*(TW[1]+TW[2]), multi_data, mw, mleft)
+                    if frozen:
+                        _frozen_face(TW[1], TW[2], YW[:, 1], YW[:, 2], P, invW, mw, multi_data, soret, mleft, cws, Yf,
+                                     frozen_multi[0], frozen_thermal[0], frozen_lam[0], 0)
+            else:
+                face_temperature_data(.5*(TW[1]+TW[2]), P, mw, mixture_data[0], mixture_data[1], mixture_data[2],
+                                      mixture_data[3], mixture_data[4], soret_mix, mixture_data[5],
+                                      mixture_data[6], tleft[0], tleft[1], tleft[2], tleft[3], tleft[4], tleft[5])
     if has_right:
-        face_temperature_data(.5*(TW[2]+TW[3]), P, mw, mixture_data[0], mixture_data[1], mixture_data[2],
-                              mixture_data[3], mixture_data[4], soret_mix, mixture_data[5],
-                              mixture_data[6], tright[0], tright[1], tright[2], tright[3], tright[4], tright[5])
         if multicomponent:
-            _multi_temperature(.5*(TW[2]+TW[3]), multi_data, mw, mright)
-            if frozen:
-                _frozen_face(TW[2], TW[3], YW[:, 2], YW[:, 3], P, invW, mw, multi_data, soret, mright, cws, Yf,
-                             frozen_multi[1], frozen_thermal[1], frozen_lam, 1)
+            face_viscosity_temperature_data(.5*(TW[2]+TW[3]), mixture_data[2], mixture_data[3], mixture_data[4], tright[3], tright[4])
+            if frozen and base_bank is not None:
+                _copy_frozen_bank(j,base_bank,frozen_multi[1],frozen_thermal[1],frozen_lam[1],0)
+            else:
+                _multi_temperature(.5*(TW[2]+TW[3]), multi_data, mw, mright)
+                if frozen:
+                    _frozen_face(TW[2], TW[3], YW[:, 2], YW[:, 3], P, invW, mw, multi_data, soret, mright, cws, Yf,
+                                 frozen_multi[1], frozen_thermal[1], frozen_lam[1], 0)
+        else:
+            face_temperature_data(.5*(TW[2]+TW[3]), P, mw, mixture_data[0], mixture_data[1], mixture_data[2],
+                                  mixture_data[3], mixture_data[4], soret_mix, mixture_data[5],
+                                  mixture_data[6], tright[0], tright[1], tright[2], tright[3], tright[4], tright[5])
     # Base composition sums of both faces for O(ns) composition columns.
     rank1 = not multicomponent and not soret
     if rank1:
@@ -644,7 +870,50 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
             face_scalars[side, 2], face_scalars[side, 3] = s1, s2
     saved_lam = (0., 0.)
     saved_mu = (0., 0.)
+    analytic_columns = analytic_transport and analytic and base_bank is not None
+    dleft, dright = np.empty((1,1)), np.empty((1,1))
+    muleft, muright = np.empty(1), np.empty(1)
+    if analytic_columns:
+        if has_left:
+            valid, dleft, muleft = frozen_face_derivatives(
+                YW[:,1],YW[:,2],TW[1],TW[2],dzW[1],P,invW,mw,frozen_multi[0],tleft[3],tleft[4],False)
+            analytic_columns = analytic_columns and valid
+        if has_right:
+            valid, dright, muright = frozen_face_derivatives(
+                YW[:,2],YW[:,3],TW[2],TW[3],dzW[2],P,invW,mw,frozen_multi[1],tright[3],tright[4],True)
+            analytic_columns = analytic_columns and valid
+    if base_bank is not None and not analytic_columns:
+        if algebraic_transport:
+            flux_left,flux_right,mu_left,mu_right = algebraic_composition_columns(
+                ns,YW,TW,dzW,P,invW,mw,Yb,has_left,has_right,tleft,tright,frozen_multi,frozen_thermal)
+        else:
+            flux_left,flux_right,mu_left,mu_right = frozen_composition_columns(
+                ns,YW,TW,dzW,P,invW,mw,Yb,has_left,has_right,tleft,tright,frozen_multi,frozen_thermal)
     for c in range(nv):
+        if analytic_columns and c >= 3:
+            q = c-3
+            invmix = 0.
+            for k in range(ns):
+                invmix += Y[k,j]*invW[k]
+            drho = -rhob[0]*invW[q]/invmix
+            coefficients = nasa_hi[q] if T[j] > nasa_tmid[q] else nasa_lo[q]
+            temperature = T[j]
+            dcp = R_UNIV*invW[q]*(coefficients[0]+temperature*(coefficients[1]+temperature*(coefficients[2]+temperature*(coefficients[3]+temperature*coefficients[4]))))
+            for w in range(1,4):
+                if not 0 <= j-2+w < n:
+                    continue
+                composition_row_derivative(trial,w,n,j,q,mW,VW,TW,YW,rhoW,hkW,JW,dzW,
+                    scalars,excess,fixed,radiation,drho,dcp,jy[:,j-partials_start,q],dleft,dright,muleft,muright)
+                for r in range(nv):
+                    if w == 1:
+                        upper[j-1,r,c] = trial[r]
+                    elif w == 2:
+                        diag[j,r,c] = trial[r]
+                    else:
+                        lower[j,r,c] = trial[r]
+            if j >= n-2:
+                border[j-(n-2),c] = dz[-1]*drho*V[j]/mref
+            continue
         step = steps[c]
         if c == 0:
             mW[2] = (x[o]+step)*mref
@@ -670,20 +939,27 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
                     if (side == 0 and not has_left) or (side == 1 and not has_right):
                         continue
                     a = 1+side
-                    td = tleft if side == 0 else tright
-                    Tf = .5*(TW[a]+TW[a+1])
-                    inv = 0.
-                    for k in range(ns):
-                        Yf[k] = .5*(YW[k, a]+YW[k, a+1])
-                        inv += Yf[k]*invW[k]
-                    wm = 1./max(inv, 1e-300)
-                    multicomponent_flux(YW[:, a], YW[:, a+1], TW[a], TW[a+1], dzW[a], Tf, P*wm/(R_UNIV*Tf), wm,
-                                        frozen_multi[side], frozen_thermal[side], invW, mw, flux, X)
-                    for k in range(ns):
-                        X[k] = Yf[k]*wm*invW[k]
-                        JW[k, a] = flux[k]
-                    lamW[a] = frozen_lam[side]
-                    muW[a] = face_viscosity(X, td[3], td[4])
+                    if base_bank is not None:
+                        result = flux_left if side == 0 else flux_right
+                        for k in range(ns):
+                            JW[k,a] = result[k,c-3]
+                        lamW[a] = frozen_lam[side][0]
+                        muW[a] = mu_left[c-3] if side == 0 else mu_right[c-3]
+                    else:
+                        td = tleft if side == 0 else tright
+                        Tf = .5*(TW[a]+TW[a+1])
+                        inv = 0.
+                        for k in range(ns):
+                            Yf[k] = .5*(YW[k, a]+YW[k, a+1])
+                            inv += Yf[k]*invW[k]
+                        wm = 1./max(inv, 1e-300)
+                        multicomponent_flux(YW[:, a], YW[:, a+1], TW[a], TW[a+1], dzW[a], Tf, P*wm/(R_UNIV*Tf), wm,
+                                            frozen_multi[side], frozen_thermal[side], invW, mw, flux, X)
+                        for k in range(ns):
+                            X[k] = Yf[k]*wm*invW[k]
+                            JW[k, a] = flux[k]
+                        lamW[a] = frozen_lam[side][0]
+                        muW[a] = face_viscosity(X, td[3], td[4])
             elif rank1 and c >= 3:
                 l = c-3
                 for side in range(2):
@@ -703,20 +979,54 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
                                  False, mw, flux)
                     for k in range(ns):
                         JW[k, a] = flux[k]
+            elif c == 2 and thermal_bank is not None and ((not has_left or thermal_bank[2][j-1,2] == 1.)
+                                                         and (not has_right or thermal_bank[2][j,2] == 1.)):
+                delta = TW[2]-T[j]
+                if has_left:
+                    for k in range(ns):
+                        JW[k,1] = saved_J[k,0]+delta*thermal_bank[1][j-1,k]
+                    lamW[1] = saved_lam[0]+.5*delta*thermal_bank[2][j-1,0]
+                    muW[1] = saved_mu[0]+.5*delta*thermal_bank[2][j-1,1]
+                if has_right:
+                    for k in range(ns):
+                        JW[k,2] = saved_J[k,1]+delta*thermal_bank[0][j,k]
+                    lamW[2] = saved_lam[1]+.5*delta*thermal_bank[2][j,0]
+                    muW[2] = saved_mu[1]+.5*delta*thermal_bank[2][j,1]
             elif has_left:
-                lamW[1], muW[1] = face_state(TW[1], TW[2], YW[:, 1], YW[:, 2], dzW[1], P, invW, mw,
-                                             mixture, multi_data, multicomponent, soret,
-                                             tpert if c == 2 else tleft, mpert if c == 2 else mleft, c != 2,
-                                             X, D, DT, Yf, multi, thermal, flux, cws)
+                if (temperature_meta is not None and c == 2 and multicomponent and frozen and reuse_left
+                    and temperature_meta[0] == 1. and temperature_meta[1] == j-1
+                    and temperature_meta[2] == .5*(TW[1]+TW[2])
+                    and _temperature_coefficients_finite(multi, thermal)):
+                    lamW[1], muW[1] = temperature_face_flux_cached(
+                        TW[1], TW[2], YW[:, 1], YW[:, 2], dzW[1], P, invW, mw,
+                        tpert, Yf, multi, thermal, flux, X, temperature_meta[3])
+                else:
+                    lamW[1], muW[1] = _face_state_ws(TW[1], TW[2], YW[:, 1], YW[:, 2], dzW[1], P, invW, mw,
+                                                 mixture, multi_data, multicomponent, soret,
+                                                 tpert if c == 2 else tleft, mpert if c == 2 else mleft, c != 2,
+                                                 X, D, DT, Yf, multi, thermal, flux, cws, mix_ws)
                 for k in range(ns):
                     JW[k, 1] = flux[k]
-            if has_right and not ((rank1 or (multicomponent and frozen)) and c >= 3):
-                lamW[2], muW[2] = face_state(TW[2], TW[3], YW[:, 2], YW[:, 3], dzW[2], P, invW, mw,
+            used_thermal = (c == 2 and thermal_bank is not None
+                            and (not has_left or thermal_bank[2][j-1,2] == 1.)
+                            and (not has_right or thermal_bank[2][j,2] == 1.))
+            if has_right and not used_thermal and not ((rank1 or (multicomponent and frozen)) and c >= 3):
+                lamW[2], muW[2] = _face_state_ws(TW[2], TW[3], YW[:, 2], YW[:, 3], dzW[2], P, invW, mw,
                                              mixture, multi_data, multicomponent, soret,
                                              tpert if c == 2 else tright, mpert if c == 2 else mright, c != 2,
-                                             X, D, DT, Yf, multi, thermal, flux, cws)
+                                             X, D, DT, Yf, multi, thermal, flux, cws, mix_ws)
                 for k in range(ns):
                     JW[k, 2] = flux[k]
+                if temperature_meta is not None and c == 2:
+                    perturbed_Tf = .5*(TW[2]+TW[3])
+                    temperature_meta[0] = 1. if (math.isfinite(perturbed_Tf)
+                        and perturbed_Tf > 0. and math.isfinite(lamW[2])
+                        and math.isfinite(muW[2])) else 0.
+                    temperature_meta[1] = j
+                    temperature_meta[2] = perturbed_Tf
+                    temperature_meta[3] = lamW[2]
+            elif temperature_meta is not None and c == 2:
+                temperature_meta[0] = 0.
         for w in range(1, 4):
             g = j-2+w
             if g < 0 or g >= n:
@@ -754,7 +1064,7 @@ def _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, sc
 def jacobian_range(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
                    fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
                    multicomponent, soret, kinetics, analytic, jy, jt, radiation, frozen,
-                   lower, diag, upper, border):
+                   lower, diag, upper, border, reuse_faces=True, partials_start=0):
     """Columns of nodes [start, stop) of the steady block-tridiagonal Jacobian.
 
     Serial and GIL-free: callers split nodes among threads. Node j writes
@@ -764,6 +1074,8 @@ def jacobian_range(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0
     ``lower[j]`` holds d(rows j+1)/d(x_j), ``upper[j]`` d(rows j)/d(x_j+1)
     and ``border`` the final continuity row against nodes n-2 and n-1.
     With ``analytic``, production-rate columns use d(omega)/dY and d(omega)/dT.
+    Reused faces rotate complete private slots within this call; each range
+    seeds its own first left face and owns its temperature-perturbation slot.
     With ``frozen`` (multicomponent only), composition columns keep the face
     D_kl, D^T and lambda of the base state, as Cantera's Jacobian keeps its
     transport properties; gradients, density, Wmix, viscosity and every
@@ -772,11 +1084,177 @@ def jacobian_range(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0
     ns = Y.shape[0]
     ws = _node_workspace(ns, multicomponent)
     for j in range(start, stop):
+        reuse_left = reuse_faces and j > start
+        if reuse_left:
+            ws = _rotate_face_workspace(ws)
         _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
                       fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
                       multicomponent, soret, kinetics, analytic, jy, jt, lower, diag, upper, border, ws,
-                      radiation, frozen)
+                      radiation, frozen, reuse_left, partials_start)
+
+
+@njit(cache=True, nogil=True)
+def jacobian_range_workspace(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                   fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                   multicomponent, soret, kinetics, analytic, jy, jt, radiation, frozen,
+                   lower, diag, upper, border, carried_ws, carry_left, reuse_faces=True, partials_start=0):
+    """Fill a tile using the private workspace owned by its exterior range.
+
+    Only adjacent tiles of the same state/grid/configuration may carry faces.
+    The owning range seeds its first left face; concurrent ranges never share
+    buffers. Kept separate from the legacy void kernel to avoid escaping its
+    scratch arrays into Python on small systems.
+    """
+    ns = Y.shape[0]
+    ws = carried_ws
+    for j in range(start, stop):
+        reuse_left = reuse_faces and (j > start or carry_left)
+        if reuse_left:
+            ws = _rotate_face_workspace(ws)
+        _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                      fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                      multicomponent, soret, kinetics, analytic, jy, jt, lower, diag, upper, border, ws,
+                      radiation, frozen, reuse_left, partials_start)
+
+    return ws
+
+
+@njit(cache=True, nogil=True)
+def jacobian_range_temperature_cache(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                   fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                   multicomponent, soret, kinetics, analytic, jy, jt, radiation, frozen,
+                   lower, diag, upper, border, carried_ws, carry_left, reuse_faces=True, partials_start=0):
+    """Fill a tile using the private workspace owned by its exterior range.
+
+    Only adjacent tiles of the same state/grid/configuration may carry faces.
+    The owning range seeds its first left face; concurrent ranges never share
+    buffers. Kept separate from the legacy void kernel to avoid escaping its
+    scratch arrays into Python on small systems.
+    """
+    ns = Y.shape[0]
+    ws = carried_ws
+    for j in range(start, stop):
+        reuse_left = reuse_faces and (j > start or carry_left)
+        if reuse_left:
+            ws = _rotate_face_workspace(ws)
+        _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                      fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                      multicomponent, soret, kinetics, analytic, jy, jt, lower, diag, upper, border, ws[:-1],
+                      radiation, frozen, reuse_left, partials_start, ws[-1])
+
+    return ws
 
 
 # Block elimination kernels are shared with the premixed solver.
 from kflame.flame.block_linear import twisted_bottom, twisted_middle, twisted_solve, twisted_top  # noqa: E402,F401
+
+
+@njit(cache=True, nogil=True)
+def face_range_bank(start, stop, T, Y, dz, P, invW, mw, mixture, multi_data, multicomponent, soret, lam, mu, J, bank_multi, bank_thermal, bank_lam):
+    """Face lambda, mu and fluxes of faces [start, stop), with the Jacobian's face functions.
+
+    Serial and GIL-free: callers split the faces among threads. Each call
+    owns its scratch arrays; outputs of different ranges never overlap.
+    """
+    ns = Y.shape[0]
+    tdata = _tdata(ns, multicomponent)
+    mdata = _mdata(ns if multicomponent else 1)
+    cws = composition_workspace(ns if multicomponent else 1)
+    flux = np.empty(ns)
+    nmix = 0 if multicomponent else ns
+    X, D, DT, Yf = np.empty(ns), np.empty(nmix), np.zeros(nmix), np.empty(ns)
+    multi, thermal = np.empty((ns, ns)), np.empty(ns)
+    mix_ws = np.empty((5 if soret else 2, nmix))
+    for f in range(start, stop):
+        lam[f], mu[f] = _face_state_ws(T[f], T[f+1], Y[:, f], Y[:, f+1], dz[f], P, invW, mw, mixture,
+                                   multi_data, multicomponent, soret, tdata, mdata, False,
+                                   X, D, DT, Yf, multi, thermal, flux, cws, mix_ws)
+        for k in range(ns):
+            J[k, f] = flux[k]
+            bank_thermal[f,k] = thermal[k]
+            for l in range(ns):
+                bank_multi[f,k,l] = multi[k,l]
+        bank_lam[f] = lam[f]
+
+
+@njit(cache=True)
+def _copy_frozen_bank(face, bank, multi, thermal, lam, side):
+    for k in range(thermal.size):
+        thermal[k] = bank[1][face,k]
+        for l in range(thermal.size):
+            multi[k,l] = bank[0][face,k,l]
+    lam[side] = bank[2][face]
+
+
+from kflame.flame.thermal_face_derivatives import (temperature_branch_safe,
+                                                   face_temperature_tangents)
+
+
+@njit(cache=True, nogil=True)
+def face_range_bank_thermal(start, stop, T, Y, dz, P, invW, mw, mixture, multi_data,
+                            multicomponent, soret, lam, mu, J, bank_multi,
+                            bank_thermal, bank_lam, Tref, dleft, dright, derivatives):
+    """Original primal face evaluation plus local, guarded implicit tangents.
+
+    Per-face inverse/Schur factors are consumed before the scratch is reused.
+    The persistent extra bank is O(faces*species), not O(faces*species**2).
+    """
+    ns = Y.shape[0]
+    tdata, mdata = _tdata(ns,True), _mdata(ns)
+    cws = composition_workspace(ns)
+    X, Yf, flux = np.empty(ns), np.empty(ns), np.empty(ns)
+    D, DT = np.empty(0), np.empty(0)
+    multi, thermal = np.empty((ns,ns)), np.empty(ns)
+    mix_ws = np.empty((2,0))
+    for f in range(start,stop):
+        lam[f],mu[f] = _face_state_ws(T[f],T[f+1],Y[:,f],Y[:,f+1],dz[f],P,invW,mw,
+            mixture,multi_data,True,soret,tdata,mdata,False,X,D,DT,Yf,
+            multi,thermal,flux,cws,mix_ws)
+        bank_lam[f] = lam[f]
+        for k in range(ns):
+            J[k,f] = flux[k]
+            bank_thermal[f,k] = thermal[k]
+            dleft[f,k],dright[f,k] = 0.,0.
+            for l in range(ns):
+                bank_multi[f,k,l] = multi[k,l]
+        derivatives[f,:] = 0.
+        eligible = (multicomponent and not multi_data[10]
+                    and temperature_branch_safe(T[f],T[f+1],Tref,
+                        multi_data[11],multi_data[12],multi_data[13]))
+        for k in range(ns):
+            eligible = eligible and Y[k,f] >= 0. and Y[k,f+1] >= 0.
+        if eligible:
+            valid,left,right,dlam,dmu = face_temperature_tangents(
+                T[f],T[f+1],dz[f],P,invW,mw,mixture,multi_data,soret,
+                mdata,tdata,cws,Y[:,f],Y[:,f+1],Yf,multi,thermal,
+                .5e-7*max(abs(T[f]),abs(T[f+1]),Tref))
+            if valid:
+                dleft[f,:],dright[f,:] = left,right
+                derivatives[f,0],derivatives[f,1],derivatives[f,2] = dlam,dmu,1.
+
+
+@njit(cache=True, nogil=True)
+def jacobian_range_bank(start, stop, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                   fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                   multicomponent, soret, kinetics, analytic, jy, jt, radiation, frozen,
+                   lower, diag, upper, border, carried_ws, carry_left, base_bank, reuse_faces=True, partials_start=0,
+                   analytic_transport=False, algebraic_transport=False, thermal_bank=None):
+    """Fill a tile using the private workspace owned by its exterior range.
+
+    Only adjacent tiles of the same state/grid/configuration may carry faces.
+    The owning range seeds its first left face; concurrent ranges never share
+    buffers. Kept separate from the legacy void kernel to avoid escaping its
+    scratch arrays into Python on small systems.
+    """
+    ns = Y.shape[0]
+    ws = carried_ws
+    for j in range(start, stop):
+        reuse_left = reuse_faces and (j > start or carry_left)
+        if reuse_left:
+            ws = _rotate_face_workspace(ws)
+        _node_columns(j, x, m, V, T, Y, rho, cp, omega, hk, lam0, mu0, J0, dz, L, scalars,
+                      fuel_Y, oxidizer_Y, excess, fixed, Tfixed, P, invW, mw, mixture, multi_data,
+                      multicomponent, soret, kinetics, analytic, jy, jt, lower, diag, upper, border, ws[:-1],
+                      radiation, frozen, reuse_left, partials_start, ws[-1], base_bank, analytic_transport, algebraic_transport,thermal_bank)
+
+    return ws

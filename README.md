@@ -1,5 +1,20 @@
 # FlamPy
 
+[Guía de lectura](docs/README.md) ·
+[Estado del repositorio y prioridades HPC (2026-10-08)](docs/reviews/repository-hpc-2026-10-08.md).
+
+[Transporte multicomponente: perfil, mejoras HPC y tiempos antes/después](docs/hpc-multicomponent.md).
+
+[Localidad L1/L2, buffers y validación exacta](docs/hpc-memory-layout.md).
+
+[Continuación HPC: caras compartidas, derivadas por bloques y tiempos antes/después](docs/hpc-next-strategies.md).
+
+[Mecanismos grandes: Jacobiano estructurado, Newton–Krylov y transporte vectorizado](docs/hpc-large-mechanisms.md):
+la llama de difusión completa con AramcoMech 3.0 pasa de no terminar a 115 s; JetSurF 3,6×, GRI 1,5×.
+
+[Validación de CO, NO y NO₂ con GRI-Mech 3.0](docs/pollutants.md):
+perfiles en ppm, fuentes químicas y comprobación de contaminantes en FGM.
+
 La rama de [llamas de difusión en contraflujo](docs/diffusion-flames.md) añade
 dos entradas independientes, un solver nativo, tablas FGM `(Z,C)` y validación
 con Cantera para metano/aire e hidrógeno/aire. Incluye entalpía total y su salida
@@ -8,6 +23,8 @@ Admite transporte promediado o multicomponente, Soret y, opcionalmente, pérdida
 por radiación ópticamente delgada (`radiation=True`), con Jacobiana compilada
 por bloques: en los casos medidos es más rápido que Cantera 3.2
 ([rendimiento](docs/diffusion-flames.md#rendimiento-de-alto-nivel-y-pérdidas-radiativas)).
+Las familias con pérdidas forman tablas `(Z,C,h)` validadas con flamelets reservados
+([tablas con pérdidas](docs/diffusion-flames.md#tablas-fgm-con-pérdidas-zch)).
 
 **Llamas premezcladas con química detallada y tablas FGM, desde Python.**
 
@@ -56,9 +73,12 @@ térmico. [Datos y reproducción de las figuras](docs/results.md).*
 | Guardar y consultar resultados | Arrays NumPy, CSV, metadatos, trazas de continuación y exportación de tablas `.fla` |
 | Verificar la tabulación | Defecto por exclusión de filas y comparación con llamas retenidas independientes |
 
-Se incluyen los mecanismos `gri30.yaml` (GRI-Mech 3.0, CH₄) y
-`h2o2.yaml` (H₂/O₂ con N₂). Otros mecanismos requieren un YAML local
-compatible con el lector nativo de gas ideal y termodinámica NASA-7.
+Se incluyen `h2o2.yaml`, `drm19.yaml`, `drm22.yaml`, `ffcm1.yaml`,
+`gri30.yaml`, `uscmech2.yaml` y `jetsurf2.yaml`. AramcoMech 2.0 y 3.0 se
+instalan como archivos locales del usuario. Consulta nombres, recuentos,
+procedencia y alcance en [mecanismos químicos](docs/mechanisms.md);
+`flampy mechanisms` muestra cuáles están disponibles. El lector nativo admite
+NASA-7, Arrhenius, terceros cuerpos, Lindemann/Troe/SRI y PLOG.
 
 ## Instalación
 

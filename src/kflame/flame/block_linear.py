@@ -85,28 +85,56 @@ def twisted_middle(lower, diag, upper, shift, k, inverse, coupling):
 
 @njit(cache=True, nogil=True)
 def twisted_solve(lower, upper, inverse, coupling, k, rhs):
+    """Solve with private scratch and an independently owned output."""
+    n, nv = inverse.shape[0], inverse.shape[1]
+    y = np.empty((n, nv))
+    x = np.empty((n, nv))
+    r = np.empty(nv, dtype=rhs.dtype)
+    product = np.empty(nv, dtype=inverse.dtype)
+    return twisted_solve_into(lower, upper, inverse, coupling, k, rhs,
+                              y, x, r, product)
+
+
+@njit(cache=True, nogil=True)
+def twisted_solve_into(lower, upper, inverse, coupling, k, rhs, y, x, r, product):
+    """Solve into caller-owned buffers, returning a flat view of ``x``.
+
+    ``rhs`` must be contiguous, as in ``twisted_solve``. Supply writable
+    C-contiguous float64 ``y`` and ``x`` of shape (n, nv), and contiguous
+    vectors ``r`` (rhs dtype) and ``product`` (inverse dtype) of length nv.
+    Buffers must not overlap each other or the inputs. Scratch ``y``, ``r``
+    and ``product`` can be reused after return; ``y[k]`` is never consumed.
+    Reusing ``x`` overwrites the returned view. Concurrent calls require
+    separate buffers; the factors and rhs are read-only inputs.
+    """
     n, nv = inverse.shape[0], inverse.shape[1]
     f = rhs.reshape((n, nv))
-    y = np.empty((n, nv))
     for i in range(k):
-        r = f[i].copy()
+        r[:] = f[i]
         if i > 0:
-            r -= np.dot(lower[i-1], y[i-1])
-        y[i] = np.dot(inverse[i], r)
+            np.dot(lower[i-1], y[i-1], out=product)
+            r -= product
+        np.dot(inverse[i], r, out=y[i])
     for i in range(n-1, k, -1):
-        r = f[i].copy()
+        r[:] = f[i]
         if i < n-1:
-            r -= np.dot(upper[i], y[i+1])
-        y[i] = np.dot(inverse[i], r)
-    r = f[k].copy()
+            np.dot(upper[i], y[i+1], out=product)
+            r -= product
+        np.dot(inverse[i], r, out=y[i])
+    r[:] = f[k]
     if k > 0:
-        r -= np.dot(lower[k-1], y[k-1])
+        np.dot(lower[k-1], y[k-1], out=product)
+        r -= product
     if k < n-1:
-        r -= np.dot(upper[k], y[k+1])
-    x = np.empty((n, nv))
-    x[k] = np.dot(inverse[k], r)
+        np.dot(upper[k], y[k+1], out=product)
+        r -= product
+    np.dot(inverse[k], r, out=x[k])
     for i in range(k-1, -1, -1):
-        x[i] = y[i]-np.dot(coupling[i], x[i+1])
+        np.dot(coupling[i], x[i+1], out=product)
+        for a in range(nv):
+            x[i, a] = y[i, a]-product[a]
     for i in range(k+1, n):
-        x[i] = y[i]-np.dot(coupling[i], x[i-1])
+        np.dot(coupling[i], x[i-1], out=product)
+        for a in range(nv):
+            x[i, a] = y[i, a]-product[a]
     return x.reshape(n*nv)

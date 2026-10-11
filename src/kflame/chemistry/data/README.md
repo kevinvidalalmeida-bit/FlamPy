@@ -16,6 +16,16 @@ La licencia de distribución de Cantera se conserva en
 `CANTERA_TRANSPORT_LICENSE.txt`. La procedencia original de GRI-Mech se
 indica en la cabecera de `gri30.yaml`.
 
+La ampliación del 9 de octubre incorpora `drm19.yaml`, `drm22.yaml`,
+`ffcm1.yaml`, `uscmech2.yaml` y `jetsurf2.yaml` desde archivos oficiales de
+Berkeley y Stanford. Se conservan atribuciones y procedencia en los YAML;
+los archivos USC/JetSurF conservan también sus fuentes originales y datos
+suplementarios. La licencia de FlamPy no se asigna a los datos de los autores.
+Los recuentos y el alcance de la conversión están en
+[mecanismos químicos](../../../../docs/mechanisms.md).
+
+AramcoMech se conserva fuera del paquete, en el directorio local del usuario
+`~/.kflame/mechanisms`, configurable mediante `KFLAME_MECHANISM_DIR`.
 Para otro mecanismo, suministrar una ruta explícita a un YAML compatible.
 Una ruta inexistente produce un error; no se sustituye por otro archivo con
 el mismo nombre ni se busca dentro de la instalación de Cantera.

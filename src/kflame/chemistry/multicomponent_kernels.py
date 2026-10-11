@@ -90,6 +90,136 @@ def temperature_terms(t, mw, log_eps_pair, epsilon, zrot, frot298, viscosity_fit
         bdiff[k, k] = 1.2 * R_UNIV * t * mu[k] * a[k, k] / mw[k]
 
 
+@njit(cache=True, fastmath=False)
+def _temperature_terms_symmetric(t, mw, log_eps_pair, epsilon, zrot, frot298, viscosity_fit, diffusion_fit,
+                      astar_fit, bstar_fit, cstar_fit, mu, rot_relax, bdiff, a, b, c):
+    """Composition-independent face data: viscosities, Zrot, collision ratios, D_kj."""
+    # Private entry: callers must own a certified immutable snapshot and
+    # independent writable outputs. Invalid T retains the original behavior.
+    if not math.isfinite(t) or t <= 0.0:
+        return temperature_terms(t, mw, log_eps_pair, epsilon, zrot, frot298,
+                                 viscosity_fit, diffusion_fit, astar_fit, bstar_fit,
+                                 cstar_fit, mu, rot_relax, bdiff, a, b, c)
+    n = mw.size
+    logt = math.log(t)
+    sqrt_t = math.sqrt(t)
+    for k in range(n):
+        value = viscosity_fit[k, 4]
+        for degree in range(3, -1, -1):
+            value = value * logt + viscosity_fit[k, degree]
+        mu[k] = sqrt_t * value * value
+        tr = epsilon[k] / t
+        sqrt_tr = math.sqrt(tr)
+        frot = (1.0 + 0.5 * math.pi ** 1.5 * sqrt_tr
+                + (0.25 * math.pi ** 2 + 2.0) * tr
+                + math.pi ** 1.5 * sqrt_tr * tr)
+        rot_relax[k] = max(1.0, zrot[k]) * frot298[k] / frot
+        for j in range(k, n):
+            z = logt - log_eps_pair[k, j]
+            aa, bb, cc = astar_fit[k, j, 8], bstar_fit[k, j, 8], cstar_fit[k, j, 8]
+            for degree in range(7, -1, -1):
+                aa = aa * z + astar_fit[k, j, degree]
+                bb = bb * z + bstar_fit[k, j, degree]
+                cc = cc * z + cstar_fit[k, j, degree]
+            a[k, j], b[k, j], c[k, j] = aa, bb, cc
+            value = diffusion_fit[k, j, 4]
+            for degree in range(3, -1, -1):
+                value = value * logt + diffusion_fit[k, j, degree]
+            bdiff[k, j] = t * sqrt_t * value
+            if j != k:
+                a[j, k], b[j, k], c[j, k], bdiff[j, k] = aa, bb, cc, bdiff[k, j]
+        bdiff[k, k] = 1.2 * R_UNIV * t * mu[k] * a[k, k] / mw[k]
+
+
+@njit(cache=True, parallel=True)
+def _evaluate_faces_symmetric(temperature, pressure, y, cp_r, mw, inv_w, log_eps_pair,
+                   epsilon, crot, zrot, frot298, viscosity_fit, diffusion_fit,
+                   astar_fit, bstar_fit, cstar_fit, dense):
+    """Private certified-snapshot entry; face-local temperature buffers are disjoint."""
+    faces = temperature.size
+    n = mw.size
+    rho = np.empty(faces)
+    conductivity = np.empty(faces)
+    wmix = np.empty(faces)
+    multi = np.empty((faces, n, n))
+    thermal = np.empty((faces, n))
+    for face in prange(faces):
+        rho[face], conductivity[face], wmix[face] = _evaluate_face_symmetric(
+            temperature[face], pressure, y[:, face], np.ascontiguousarray(cp_r[:, face]),
+            mw, inv_w, log_eps_pair, epsilon, crot, zrot, frot298, viscosity_fit,
+            diffusion_fit, astar_fit, bstar_fit, cstar_fit, dense, multi[face], thermal[face])
+    return rho, conductivity, wmix, multi.transpose(1, 2, 0), thermal.T
+
+
+@njit(cache=True)
+def _evaluate_face_symmetric(t, pressure, y, cp_r, mw, inv_w, log_eps_pair, epsilon, crot, zrot,
+                  frot298, viscosity_fit, diffusion_fit, astar_fit, bstar_fit, cstar_fit,
+                  dense, multi, thermal):
+    """One face: returns rho, conductivity, Wmix; fills multi[k,j] and thermal[k]."""
+    n = mw.size
+    mu = np.empty(n)
+    rot_relax = np.empty(n)
+    bdiff = np.empty((n, n))
+    a = np.empty((n, n))
+    b = np.empty((n, n))
+    c = np.empty((n, n))
+    _temperature_terms_symmetric(t, mw, log_eps_pair, epsilon, zrot, frot298, viscosity_fit, diffusion_fit,
+                      astar_fit, bstar_fit, cstar_fit, mu, rot_relax, bdiff, a, b, c)
+    return composition_terms(t, pressure, y, cp_r, mw, inv_w, crot, mu, rot_relax, bdiff, a, b, c,
+                             dense, multi, thermal)
+
+
+@njit(cache=True, parallel=True, fastmath=False)
+def _evaluate_faces_blocked(temperature, pressure, y, cp_r, mw, inv_w, log_eps_pair,
+                            epsilon, crot, zrot, frot298, viscosity_fit, diffusion_fit,
+                            astar_fit, bstar_fit, cstar_fit, dense, symmetric, blocksize):
+    """Block-owned scratch; every face retains its ordered scalar operations.
+
+    The symmetric entry requires the same immutable snapshot certificate as
+    _evaluate_faces_symmetric. Dense evaluation retains its original route.
+    No mutable workspace is shared between blocks or concurrent invocations.
+    """
+    if blocksize < 1:
+        raise ValueError("blocksize must be a positive integer")
+    if dense:
+        if symmetric:
+            return _evaluate_faces_symmetric(
+                temperature, pressure, y, cp_r, mw, inv_w, log_eps_pair,
+                epsilon, crot, zrot, frot298, viscosity_fit, diffusion_fit,
+                astar_fit, bstar_fit, cstar_fit, dense)
+        return evaluate_faces(
+            temperature, pressure, y, cp_r, mw, inv_w, log_eps_pair,
+            epsilon, crot, zrot, frot298, viscosity_fit, diffusion_fit,
+            astar_fit, bstar_fit, cstar_fit, dense)
+    faces, n = temperature.size, mw.size
+    rho, conductivity, wmix = np.empty(faces), np.empty(faces), np.empty(faces)
+    multi, thermal = np.empty((faces, n, n)), np.empty((faces, n))
+    blocks = faces // blocksize + (1 if faces % blocksize else 0)
+    for block in prange(blocks):
+        start = np.int64(block) * blocksize
+        stop = start + min(blocksize, faces-start)
+        mu, rot_relax, cp_face = np.empty(n), np.empty(n), np.empty(n)
+        bdiff, a, b, c = (np.empty((n, n)), np.empty((n, n)),
+                          np.empty((n, n)), np.empty((n, n)))
+        workspace = composition_workspace(n)
+        for face in range(start, stop):
+            cp_face[:] = cp_r[:, face]
+            if symmetric:
+                _temperature_terms_symmetric(
+                    temperature[face], mw, log_eps_pair, epsilon, zrot, frot298,
+                    viscosity_fit, diffusion_fit, astar_fit, bstar_fit, cstar_fit,
+                    mu, rot_relax, bdiff, a, b, c)
+            else:
+                temperature_terms(
+                    temperature[face], mw, log_eps_pair, epsilon, zrot, frot298,
+                    viscosity_fit, diffusion_fit, astar_fit, bstar_fit, cstar_fit,
+                    mu, rot_relax, bdiff, a, b, c)
+            rho[face], conductivity[face], wmix[face] = composition_terms_ws(
+                temperature[face], pressure, y[:, face], cp_face, mw, inv_w,
+                crot, mu, rot_relax, bdiff, a, b, c, multi[face], thermal[face], workspace)
+    return rho, conductivity, wmix, multi.transpose(1, 2, 0), thermal.T
+
+
 @njit(cache=True)
 def composition_terms(t, pressure, y, cp_r, mw, inv_w, crot, mu, rot_relax, bdiff, a, b, c,
                       dense, multi, thermal):
@@ -185,8 +315,16 @@ def _lu(a, piv):
             factor = a[i, k] / pivot
             a[i, k] = factor
             if factor != 0.0:
-                for j in range(k + 1, n):
-                    a[i, j] -= factor * a[k, j]
+                if n >= _BLAS_SPECIES and a.flags.c_contiguous:
+                    # Independent trailing-row updates are contiguous and
+                    # vectorizable without reassociation or fused arithmetic.
+                    row_i = a[i, k+1:]
+                    row_k = a[k, k+1:]
+                    for q in range(row_i.size):
+                        row_i[q] -= factor * row_k[q]
+                else:
+                    for j in range(k + 1, n):
+                        a[i, j] -= factor * a[k, j]
 
 
 @njit(cache=True)
@@ -265,18 +403,37 @@ def thermal_schur(temperature, x, cp_r, bdiff, astar, bstar, cstar, rot_relax, m
         l01[j, j] -= column
     # L11.
     five_over_3pi = 5.0 / (3.0 * math.pi)
-    for j in range(n):
-        wj = mw[j]
-        wj2 = wj * wj
-        constant = 16.0 * t * x[j] / 25.0
-        diagonal = 0.0
+    if n >= 400 and l11.flags.c_contiguous:
+        # Traverse C-order coefficient rows. Each column's reduction still
+        # accumulates in ascending i, with the original expression/order.
+        diagonal11 = np.zeros(n)
+        constant11, squared_w = np.empty(n), np.empty(n)
+        for j in range(n):
+            squared_w[j] = mw[j] * mw[j]
+            constant11[j] = 16.0 * t * x[j] / 25.0
         for i in range(n):
             wi = mw[i]
-            term1 = bdiff[i, j] * (wi + wj) ** 2
-            term2 = 4.0 * wj * astar[i, j] * (1.0 + five_over_3pi * (ratio[j] + ratio[i]))
-            l11[i, j] = constant * x[i] * wi / (wj * term1) * (13.75 * wj2 - 3.0 * wj2 * bstar[i, j] - term2 * wj)
-            diagonal += x[i] / term1 * (7.5 * wj2 + wi * wi * (6.25 - 3.0 * bstar[i, j]) + term2 * wi)
-        l11[j, j] -= constant * diagonal
+            for j in range(n):
+                wj, wj2 = mw[j], squared_w[j]
+                term1 = bdiff[i, j] * (wi + wj) ** 2
+                term2 = 4.0 * wj * astar[i, j] * (1.0 + five_over_3pi * (ratio[j] + ratio[i]))
+                l11[i, j] = constant11[j] * x[i] * wi / (wj * term1) * (13.75 * wj2 - 3.0 * wj2 * bstar[i, j] - term2 * wj)
+                diagonal11[j] += x[i] / term1 * (7.5 * wj2 + wi * wi * (6.25 - 3.0 * bstar[i, j]) + term2 * wi)
+        for j in range(n):
+            l11[j, j] -= constant11[j] * diagonal11[j]
+    else:
+        for j in range(n):
+            wj = mw[j]
+            wj2 = wj * wj
+            constant = 16.0 * t * x[j] / 25.0
+            diagonal = 0.0
+            for i in range(n):
+                wi = mw[i]
+                term1 = bdiff[i, j] * (wi + wj) ** 2
+                term2 = 4.0 * wj * astar[i, j] * (1.0 + five_over_3pi * (ratio[j] + ratio[i]))
+                l11[i, j] = constant * x[i] * wi / (wj * term1) * (13.75 * wj2 - 3.0 * wj2 * bstar[i, j] - term2 * wj)
+                diagonal += x[i] / term1 * (7.5 * wj2 + wi * wi * (6.25 - 3.0 * bstar[i, j]) + term2 * wi)
+            l11[j, j] -= constant * diagonal
     # L12 and the diagonal internal-mode block L22.
     for k in range(n):
         internal_constant[k] = 0.0
@@ -313,8 +470,26 @@ def thermal_schur(temperature, x, cp_r, bdiff, astar, bstar, cstar, rot_relax, m
             d_einv[i, k] = l12[i, k] / l22[k]
     if n >= _BLAS_SPECIES:
         # Larger mechanisms: the two N^3 products go to BLAS.
-        ainv_b[:, :] = np.dot(l00_inverse, l01)
-        schur[:, :] = l11 - np.dot(np.ascontiguousarray(l01.T), ainv_b) - np.dot(d_einv, np.ascontiguousarray(l12.T))
+        # L00 and its LU scratch are dead after inversion; matrices[2]
+        # retains the inverse for _multi_matrix. Reuse the dead slots for
+        # products while keeping the original transpose copies/GEMM flags.
+        product01, product12 = matrices[0], matrices[1]
+        if (ainv_b.flags.c_contiguous and product01.flags.c_contiguous
+                and product12.flags.c_contiguous):
+            # Numba requires statically C-contiguous dot outputs as well.
+            # The runtime guard makes these aliases allocation-free.
+            output_b = np.ascontiguousarray(ainv_b)
+            output01 = np.ascontiguousarray(product01)
+            output12 = np.ascontiguousarray(product12)
+            np.dot(l00_inverse, l01, output_b)
+            np.dot(np.ascontiguousarray(l01.T), ainv_b, output01)
+            np.dot(d_einv, np.ascontiguousarray(l12.T), output12)
+            for i in range(n):
+                for j in range(n):
+                    schur[i, j] = (l11[i, j] - product01[i, j]) - product12[i, j]
+        else:
+            ainv_b[:, :] = np.dot(l00_inverse, l01)
+            schur[:, :] = l11 - np.dot(np.ascontiguousarray(l01.T), ainv_b) - np.dot(d_einv, np.ascontiguousarray(l12.T))
     else:
         for i in range(n):
             for j in range(n):

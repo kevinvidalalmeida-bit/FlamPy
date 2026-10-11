@@ -1,0 +1,363 @@
+{
+  "h2": {
+    "case": "H2",
+    "transport": "mixture-averaged",
+    "soret": false,
+    "flow_scales": [
+      0.75,
+      1.0,
+      1.25
+    ],
+    "radiation_scales": [
+      0.0,
+      10.0,
+      30.0,
+      60.0
+    ],
+    "withheld": {
+      "flow_scale": 1.1,
+      "radiation_scale": 20.0
+    },
+    "generation_wall_s": 4.84422159998212,
+    "flamelet_runtimes_s": [
+      [
+        0.5376600000017788,
+        0.16417649999493733,
+        0.17415609999443404,
+        0.17268160000094213
+      ],
+      [
+        0.68409409999731,
+        0.2063594999781344,
+        0.19117569999070838,
+        0.18861380001180805
+      ],
+      [
+        0.18110809999052435,
+        0.18753519997699186,
+        0.19700980000197887,
+        0.1682316000224091
+      ]
+    ],
+    "table_megabytes": 1.204848,
+    "geometry": {
+      "vertices": 5868,
+      "tetrahedra": 17473,
+      "excluded_folded_cells": 0,
+      "excluded_degenerate_cells": 95,
+      "excluded_spatial_points_outside_feed_Z": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "mixture_sampling": {
+      "points": 489,
+      "relative_tolerance": 0.001,
+      "rule": "adaptive physical-knot subset"
+    },
+    "progress_rule": "products:H2O",
+    "progress_candidates": [
+      {
+        "rule": "products:H2O",
+        "folded_cells": 0,
+        "tetrahedra": 17473
+      },
+      {
+        "rule": "strain_linear_program",
+        "folded_cells": 80,
+        "tetrahedra": 17368
+      }
+    ],
+    "maximum_enthalpy_deficit_J_kg": 2277455.342271916,
+    "validation": {
+      "passed": true,
+      "metrics": {
+        "temperature_K": 1.5727815184841347,
+        "species_absolute": 8.043474628383063e-05,
+        "species_source_relative": 0.039246842760914134,
+        "heat_release_relative": 0.027941574912105978,
+        "species_sum_error": 9.585665594613602e-13,
+        "thermodynamic_enthalpy_error_J_kg": 8.39791027829051e-07,
+        "maximum_enthalpy_deficit_J_kg": 843460.3040395523
+      },
+      "limits": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "species_source_relative": 0.1,
+        "heat_release_relative": 0.1
+      },
+      "checks": {
+        "temperature_K": true,
+        "species_absolute": true,
+        "species_source_relative": true,
+        "heat_release_relative": true,
+        "reaction_coverage": true,
+        "thermodynamic_consistency": true
+      },
+      "reaction_coverage": 1.0,
+      "covered_points": 889,
+      "total_points": 1071
+    }
+  },
+  "h2ms": {
+    "case": "H2",
+    "transport": "multicomponent",
+    "soret": true,
+    "flow_scales": [
+      0.75,
+      1.0,
+      1.25
+    ],
+    "radiation_scales": [
+      0.0,
+      10.0,
+      30.0,
+      60.0
+    ],
+    "withheld": {
+      "flow_scale": 1.1,
+      "radiation_scale": 20.0
+    },
+    "generation_wall_s": 9.73182519999682,
+    "flamelet_runtimes_s": [
+      [
+        0.9547992000007071,
+        0.3870292000065092,
+        0.9039036000031047,
+        0.4467090000107419
+      ],
+      [
+        0.45448270000633784,
+        0.38386430000537075,
+        0.49336959997890517,
+        0.3500108000007458
+      ],
+      [
+        0.3550208000233397,
+        0.3989931000105571,
+        0.3737515000102576,
+        0.38189889999921434
+      ]
+    ],
+    "table_megabytes": 13.003007,
+    "geometry": {
+      "vertices": 62952,
+      "tetrahedra": 158640,
+      "excluded_folded_cells": 142,
+      "excluded_degenerate_cells": 30038,
+      "excluded_spatial_points_outside_feed_Z": [
+        48,
+        0,
+        0,
+        1,
+        15,
+        19,
+        14,
+        27,
+        22,
+        10,
+        17,
+        37
+      ],
+      "dropped_rounding_reversals_of_Z": [
+        21,
+        34,
+        13,
+        18,
+        30,
+        40,
+        24,
+        19,
+        56,
+        48,
+        32,
+        29
+      ]
+    },
+    "mixture_sampling": {
+      "points": 5246,
+      "relative_tolerance": 0.001,
+      "rule": "adaptive physical-knot subset"
+    },
+    "progress_rule": "products:H2O",
+    "progress_candidates": [
+      {
+        "rule": "products:H2O",
+        "folded_cells": 142,
+        "tetrahedra": 158640
+      },
+      {
+        "rule": "strain_linear_program",
+        "folded_cells": 1904,
+        "tetrahedra": 151884
+      }
+    ],
+    "maximum_enthalpy_deficit_J_kg": 2365857.9775563315,
+    "validation": {
+      "passed": true,
+      "metrics": {
+        "temperature_K": 1.260800205964415,
+        "species_absolute": 7.054389962823926e-05,
+        "species_source_relative": 0.02431077375123737,
+        "heat_release_relative": 0.01918447727020199,
+        "species_sum_error": 5.1247339705184913e-11,
+        "thermodynamic_enthalpy_error_J_kg": 9.958748705685139e-07,
+        "maximum_enthalpy_deficit_J_kg": 1157100.0179498438
+      },
+      "limits": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "species_source_relative": 0.1,
+        "heat_release_relative": 0.1
+      },
+      "checks": {
+        "temperature_K": true,
+        "species_absolute": true,
+        "species_source_relative": true,
+        "heat_release_relative": true,
+        "reaction_coverage": true,
+        "thermodynamic_consistency": true
+      },
+      "reaction_coverage": 1.0,
+      "covered_points": 884,
+      "total_points": 1072
+    }
+  },
+  "ch4": {
+    "case": "CH4",
+    "transport": "mixture-averaged",
+    "soret": false,
+    "flow_scales": [
+      0.75,
+      1.0,
+      1.25
+    ],
+    "radiation_scales": [
+      0.0,
+      2.0,
+      4.0,
+      6.0,
+      8.0
+    ],
+    "withheld": {
+      "flow_scale": 1.1,
+      "radiation_scale": 5.0
+    },
+    "generation_wall_s": 32.141665300005116,
+    "flamelet_runtimes_s": [
+      [
+        3.731463900010567,
+        1.5925680000218563,
+        1.4966962999897078,
+        1.0547141999995802,
+        1.4299051999987569
+      ],
+      [
+        2.2205906999879517,
+        1.549018999998225,
+        1.5650290999910794,
+        1.4966959000157658,
+        1.5342661999748088
+      ],
+      [
+        1.6767269999836572,
+        1.559678299992811,
+        1.4966951000096742,
+        1.4840016000089236,
+        1.498475000000326
+      ]
+    ],
+    "table_megabytes": 7.12809,
+    "geometry": {
+      "vertices": 8145,
+      "tetrahedra": 25730,
+      "excluded_folded_cells": 0,
+      "excluded_degenerate_cells": 286,
+      "excluded_spatial_points_outside_feed_Z": [
+        35,
+        42,
+        51,
+        56,
+        54,
+        52,
+        60,
+        66,
+        76,
+        44,
+        66,
+        71,
+        75,
+        58,
+        67
+      ]
+    },
+    "mixture_sampling": {
+      "points": 543,
+      "relative_tolerance": 0.001,
+      "rule": "adaptive physical-knot subset"
+    },
+    "progress_rule": "injective_linear_program",
+    "progress_candidates": [
+      {
+        "rule": "products:H2O+CO2",
+        "folded_cells": 1138,
+        "tetrahedra": 24578
+      },
+      {
+        "rule": "products:H2+H2O+CO+CO2",
+        "folded_cells": 0,
+        "tetrahedra": 25725
+      },
+      {
+        "rule": "injective_linear_program",
+        "folded_cells": 0,
+        "tetrahedra": 25730
+      },
+      {
+        "rule": "strain_linear_program",
+        "folded_cells": 0,
+        "tetrahedra": 25728
+      }
+    ],
+    "maximum_enthalpy_deficit_J_kg": 663857.6348610328,
+    "validation": {
+      "passed": true,
+      "metrics": {
+        "temperature_K": 0.6086833607312201,
+        "species_absolute": 9.426976303016088e-05,
+        "species_source_relative": 0.014380356298706523,
+        "heat_release_relative": 0.012336471784899782,
+        "species_sum_error": 2.3714363805993344e-13,
+        "thermodynamic_enthalpy_error_J_kg": 9.397044777870178e-07,
+        "maximum_enthalpy_deficit_J_kg": 279114.9253443701
+      },
+      "limits": {
+        "temperature_K": 20.0,
+        "species_absolute": 0.005,
+        "species_source_relative": 0.1,
+        "heat_release_relative": 0.1
+      },
+      "checks": {
+        "temperature_K": true,
+        "species_absolute": true,
+        "species_source_relative": true,
+        "heat_release_relative": true,
+        "reaction_coverage": true,
+        "thermodynamic_consistency": true
+      },
+      "reaction_coverage": 1.0,
+      "covered_points": 1198,
+      "total_points": 1347
+    }
+  }
+}

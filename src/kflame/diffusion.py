@@ -19,7 +19,8 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
                           initial_points=31, transport='mixture-averaged', soret=False,
                           ratio=3., slope=.01, curve=.02, max_points=2400, max_time=600.,
                           initial_solution=None, refine=True, output=None, plots=False,
-                          radiation=False, radiation_scale=1., boundary_emissivities=(0., 0.)):
+                          radiation=False, radiation_scale=1., boundary_emissivities=(0., 0.),
+                          refine_split=2):
     """Solve a native axisymmetric diffusion flame with two separate inflows.
 
     Streams are mole-basis strings/dictionaries. Both mass fluxes are positive
@@ -34,6 +35,12 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     is adiabatic. ``radiation_scale`` multiplies that loss to generate deeper
     enthalpy defects for tabulation (1 is the physical model), and
     ``boundary_emissivities`` are the (fuel, oxidizer) inlet emissivities.
+
+    ``refine_split`` > 2 enables multi-point refinement: an interval whose
+    worst refinement ratio is r is split into min(refine_split, ceil(r))
+    equal parts at once (2 keeps the single midpoint). The final grid
+    must still pass the unchanged criteria; fewer intermediate grids are
+    solved, but the final grid can differ from the midpoint sequence.
     """
     for name,value in dict(fuel_temperature=fuel_temperature,oxidizer_temperature=oxidizer_temperature,
             pressure=pressure,fuel_mass_flux=fuel_mass_flux,oxidizer_mass_flux=oxidizer_mass_flux,
@@ -52,6 +59,8 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
         raise ValueError('Require integer 5 <= initial_points <= max_points')
     if not np.isfinite(ratio) or ratio<2. or not 0.<slope<=1. or not 0.<curve<=1.:
         raise ValueError('Require ratio >= 2 and 0 < slope, curve <= 1')
+    if not isinstance(refine_split,int) or not 2<=refine_split<=8:
+        raise ValueError('refine_split must be an integer in [2, 8]')
     mechanism=resolve_mechanism(str(mechanism));mech=load_mechanism(mechanism)
     fuel,oxidizer=_stream(fuel),_stream(oxidizer)
     feeds=[]
@@ -86,9 +95,13 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
             # nonlinear solve unnecessarily stiff and expensive. Preserve
             # the native profile as a guess on a bounded coarse subset, then
             # certify the target with the normal full adaptive refinement.
+            # A changed radiative loss moves the hot region in the same way.
+            radiative=lambda on,scale:float(scale) if on else 0.
             changed=(not np.isclose(meta['fuel_mass_flux'],fuel_mass_flux,rtol=1e-12)
                      or not np.isclose(meta['oxidizer_mass_flux'],oxidizer_mass_flux,rtol=1e-12)
-                     or not np.isclose(meta['width'],width,rtol=1e-12))
+                     or not np.isclose(meta['width'],width,rtol=1e-12)
+                     or radiative(meta.get('radiation',False),meta.get('radiation_scale',1.))
+                        !=radiative(radiation,radiation_scale))
             continuation_points=max(initial_points,min(201,max_points))
             if changed and len(grid)>continuation_points:
                 indices=np.unique(np.linspace(0,len(grid)-1,continuation_points).astype(int))
@@ -109,13 +122,24 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     source_sha256=digest.hexdigest()
     started=time.perf_counter()
     problem=DiffusionFlameProblem(case,mech,z)
+    problem.refine_split=refine_split
     initial=None
     if seed is not None:
         scaledz=seed['z']*width/seed['z'][-1]
         factor=np.sqrt(fuel_mass_flux*oxidizer_mass_flux/(meta['fuel_mass_flux']*meta['oxidizer_mass_flux']))
-        initial={key:np.interp(z,scaledz,seed[key]) for key in ('T','m','V')}
+        initial={key:np.interp(z,scaledz,seed[key]) for key in ('m','V')}
         initial['m']*=factor;initial['V']*=factor*seed['z'][-1]/width
-        initial['Y']=np.array([np.interp(z,scaledz,row) for row in seed['Y']])
+        # Strain similarity: the mixing layer thins as (strain)^-1/2 about the
+        # stagnation plane, so T and Y are compressed there; m, V and Lambda
+        # scale with the flux factor. Only the guess changes.
+        crossing=np.flatnonzero((seed['m'][:-1]>=0.)&(seed['m'][1:]<0.))
+        sampled=z
+        if len(crossing) and factor!=1.:
+            j=crossing[0]
+            stagnation=scaledz[j]+(scaledz[j+1]-scaledz[j])*seed['m'][j]/(seed['m'][j]-seed['m'][j+1])
+            sampled=np.clip(stagnation+(z-stagnation)*np.sqrt(factor),scaledz[0],scaledz[-1])
+        initial['T']=np.interp(sampled,scaledz,seed['T'])
+        initial['Y']=np.array([np.interp(sampled,scaledz,row) for row in seed['Y']])
         initial['Lambda']=float(seed['Lambda'])*factor**2*(seed['z'][-1]/width)**2
     fields,accepted,report=solve_diffusion_problem(problem,initial=initial,max_time=max_time,
         ratio=ratio,slope=slope,curve=curve,max_points=max_points,refine=refine)
@@ -133,7 +157,7 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
         boundary_emissivities=list(emissivities),refine=bool(refine),report=report,runtime_s=runtime,
         source_sha256=source_sha256,
         numerical_settings=dict(initial_points=len(z),ratio=ratio,slope=slope,curve=curve,
-                                max_points=max_points,max_time=max_time))
+                                max_points=max_points,max_time=max_time,refine_split=refine_split))
     (folder/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n',encoding='utf-8')
     with (folder/'profiles.csv').open('w',newline='',encoding='utf-8') as out:
         writer=csv.writer(out)
@@ -169,5 +193,7 @@ def main(argv=None):
     parser.add_argument('--output',type=Path)
     parser.add_argument('--initial-solution',type=Path)
     parser.add_argument('--max-points',type=int,default=2400)
+    parser.add_argument('--refine-split',type=int,default=2,
+                        help='Split a flagged interval into up to N parts per refinement (2 = midpoint)')
     result=solve_diffusion_flame(**vars(parser.parse_args(argv)))
     print(result['report']);print(result['output'])

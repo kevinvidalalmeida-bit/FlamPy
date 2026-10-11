@@ -1,0 +1,568 @@
+{
+  "settings": {
+    "mechanism": "gri30.yaml",
+    "fuel": "CH4",
+    "oxidizer": "O2:1,N2:3.76",
+    "fuel_mass_flux": 0.12,
+    "oxidizer_mass_flux": 0.24,
+    "fuel_temperature": 300.0,
+    "oxidizer_temperature": 300.0,
+    "pressure": 101325.0,
+    "width": 0.02,
+    "transport": "mixture-averaged",
+    "soret": false
+  },
+  "scope": "Local flame ppm and net sources, not integrated exhaust emissions. Screening limits: ppm 1 + 5% of own peak; sources 1e-8 + 10% of own absolute peak.",
+  "environment": {
+    "python": "3.11.0",
+    "cantera": "3.2.0",
+    "numpy": "2.4.6",
+    "numba": "0.65.1",
+    "scipy": "1.17.1"
+  },
+  "cases": {
+    "baseline": {
+      "passed": true,
+      "pollutants": {
+        "CO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 46892.45908132522,
+            "reference_peak": 46898.44629511855,
+            "reference_absolute_scale": 46898.44629511855,
+            "maximum_absolute_error": 56.76330940452681,
+            "error_relative_to_reference_peak": 0.001210345200933342,
+            "limit": 2345.9223147559273
+          },
+          "source": {
+            "predicted_peak": 24.951393781004327,
+            "reference_peak": 24.950490444751892,
+            "reference_absolute_scale": 24.950490444751892,
+            "maximum_absolute_error": 0.18216027455406625,
+            "error_relative_to_reference_peak": 0.007300869494225994,
+            "limit": 2.4950490544751895
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 219.3078148116713,
+            "reference_peak": 219.35057115178893,
+            "reference_absolute_scale": 219.35057115178893,
+            "maximum_absolute_error": 0.26132097688824274,
+            "error_relative_to_reference_peak": 0.001191339395726536,
+            "limit": 11.967528557589446
+          },
+          "source": {
+            "predicted_peak": 0.14445498216243396,
+            "reference_peak": 0.1444718189329056,
+            "reference_absolute_scale": 0.1444718189329056,
+            "maximum_absolute_error": 0.0012372964895762187,
+            "error_relative_to_reference_peak": 0.008564275709374392,
+            "limit": 0.01444719189329056
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO2": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 6.256640832487162,
+            "reference_peak": 6.260244371545471,
+            "reference_absolute_scale": 6.260244371545471,
+            "maximum_absolute_error": 0.011151999286848735,
+            "error_relative_to_reference_peak": 0.00178139999415001,
+            "limit": 1.3130122185772737
+          },
+          "source": {
+            "predicted_peak": 0.004190430267539333,
+            "reference_peak": 0.00418795500441037,
+            "reference_absolute_scale": 0.004527179524483229,
+            "maximum_absolute_error": 2.2460055777147412e-05,
+            "error_relative_to_reference_peak": 0.004961158632142205,
+            "limit": 0.0004527279524483229
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NOx": {
+          "source_unit": "mol/(m3 s)",
+          "ppm": {
+            "predicted_peak": 219.33057162776984,
+            "reference_peak": 219.37316868433453,
+            "reference_absolute_scale": 219.37316868433453,
+            "maximum_absolute_error": 0.2613573552723665,
+            "error_relative_to_reference_peak": 0.001191382505161535,
+            "limit": 11.968658434216728
+          },
+          "source": {
+            "predicted_peak": 4.813541390599657,
+            "reference_peak": 4.814107714340137,
+            "reference_absolute_scale": 4.814107714340137,
+            "maximum_absolute_error": 0.041233983367308324,
+            "error_relative_to_reference_peak": 0.008565239046164594,
+            "limit": 0.4814107814340137
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        }
+      },
+      "limits": {
+        "concentration_atol_ppm": 1.0,
+        "concentration_rtol": 0.05,
+        "source_atol": 1e-08,
+        "source_rtol": 0.1
+      },
+      "criterion": "Maximum profile error <= absolute floor + relative limit * own reference absolute peak",
+      "coverage": {
+        "CO": {
+          "ppm": {
+            "active_points": 894,
+            "covered_active_points": 894,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 630,
+            "covered_active_points": 630,
+            "fraction": 1.0
+          }
+        },
+        "NO": {
+          "ppm": {
+            "active_points": 1139,
+            "covered_active_points": 1139,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 682,
+            "covered_active_points": 682,
+            "fraction": 1.0
+          }
+        },
+        "NO2": {
+          "ppm": {
+            "active_points": 449,
+            "covered_active_points": 449,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 478,
+            "covered_active_points": 478,
+            "fraction": 1.0
+          }
+        },
+        "NOx": {
+          "ppm": {
+            "active_points": 1145,
+            "covered_active_points": 1145,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 551,
+            "covered_active_points": 551,
+            "fraction": 1.0
+          }
+        }
+      },
+      "covered_points": 1322,
+      "total_points": 1322,
+      "source_sha256": "fbaf6b7e3e3888ca72fae5dd1ae8367060abdcbd176e0b5f5b2498644dde8efc",
+      "flow_passed": true,
+      "flow_metrics": {
+        "temperature_K": 0.6399797835185836,
+        "species_absolute": 0.00043170836409778257,
+        "velocity_relative": 0.0002904591943687633,
+        "pressure_eigenvalue_relative": 7.474914680884232e-05,
+        "heat_release_peak_relative": 4.933292121430132e-05,
+        "peak_temperature_K": 0.011296079982912488
+      },
+      "timings": {
+        "native_s": 47.53392339999846,
+        "cantera_s": 34.852489400000195,
+        "native_initialization": "independent cold start"
+      }
+    },
+    "withheld": {
+      "passed": true,
+      "pollutants": {
+        "CO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 46756.297307837114,
+            "reference_peak": 46769.88706717522,
+            "reference_absolute_scale": 46769.88706717522,
+            "maximum_absolute_error": 20.46149138731562,
+            "error_relative_to_reference_peak": 0.0004374928542787999,
+            "limit": 2339.494353358761
+          },
+          "source": {
+            "predicted_peak": 26.695053914700495,
+            "reference_peak": 26.694185912711973,
+            "reference_absolute_scale": 26.694185912711973,
+            "maximum_absolute_error": 0.0332696527957026,
+            "error_relative_to_reference_peak": 0.0012463258068439293,
+            "limit": 2.6694186012711976
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 215.2844831188068,
+            "reference_peak": 215.37804383150154,
+            "reference_absolute_scale": 215.37804383150154,
+            "maximum_absolute_error": 0.1110620219542966,
+            "error_relative_to_reference_peak": 0.0005156608351461519,
+            "limit": 11.768902191575078
+          },
+          "source": {
+            "predicted_peak": 0.1503097684480225,
+            "reference_peak": 0.15036434306846938,
+            "reference_absolute_scale": 0.15036434306846938,
+            "maximum_absolute_error": 0.0001893227900868627,
+            "error_relative_to_reference_peak": 0.0012590936536107723,
+            "limit": 0.015036444306846938
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO2": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 6.113767373939721,
+            "reference_peak": 6.116687169963618,
+            "reference_absolute_scale": 6.116687169963618,
+            "maximum_absolute_error": 0.007969624475322235,
+            "error_relative_to_reference_peak": 0.0013029315140485821,
+            "limit": 1.3058343584981809
+          },
+          "source": {
+            "predicted_peak": 0.004488766901986574,
+            "reference_peak": 0.004488616921774793,
+            "reference_absolute_scale": 0.004827961194781384,
+            "maximum_absolute_error": 2.1712837837617384e-05,
+            "error_relative_to_reference_peak": 0.004497309933039047,
+            "limit": 0.00048280611947813844
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NOx": {
+          "source_unit": "mol/(m3 s)",
+          "ppm": {
+            "predicted_peak": 215.30719457790212,
+            "reference_peak": 215.40074174424146,
+            "reference_absolute_scale": 215.40074174424146,
+            "maximum_absolute_error": 0.11104875642860179,
+            "error_relative_to_reference_peak": 0.0005155449119133341,
+            "limit": 11.770037087212074
+          },
+          "source": {
+            "predicted_peak": 5.008632616097284,
+            "reference_peak": 5.010450414980732,
+            "reference_absolute_scale": 5.010450414980732,
+            "maximum_absolute_error": 0.0063092067644678895,
+            "error_relative_to_reference_peak": 0.0012592095005279384,
+            "limit": 0.5010450514980733
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        }
+      },
+      "limits": {
+        "concentration_atol_ppm": 1.0,
+        "concentration_rtol": 0.05,
+        "source_atol": 1e-08,
+        "source_rtol": 0.1
+      },
+      "criterion": "Maximum profile error <= absolute floor + relative limit * own reference absolute peak",
+      "coverage": {
+        "CO": {
+          "ppm": {
+            "active_points": 953,
+            "covered_active_points": 953,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 613,
+            "covered_active_points": 613,
+            "fraction": 1.0
+          }
+        },
+        "NO": {
+          "ppm": {
+            "active_points": 1202,
+            "covered_active_points": 1202,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 724,
+            "covered_active_points": 724,
+            "fraction": 1.0
+          }
+        },
+        "NO2": {
+          "ppm": {
+            "active_points": 450,
+            "covered_active_points": 450,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 471,
+            "covered_active_points": 471,
+            "fraction": 1.0
+          }
+        },
+        "NOx": {
+          "ppm": {
+            "active_points": 1208,
+            "covered_active_points": 1208,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 561,
+            "covered_active_points": 561,
+            "fraction": 1.0
+          }
+        }
+      },
+      "covered_points": 1405,
+      "total_points": 1405,
+      "source_sha256": "fbaf6b7e3e3888ca72fae5dd1ae8367060abdcbd176e0b5f5b2498644dde8efc",
+      "flow_passed": true,
+      "flow_metrics": {
+        "temperature_K": 0.4508212057636456,
+        "species_absolute": 0.00022838525431456702,
+        "velocity_relative": 0.00032968068668832735,
+        "pressure_eigenvalue_relative": 0.00015271947874755652,
+        "heat_release_peak_relative": 0.00019698870144844793,
+        "peak_temperature_K": 0.11064458130340427
+      },
+      "timings": {
+        "native_s": 13.00457340000139,
+        "cantera_s": 36.824526099997456,
+        "native_initialization": "native continuation"
+      }
+    },
+    "fgm": {
+      "passed": true,
+      "pollutants": {
+        "CO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 46760.52998602792,
+            "reference_peak": 46756.297307837114,
+            "reference_absolute_scale": 46756.297307837114,
+            "maximum_absolute_error": 6.645297243598179,
+            "error_relative_to_reference_peak": 0.000142126250927152,
+            "limit": 2338.8148653918556
+          },
+          "source": {
+            "predicted_peak": 26.73980997198629,
+            "reference_peak": 26.695053914700495,
+            "reference_absolute_scale": 26.695053914700495,
+            "maximum_absolute_error": 0.11274449707697887,
+            "error_relative_to_reference_peak": 0.004223422714830797,
+            "limit": 2.6695054014700497
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 215.08891994833613,
+            "reference_peak": 215.2844831188068,
+            "reference_absolute_scale": 215.2844831188068,
+            "maximum_absolute_error": 0.21025749224685342,
+            "error_relative_to_reference_peak": 0.0009766495439005737,
+            "limit": 11.76422415594034
+          },
+          "source": {
+            "predicted_peak": 0.14994939151144673,
+            "reference_peak": 0.1503097684480225,
+            "reference_absolute_scale": 0.1503097684480225,
+            "maximum_absolute_error": 0.0004621005669271372,
+            "error_relative_to_reference_peak": 0.0030743215939883026,
+            "limit": 0.01503098684480225
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NO2": {
+          "source_unit": "kg/(m3 s)",
+          "ppm": {
+            "predicted_peak": 6.130220004339139,
+            "reference_peak": 6.113767373939721,
+            "reference_absolute_scale": 6.113767373939721,
+            "maximum_absolute_error": 0.026121632150757357,
+            "error_relative_to_reference_peak": 0.004272591767573998,
+            "limit": 1.305688368696986
+          },
+          "source": {
+            "predicted_peak": 0.004441874105168432,
+            "reference_peak": 0.004488766901986574,
+            "reference_absolute_scale": 0.004828090501692341,
+            "maximum_absolute_error": 5.172256276157663e-05,
+            "error_relative_to_reference_peak": 0.01071284035447282,
+            "limit": 0.00048281905016923406
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        },
+        "NOx": {
+          "source_unit": "mol/(m3 s)",
+          "ppm": {
+            "predicted_peak": 215.11161521789467,
+            "reference_peak": 215.30719457790212,
+            "reference_absolute_scale": 215.30719457790212,
+            "maximum_absolute_error": 0.21027462045398693,
+            "error_relative_to_reference_peak": 0.000976626075437092,
+            "limit": 11.765359728895106
+          },
+          "source": {
+            "predicted_peak": 4.996618789958187,
+            "reference_peak": 5.008632616097284,
+            "reference_absolute_scale": 5.008632616097284,
+            "maximum_absolute_error": 0.015403379988266686,
+            "error_relative_to_reference_peak": 0.0030753663063171456,
+            "limit": 0.5008632716097284
+          },
+          "checks": {
+            "ppm": true,
+            "source": true
+          },
+          "passed": true
+        }
+      },
+      "limits": {
+        "concentration_atol_ppm": 1.0,
+        "concentration_rtol": 0.05,
+        "source_atol": 1e-08,
+        "source_rtol": 0.1
+      },
+      "criterion": "Maximum profile error <= absolute floor + relative limit * own reference absolute peak",
+      "coverage": {
+        "CO": {
+          "ppm": {
+            "active_points": 953,
+            "covered_active_points": 953,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 613,
+            "covered_active_points": 613,
+            "fraction": 1.0
+          }
+        },
+        "NO": {
+          "ppm": {
+            "active_points": 1202,
+            "covered_active_points": 1202,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 724,
+            "covered_active_points": 724,
+            "fraction": 1.0
+          }
+        },
+        "NO2": {
+          "ppm": {
+            "active_points": 450,
+            "covered_active_points": 450,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 471,
+            "covered_active_points": 471,
+            "fraction": 1.0
+          }
+        },
+        "NOx": {
+          "ppm": {
+            "active_points": 1208,
+            "covered_active_points": 1208,
+            "fraction": 1.0
+          },
+          "source": {
+            "active_points": 561,
+            "covered_active_points": 561,
+            "fraction": 1.0
+          }
+        }
+      },
+      "covered_points": 1283,
+      "total_points": 1405,
+      "source_sha256": "fbaf6b7e3e3888ca72fae5dd1ae8367060abdcbd176e0b5f5b2498644dde8efc",
+      "flow_passed": true,
+      "flow_metrics": {
+        "temperature_K": 0.11808763031763192,
+        "species_absolute": 1.295990688562898e-05,
+        "species_source_relative": 0.004223422714830797,
+        "heat_release_relative": 0.005113578788671117,
+        "enthalpy_J_kg": 158.42000003874114,
+        "enthalpy_temperature_equivalent_K": 0.12692604199949575,
+        "species_sum_error": 1.9562129693895258e-13,
+        "thermodynamic_enthalpy_error_J_kg": 8.689239621162415e-07
+      }
+    }
+  },
+  "training": {
+    "flow_scales": [
+      0.75,
+      1.0,
+      1.25
+    ],
+    "runtime_s": [
+      23.120391200005542,
+      28.166052500004298,
+      20.486865399987437
+    ],
+    "table_sha256": "cf3a363c246632043ddef2fa0be12306248553228d76245857ab1c4cc93fce8e",
+    "table_builder_source_sha256": "fb51eadbada4dbbe298940ff0acfdbc18b9d7d88de18298c191df7f900f90b6b",
+    "withheld_scale": 1.1
+  },
+  "artifacts_sha256": {
+    "fgm-withheld.pdf": "cde247eb8225b285288db6f642995acd648e66172e50bd5366a51332902bc7f4",
+    "fgm-withheld.png": "ff39b59d33a355d6cd9c5982863b0aec02e0bb98b383cdf19c9ca81a342a838b",
+    "native-cantera.pdf": "ce98ebe2dc9156dd74da4bf0a4ab918e97fa9e5e5ed6321f4cd6dfa84d75adbe",
+    "native-cantera.png": "81ff34828da32b56d928a583404d82ca6d73f82af910b9e2710dfd849f943fca"
+  }
+}

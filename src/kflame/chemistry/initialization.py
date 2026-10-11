@@ -175,8 +175,14 @@ def _hp_equilibrium(mech: MechanismData, T_in: float, P: float, Y_in: np.ndarray
         n = _equilibrium_moles(mech, thermo, T, P, atom_totals)
         h = thermo.partial_molar_enthalpies(T)
         return float(np.dot(n, h) / np.dot(n, mech.molecular_weights) - h_target)
-    T_eq = brentq(energy_error, float(mech.min_temperature),
-                  float(mech.max_temperature), xtol=1e-7, rtol=1e-10)
+    lower, upper = float(mech.min_temperature), float(mech.max_temperature)
+    if energy_error(upper) < 0.0:
+        # Large mechanisms (Aramco, JetSurF, USC) declare a 2000 K common NASA
+        # maximum through a few heavy species while stoichiometric flames are
+        # hotter. As in Cantera, polynomials are extrapolated; the bracket is
+        # widened to the flame solvers' own 2*Tmax temperature bound.
+        upper = 2.0 * upper
+    T_eq = brentq(energy_error, lower, upper, xtol=1e-7, rtol=1e-10)
     n_eq = _equilibrium_moles(mech, thermo, T_eq, P, atom_totals)
     Y_eq = n_eq * mech.molecular_weights / np.dot(n_eq, mech.molecular_weights)
     return T_eq, Y_eq, float(thermo.density(T_eq, P, Y_eq))

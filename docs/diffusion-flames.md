@@ -1,5 +1,22 @@
 # Llamas no premezcladas en contraflujo
 
+[Guía de lectura](README.md) ·
+[Estado y prioridades HPC (2026-10-08)](reviews/repository-hpc-2026-10-08.md).
+
+[Optimización del transporte multicomponente y Soret](hpc-multicomponent.md):
+perfil de tiempo, mejoras seleccionadas, literatura y 554 pruebas aprobadas.
+
+[Optimización de memoria, L1/L2 y buffers](hpc-memory-layout.md): disposición
+de arrays, asignaciones evitadas y comparación exacta entre versiones.
+
+[Continuación HPC: caras compartidas y derivadas por bloques](hpc-next-strategies.md):
+implementación seleccionada, 463 pruebas y tiempos completos antes/después.
+
+Para evaluar el rendimiento, empezar por
+[las mediciones del Jacobiano por bloques](#rendimiento-de-alto-nivel-y-pérdidas-radiativas).
+Las secciones anteriores de optimización conservan resultados históricos;
+la revisión fechada enlaza mediciones del código local y hallazgos pendientes.
+
 `solve_diffusion_flame` resuelve una llama de difusión axisimétrica entre dos
 entradas independientes. Combustible y oxidante se mezclan dentro del dominio.
 El mecanismo, las composiciones molares y las condiciones de entrada son
@@ -107,9 +124,10 @@ Las consultas fuera de las celdas disponibles lanzan `OutsideManifoldError`.
 La interpolación recupera T a partir de la **entalpía total interpolada y Y**,
 sin recomputar química detallada. Esta tabla de dos controles contiene las
 historias de entalpía de las llamas de entrenamiento. No ofrece todavía un
-control independiente de pérdidas térmicas `(Z,C,h)` ni un solver reducido de
+control independiente de pérdidas térmicas ni un solver reducido de
 contraflujo; las llamas pueden incluir radiación (`radiation=True`), cuya historia
-entálpica queda en la tabla de su familia. Esas capacidades requieren una familia física adicional
+entálpica queda en la tabla de su familia. El control `(Z,C,h)` está en
+[tablas con pérdidas](#tablas-fgm-con-pérdidas-zch). Esas capacidades requieren una familia física adicional
 y cierres de transporte propios de esta geometría.
 
 `validate_diffusion_fgm(table, native, output)` compara una llama nativa
@@ -211,7 +229,8 @@ El perfil posterior mide 45.0 s para CH4 frente a 76.2 s antes (1.69×),
 Soret frente a 8.09 s (1.43×). En CH4, la química nodal y agrupada conjuntamente
 ocupa 4.92 s y el Jacobiano completo 29.2 s. Los límites físicos siguen pasando.
 
-La última ejecución **sin instrumentación**, con kernels compilados, produjo:
+La ejecución histórica **sin instrumentación**, anterior al Jacobiano por
+bloques y a la eliminación de dos extremos, produjo:
 
 | Una llama | Solver nativo | Cantera | Relación nativo/Cantera |
 |---|---:|---:|---:|
@@ -220,7 +239,9 @@ La última ejecución **sin instrumentación**, con kernels compilados, produjo:
 | H2/aire, multicomponente + Soret | 4.00 s | 2.22 s | 1.80 |
 
 Son muestras locales individuales, no una garantía de velocidad. El nativo
-sigue siendo más lento que Cantera en estas tres mediciones. CH4 tiene 53
+era más lento que Cantera en estas tres mediciones; los resultados posteriores
+están en [rendimiento de alto nivel](#rendimiento-de-alto-nivel-y-pérdidas-radiativas).
+CH4 tiene 53
 especies y 74 033 incógnitas en la malla final; permanecen costes importantes
 de transporte y de construcción/factorización del Jacobiano. Los residuos
 completos mantienen la tolerancia `1e-7`, y las diferencias de perfiles frente
@@ -267,9 +288,14 @@ python examples/benchmark_diffusion_solver.py --output runs/repeated_diffusion -
 
 Revisión del 7 de octubre de 2026 sobre `21399ef`. Objetivo: resolver llamas de
 difusión **con o sin pérdidas**, con transporte promediado o multicomponente y
-Soret, más rápido que Cantera 3.2 sin cambiar las ecuaciones ni la puerta de
+Soret, más rápido que Cantera 3.2 conservando las ecuaciones continuas y la puerta de
 aceptación (residual escalado completo `< 1e-7`, suma y mínimo de Y, llama
 encendida, convergencia de malla).
+
+El trabajo local posterior introduce una mezcla de gradientes de entalpía
+cerca del estancamiento. Esa modificación del residual discreto se describe
+en la sección de tablas con pérdidas y necesita distinguirse de las
+optimizaciones que conservan exactamente la discretización anterior.
 
 ### Dónde estaba el coste
 
@@ -340,8 +366,8 @@ La continuación admite cambiar `radiation`/`radiation_scale`; la comparación
 con Cantera activa la misma radiación y rechaza escalas distintas de 1, que no
 tienen equivalente en Cantera. `generate_diffusion_fgm(..., radiation=True)`
 genera familias radiativas; la tabla `(Z,C)` contiene sus historias entálpicas.
-Una tabla `(Z,C,h)` con niveles de pérdida independientes requiere todavía
-familias en `radiation_scale` y una triangulación tridimensional propia.
+La tabla `(Z,C,h)` con niveles de pérdida independientes se describe en
+[tablas con pérdidas](#tablas-fgm-con-pérdidas-zch).
 
 ### Resultados medidos
 
@@ -403,3 +429,90 @@ python examples/benchmark_diffusion_solver.py --output runs/hpc --no-profile --r
 python examples/benchmark_diffusion_solver.py --output runs/hpc_rad --no-profile --radiation
 NUMBA_NUM_THREADS=1 python examples/benchmark_diffusion_solver.py --output runs/hpc_one_thread --no-profile
 ```
+
+## Tablas FGM con pérdidas `(Z,C,h)`
+
+`generate_diffusion_heat_loss_fgm` genera una familia de flamelets nativos en
+dos direcciones físicas: **deformación** (`flow_scales`, escala ambos caudales)
+y **pérdida radiativa** (`radiation_scales`, que empieza en 0 = adiabático y
+multiplica la radiación ópticamente delgada). Cada flamelet continúa desde su
+vecino (menor pérdida o menor deformación adiabática). La tabla se consulta con
+Z de Bilger local, el progreso C y la **entalpía total h**; la temperatura se
+recupera de `h` e `Y` interpoladas, sin química detallada.
+
+```python
+from kflame import generate_diffusion_heat_loss_fgm, DiffusionHeatLossFGM
+family = generate_diffusion_heat_loss_fgm(mechanism='gri30.yaml', fuel='CH4',
+                                          flow_scales=(.75, 1., 1.25),
+                                          radiation_scales=(0., 2., 4., 6., 8.),
+                                          output='runs/ch4_heat_loss')
+table = DiffusionHeatLossFGM(family['output'])
+state = table.lookup_batch(Z=Z, C=C, h=h, outside='mask')   # T, Y, omega_Y, qdot, delta_h
+```
+
+```sh
+flampy diffusion-fgm --fuel CH4 --radiation-scales 0,2,4,6,8 --output runs/ch4_heat_loss
+python examples/example_diffusion_heat_loss.py --case CH4 --output runs/ch4_heat_loss_check
+```
+
+Construcción:
+
+- **Malla común en Z adaptativa.** Parte de `mixture_points` muestras uniformes
+  e inserta nodos físicos de los flamelets donde la reconstrucción lineal en Z
+  de T, h, q̇, cada Y_k y cada ω_k falla en más de `mixture_tolerance` (1e-3 del
+  rango de la familia). En CH4 pasa de 26 754 nodos (unión de todos) a 543, y la
+  tabla de 483 a 7.1 MB con el mismo error de validación.
+- **Celdas conectadas.** Tetraedros de Freudenthal entre flamelets adyacentes
+  en deformación, pérdida y Z. La orientación es el signo de
+  `Z_k (C_i h_j - C_j h_i)`; se prueban ambos signos y las celdas del signo
+  minoritario son pliegues: se excluyen y se cuentan. Un solape entre celdas no
+  adyacentes rechaza la tabla. No se extrapola fuera de las celdas.
+- **Progreso C.** Con `progress_weights` se usa el indicado. Si no, se juzgan
+  candidatos genéricos **por la tabla que producen** (menos pliegues, más
+  celdas válidas): sumas de productos de oxidación presentes en el mecanismo y
+  ausentes del combustible, un programa lineal que ordena las deformaciones y
+  mantiene el signo del determinante `(C,h)` frente a `(deformación, pérdida)`
+  (condición lineal en los pesos), y el programa lineal de deformación de la
+  tabla 2D. La elección y sus puntuaciones quedan en `metadata.json`.
+- **Δh.** `delta_h = h_ad(Z,C) - h`, con la carta adiabática de la propia familia.
+- Pliegues de Z de amplitud menor que 1e-6 (redondeo en las colas frías con
+  Soret/multicomponente) se descartan con una envolvente monótona y se cuentan;
+  pliegues mayores siguen rechazando el flamelet, también en la tabla 2D.
+
+`validate_diffusion_heat_loss_fgm(tabla, nativa, salida)` compara un flamelet
+nativo **reservado** (deformación y pérdida ausentes de la familia), con los
+mismos límites de la tabla 2D (20 K, 0.005, 10% en fuentes) y cobertura de la
+zona de reacción ≥ 99%.
+
+| Familia (3 deformaciones) | Pérdidas | Generación | Tabla | Celdas / plegadas | Reservado | ΔT | ΔY | Fuentes | q̇ |
+|---|---|---:|---:|---:|---|---:|---:|---:|---:|
+| H2/aire, mezcla | 0, 10, 30, 60 | 4.8 s | 1.2 MB | 17 473 / 0 | ×1.1, rad ×20 | 1.57 K | 8e-5 | 3.9% | 2.8% |
+| H2/aire, multicomp. + Soret | 0, 10, 30, 60 | 9.7 s | 13.0 MB | 158 640 / 142 | ×1.1, rad ×20 | 1.26 K | 7e-5 | 2.4% | 1.9% |
+| CH4/aire, mezcla | 0, 2, 4, 6, 8 | 32 s | 7.1 MB | 25 730 / 0 | ×1.1, rad ×5 | 0.61 K | 9e-5 | 1.4% | 1.2% |
+
+Las tres validaciones pasan con cobertura completa de la zona de reacción. Los
+defectos de entalpía tabulados llegan a 2.3 MJ/kg en H2 (≈1100 K equivalentes
+en el pico) y 0.66 MJ/kg en CH4. Con pérdidas espaciadas 0/3/8/15 en CH4, el
+error de fuentes del reservado subía al 15–21%: la densidad en la dirección de
+pérdida es la que controla la precisión, no la de Z. CH4 se extingue por
+radiación a escala ~40 con estos caudales; el generador aborta si un flamelet
+se apaga. Evidencia: [heat-loss-tables.json](assets/diffusion/heat-loss-tables.json).
+
+Límites: las pérdidas proceden de radiación escalada, que actúa en la zona
+caliente; las entradas conservan su entalpía. Defectos en las entradas (gases
+fríos o calientes) requieren otra familia de temperaturas de entrada. La tabla
+no contiene el estado apagado ni la rama inestable.
+
+## Segunda ronda de rendimiento y robustez
+
+| Cambio | Efecto medido |
+|---|---|
+| La continuación con otra radiación arranca, como al cambiar caudales, desde un subconjunto de ≤201 nodos de la llama semilla y refina de nuevo | CH4 radiación 3→10: 11.5 → 2.8 s; 10→20: 13.1 → 2.8 s; H2: ~1.4 → 0.45 s |
+| Newton estacionario más paciente al continuar desde una llama (amortiguación de hasta 16 reducciones y refresco por contracción); el arranque en frío conserva la política rápida | Deformación CH4 0.75→1.0: 3.1 → 1.9 s (sin pasos pseudotemporales) |
+| Semejanza de deformación en la estimación: T e Y se comprimen como (a_nuevo/a_viejo)^-1/2 en torno al plano de estancamiento | Sin efecto medible por sí sola; se conserva como estimación física |
+| En el estancamiento, el gradiente upwind de `Σ J_k ∂h_k/∂z` (como en Cantera) hacía discontinuo el residual: si el plano caía sobre un nodo no había raíz discreta y la continuación quedaba estancada con residual 8.7e-3. Para `|m| < 1e-4 m_ref` se mezclan linealmente ambos gradientes laterales | Recupera esos flamelets; fuera de esa franja el esquema es idéntico (mismas mallas y T máx. a 1e-13 K en los casos de referencia) |
+
+También se probaron, y se descartaron por no mejorar de forma consistente: un
+arranque en frío en malla interna más gruesa (misma solución final, sin
+ganancia en CH4) y la regla SER para dt (el residual estacionario puede crecer
+al inicio y dt colapsa). La suite pasa **207 pruebas**.

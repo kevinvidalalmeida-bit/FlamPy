@@ -4,7 +4,8 @@ kinetics_native.py - Chemical kinetics for ideal gas mixtures.
 Supports:
   - Elementary Arrhenius reactions
   - Three-body reactions with efficiency factors
-  - Pressure-dependent falloff reactions (Lindemann and Troe)
+  - Pressure-dependent falloff reactions (Lindemann, Troe and SRI)
+  - PLOG pressure-dependent Arrhenius reactions
 
 Evaluates forward/reverse rate constants and net production rates
 for all species simultaneously.
@@ -15,6 +16,7 @@ from __future__ import annotations
 import math
 import numpy as np
 from kflame.chemistry.mechanism import MechanismData, R_UNIV
+from kflame.chemistry.pressure_rates import pack_plog, plog_rate, pack_sri, sri_falloff, troe_temperature_scale
 
 # R_UNIV = 8314.46261815324 J/(kmol*K)
 
@@ -74,13 +76,13 @@ if njit is not None:
     _apply_negative_factors = njit(cache=True)(_apply_negative_factors)
 
 
-def _make_mass_action_plan(indices, orders, counts):
+def _make_mass_action_plan(indices, orders, counts, max_degree=3):
     """Classify molecularity once; -1 retains the general-order log product."""
-    plan = np.full((len(counts), 4), -1, dtype=np.int64)
+    plan = np.full((len(counts), max_degree + 1), -1, dtype=np.int64)
     for r, count in enumerate(counts):
         nu = orders[r, :count]
         total = float(nu.sum())
-        if total <= 3 and np.all(nu >= 0) and np.all(nu == np.floor(nu)):
+        if total <= max_degree and np.all(nu >= 0) and np.all(nu == np.floor(nu)):
             participants = np.repeat(indices[r, :count], nu.astype(np.int64))
             plan[r, 0] = len(participants)
             plan[r, 1:1+len(participants)] = participants
@@ -134,7 +136,7 @@ if njit is not None:
         T_arr, C, g_RT, A_hi, b_hi, Ea_hi, A_lo, b_lo, Ea_lo,
         is_three_body, is_falloff, is_reversible, has_troe,
         troe_A, troe_T3, troe_T1, troe_T2, nu_r, nu_p, nu_net, eff,
-        delta_nu,
+        delta_nu, plog_data=None, sri_data=None,
     ):
         n_sp = C.shape[0]
         n_pts = C.shape[1]
@@ -149,9 +151,11 @@ if njit is not None:
             inv_RT = 1.0 / (R_UNIV * T)
             logT = math.log(T)
             has_negative = False
+            c_total = 0.0
 
             for k in range(n_sp):
                 c = C[k, m]
+                c_total += c
                 has_negative = has_negative or c < 0.0
                 c = abs(c)
                 if c < 1.0e-300:
@@ -162,6 +166,8 @@ if njit is not None:
                 # T**b * exp(-Ea / RT) as one exponential. This is algebraically
                 # identical and avoids the generic floating-point power routine.
                 kf = A_hi[r] * math.exp(b_hi[r] * logT - Ea_hi[r] * inv_RT)
+                if plog_data is not None and plog_data[0][r] >= 0:
+                    kf = plog_rate(T, R_UNIV*T*c_total, r, plog_data)[0]
 
                 delta_g = 0.0
                 rf_exp = 0.0
@@ -204,8 +210,8 @@ if njit is not None:
                     F = 1.0
 
                     if has_troe[r]:
-                        t3 = max(troe_T3[r], 1.0e-300)
-                        t1 = max(troe_T1[r], 1.0e-300)
+                        t3 = troe_temperature_scale(troe_T3[r])
+                        t1 = troe_temperature_scale(troe_T1[r])
                         Fcent = (
                             (1.0 - troe_A[r]) * math.exp(-T / t3)
                             + troe_A[r] * math.exp(-T / t1)
@@ -221,6 +227,9 @@ if njit is not None:
                             n_troe - d_troe * (logPr + c_troe)
                         )
                         F = 10.0 ** (logFcent / (1.0 + f1 * f1))
+
+                    if sri_data is not None and sri_data[r, 0] != 0.:
+                        F = sri_falloff(T, Pr, sri_data[r])[0]
 
                     kf_falloff = kf * F_lind * F
                     Rf = kf_falloff * (Rf / max(kf, 1.0e-300))
@@ -242,7 +251,7 @@ if njit is not None:
         troe_A, troe_T3, troe_T1, troe_T2,
         r_idx, r_nu, r_count, p_idx, p_nu, p_count,
         net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-        delta_nu,
+        delta_nu, plog_data=None, sri_data=None,
     ):
         n_sp = C.shape[0]
         n_pts = C.shape[1]
@@ -269,6 +278,8 @@ if njit is not None:
 
             for r in range(n_rxn):
                 kf = A_hi[r] * math.exp(b_hi[r] * logT - Ea_hi[r] * inv_RT)
+                if plog_data is not None and plog_data[0][r] >= 0:
+                    kf = plog_rate(T, R_UNIV*T*c_total, r, plog_data)[0]
 
                 rf_exp = 0.0
                 for ii in range(r_count[r]):
@@ -323,8 +334,8 @@ if njit is not None:
                     F = 1.0
 
                     if has_troe[r]:
-                        t3 = max(troe_T3[r], 1.0e-300)
-                        t1 = max(troe_T1[r], 1.0e-300)
+                        t3 = troe_temperature_scale(troe_T3[r])
+                        t1 = troe_temperature_scale(troe_T1[r])
                         Fcent = (
                             (1.0 - troe_A[r]) * math.exp(-T / t3)
                             + troe_A[r] * math.exp(-T / t1)
@@ -340,6 +351,9 @@ if njit is not None:
                             n_troe - d_troe * (logPr + c_troe)
                         )
                         F = 10.0 ** (logFcent / (1.0 + f1 * f1))
+
+                    if sri_data is not None and sri_data[r, 0] != 0.:
+                        F = sri_falloff(T, Pr, sri_data[r])[0]
 
                     kf_falloff = kf * F_lind * F
                     Rf = kf_falloff * (Rf / max(kf, 1.0e-300))
@@ -379,6 +393,8 @@ class NativeKinetics:
 
         # Pre-extract reaction parameters into flat arrays for vectorisation
         self._build_reaction_arrays()
+        self._plog_data = pack_plog(mech)
+        self._sri_data = pack_sri(mech)
         self._numba_available = (
             _net_production_rates_numba_core is not None
             and getattr(self.xp, "__name__", "") == "numpy"
@@ -509,6 +525,20 @@ class NativeKinetics:
         self._sp_r_plan = _make_mass_action_plan(self._sp_r_idx, self._sp_r_nu, self._sp_r_count)
         self._sp_p_plan = _make_mass_action_plan(self._sp_p_idx, self._sp_p_nu, self._sp_p_count)
 
+        # Analytic differentiation supports larger integer polynomials. Keep
+        # the original <=3 rate plans and their log-product fallback intact:
+        # widening those plans would change the rounding of production rates.
+        self._analytic_r_plan = self._sp_r_plan
+        self._analytic_p_plan = self._sp_p_plan
+        for side in ('r', 'p'):
+            orders = getattr(self, f'_sp_{side}_nu')
+            maximum = int(np.ceil(np.max(orders.sum(axis=1), initial=0)))
+            if maximum > 3:
+                plan = _make_mass_action_plan(getattr(self, f'_sp_{side}_idx'),
+                    orders, getattr(self, f'_sp_{side}_count'), max_degree=maximum)
+                plan.setflags(write=False)
+                setattr(self, f'_analytic_{side}_plan', plan)
+
     # ------------------------------------------------------------------
     #  Grid Vectorization Helpers
     # ------------------------------------------------------------------
@@ -571,13 +601,15 @@ class NativeKinetics:
         T3 = self.troe_T3[j_mask]
         T1 = self.troe_T1[j_mask]
         T2 = self.troe_T2[j_mask]
+        T3 = self.xp.where(T3 < 0., T3, self.xp.maximum(T3, 1e-300))
+        T1 = self.xp.where(T1 < 0., T1, self.xp.maximum(T1, 1e-300))
 
         if self._is_grid(T):
             T_arr = self.xp.asarray(T, dtype=float)[None, :]
             Pr_val = self.xp.maximum(Pr[j_mask, :], 1e-300)
             
-            Fcent = ((1 - A[:, None]) * self.xp.exp(-T_arr / self.xp.maximum(T3[:, None], 1e-300))
-                     + A[:, None] * self.xp.exp(-T_arr / self.xp.maximum(T1[:, None], 1e-300))
+            Fcent = ((1 - A[:, None]) * self.xp.exp(-T_arr / T3[:, None])
+                     + A[:, None] * self.xp.exp(-T_arr / T1[:, None])
                      + self.xp.exp(-T2[:, None] / self.xp.maximum(T_arr, 1e-300)))
             Fcent = self.xp.maximum(Fcent, 1e-300)
             
@@ -594,8 +626,8 @@ class NativeKinetics:
             return F_out
         else:
             Pr_val = self.xp.maximum(Pr[j_mask], 1e-300)
-            Fcent = ((1 - A) * self.xp.exp(-T / self.xp.maximum(T3, 1e-300))
-                     + A * self.xp.exp(-T / self.xp.maximum(T1, 1e-300))
+            Fcent = ((1 - A) * self.xp.exp(-T / T3)
+                     + A * self.xp.exp(-T / T1)
                      + self.xp.exp(-T2 / max(T, 1e-300)))
             Fcent = self.xp.maximum(Fcent, 1e-300)
 
@@ -674,6 +706,8 @@ class NativeKinetics:
                 self._sp_eff_delta,
                 self._sp_eff_count,
                 self._nb_delta_nu,
+                self._plog_data,
+                self._sri_data,
             )
             return wdot[:, 0] if scalar else wdot
 
@@ -715,6 +749,8 @@ class NativeKinetics:
                 self._nb_nu_net,
                 self._nb_eff,
                 self._nb_delta_nu,
+                self._plog_data,
+                self._sri_data,
             )
             return wdot[:, 0] if scalar else wdot
 
@@ -722,6 +758,17 @@ class NativeKinetics:
 
         # Forward rate constants
         kf = self._arrhenius_vec(self.A_hi, self.b_hi, self.Ea_hi, T)
+        if self._plog_data is not None:
+            temperatures = np.broadcast_to(np.asarray(T, dtype=float), C.shape[1:] or ())
+            pressures = R_UNIV*temperatures*np.sum(C, axis=0)
+            for reaction in np.flatnonzero(self._plog_data[0] >= 0):
+                if is_grid:
+                    for node in range(C.shape[1]):
+                        kf[reaction, node] = plog_rate(
+                            temperatures[node], pressures[node], reaction, self._plog_data)[0]
+                else:
+                    kf[reaction] = plog_rate(float(temperatures), float(pressures),
+                                           reaction, self._plog_data)[0]
 
         # Reverse rate constants via equilibrium
         Kc = self.equilibrium_constants(g_RT, T)
@@ -778,6 +825,16 @@ class NativeKinetics:
                 F = self._troe_F(T, Pr, troe_mask)
             else:
                 F = self.xp.ones_like(Pr)
+
+            if self._sri_data is not None:
+                for reaction in np.flatnonzero(self._sri_data[:, 0]):
+                    if is_grid:
+                        for node in range(C.shape[1]):
+                            F[reaction, node] = sri_falloff(float(np.asarray(T)[node]),
+                                Pr[reaction, node], self._sri_data[reaction])[0]
+                    else:
+                        F[reaction] = sri_falloff(float(T), Pr[reaction],
+                                                 self._sri_data[reaction])[0]
 
             kf_falloff = kinf * F_lind * F
             Rf = self.xp.where(fo_mask, kf_falloff * (Rf / self.xp.maximum(kf, 1e-300)), Rf)

@@ -5,6 +5,7 @@ fractions, and one radial pressure eigenvalue. Chemistry and transport use the
 same native kernels as premixed flames; no reference solution seeds the solve.
 """
 from dataclasses import dataclass
+import os
 import time
 
 import numba
@@ -13,26 +14,47 @@ from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import splu
 from scipy.special import erfc
 
-from kflame.chemistry.analytic import species_partials
+from kflame.chemistry.analytic import prepare_species_partials, species_partials, species_partials_range
 from kflame.chemistry.backend import NativeSpeciesBackend
 from kflame.chemistry.initialization import hp_equilibrium, oxygen_demand
 from kflame.flame.equations import _corrected_flux_frozen
 from kflame.flame.solver import AdaptiveRefiner
-from kflame.flame import block_linear, diffusion_kernels
+from kflame.flame import block_linear
+from kflame.flame import diffusion_kernels
+from kflame.flame import fast_transport
 from kflame.flame.diffusion_kernels import assemble_residual
+from kflame.flame.structured_jacobian import structured_blocks
+from kflame.flame.structured_linear import StructuredFactor
+from kflame.flame.buffer_pool import pool_of
 
 _THERMO_BATCH_BUDGET_BYTES=96*1024**2
 _EXACT_MULTICOMPONENT_SPECIES=20
+_CHEMISTRY_TILE_NODES=32
+_CHEMISTRY_TILE_BUDGET_BYTES=1024**2
 
 
-def _split(function,count,*arguments,minimum=24):
+def heavy_threads():
+    """Ranges for O(ns^2)-per-item kernels of large mechanisms.
+
+    ``KFLAME_THREADS`` overrides. By default two physical cores (half of the
+    logical CPUs) are left free so the machine stays responsive; never fewer
+    than the Numba thread count.
+    """
+    configured=os.environ.get('KFLAME_THREADS')
+    if configured:
+        return max(1,int(configured))
+    return max(numba.get_num_threads(),(os.cpu_count() or 2)//2-2)
+
+
+def _split(function,count,*arguments,minimum=24,threads=None):
     """Run ``function(start, stop, *arguments)`` over [0, count) in threads.
 
     The compiled range kernels release the GIL, so the Numba thread count
-    (NUMBA_NUM_THREADS) sets the number of concurrent ranges. Plain threads
-    avoid compiling a parallel region over very large argument tuples.
+    (NUMBA_NUM_THREADS) sets the number of concurrent ranges unless
+    ``threads`` is given. Plain threads avoid compiling a parallel region
+    over very large argument tuples.
     """
-    threads=max(1,min(numba.get_num_threads(),count//minimum))
+    threads=max(1,min(numba.get_num_threads() if threads is None else threads,count//minimum))
     if threads==1:
         function(0,count,*arguments)
         return
@@ -43,14 +65,120 @@ def _split(function,count,*arguments,minimum=24):
         task.result()
 
 
-def face_properties(problem,T,Y):
-    """lambda, Wilke viscosity and species fluxes at all faces (compiled)."""
+def _species_layout(Y):
+    """Borrow contiguous C/F inputs; pack strided node columns only once.
+
+    Range kernels only read Y and own their scratch, so no global ownership
+    or writeability of the borrowed input is required.
+    """
+    if Y.flags.c_contiguous or Y.flags.f_contiguous:
+        return Y
+    return np.asfortranarray(Y)
+
+
+# Smaller mechanisms keep the column Jacobian and scalar faces: per-call
+# overheads exceed the O(ns^2) savings (H2-O2: 1.6 s against 0.42 s).
+STRUCTURED_MIN_SPECIES=20
+
+
+def _fast_faces(problem):
+    """Vectorized face-blocked mixture transport (with or without Soret)."""
+    mode=getattr(problem,'fast_transport','auto')
+    if mode not in ('auto',True,False):
+        raise ValueError('fast_transport must be auto, True or False')
+    return (bool(mode) and (mode is True or problem.ns>=STRUCTURED_MIN_SPECIES)
+            and problem.transport_model=='mixture-averaged' and not problem.backend.uses_multicomponent_flux)
+
+
+def face_properties(problem,T,Y,fast=True):
+    """lambda, Wilke viscosity and species fluxes at all faces (compiled).
+
+    ``fast=False`` keeps the scalar kernels shared with the column-wise
+    finite-difference Jacobian, so its base and trial faces round alike.
+    """
+    data=problem._compiled_data()
+    ns,n=Y.shape
+    if fast and _fast_faces(problem) and 'fast_mixture' in data:
+        lam,mu,J=np.empty(n-1),np.empty(n-1),np.empty((ns,n-1))
+        coef=np.empty((n-1,ns))
+        threads=dict(minimum=2 if ns>=100 else 64,threads=heavy_threads() if ns>=100 else None)
+        if problem.soret_enabled:
+            _split(fast_transport.face_range_fast_soret,n-1,T,Y,problem.dz,float(problem.P),data['invW'],
+                   data['mw'],data['fast_mixture'],data['fast_soret'],lam,mu,J,coef,np.empty((n-1,ns)),**threads)
+        else:
+            _split(fast_transport.face_range_fast,n-1,T,Y,problem.dz,float(problem.P),data['invW'],data['mw'],
+                   data['fast_mixture'],lam,mu,J,coef,**threads)
+        return lam,mu,J
+    # Keep public J in C order: downstream NumPy reductions depend on layout.
+    lam,mu,J=np.empty(n-1),np.empty(n-1),np.empty((ns,n-1))
+    _split(diffusion_kernels.face_range,n-1,T,Y,problem.dz,float(problem.P),data['invW'],data['mw'],
+           data['mixture'],data.get('multi_certified',data['multi']),data['multicomponent'],
+           bool(problem.soret_enabled),lam,mu,J,
+           minimum=24 if ns<=20 and not data["multicomponent"] else 4)
+    return lam,mu,J
+
+_FACE_BANK_BUDGET_BYTES=96*1024**2
+
+
+def _face_bank_key(problem):
+    return (id(problem),id(problem.backend),id(problem._compiled_data()),float(problem.P),
+        bool(problem.soret_enabled),problem.transport_model,problem.flux_gradient_basis,
+        bool(problem.compiled_faces),bool(problem.analytic_chemistry),int(problem.chemistry_tile_nodes),
+        bool(problem._frozen_multicomponent()),bool(problem.temperature_pair_symmetry),
+        bool(problem.thermal_transport_tangents),float(problem.Tref))
+
+
+def _face_bank_available(problem):
+    if (problem.ns<256 or not problem.compiled_faces or not problem._frozen_multicomponent()
+        or not problem.analytic_chemistry or problem.chemistry_tile_nodes<=0):
+        return False
+    size=8*(problem.n-1)*(problem.ns*problem.ns+problem.ns+1)
+    if problem.thermal_transport_tangents:
+        size+=8*(problem.n-1)*(2*problem.ns+3)
+    return size<=_FACE_BANK_BUDGET_BYTES and not problem._compiled_data()['multi'][10]
+
+
+def _same_float64_bits(left,right):
+    # Integer views compare signed zero as well as every other input bit;
+    # ndarray equality alone would accept a changed +0/-0 species state.
+    return (isinstance(left,np.ndarray) and isinstance(right,np.ndarray)
+        and left.dtype==right.dtype==np.float64 and left.shape==right.shape
+        and np.array_equal(left.view(np.uint64),right.view(np.uint64)))
+
+
+def _valid_face_bank(problem,bank,T,Y,cached_properties):
+    if bank is None or cached_properties is None or not _face_bank_available(problem):
+        return False
+    if (type(bank) is not dict or bank.get('owner') is not problem
+        or bank.get('key')!=_face_bank_key(problem)):
+        return False
+    if not (_same_float64_bits(T,bank.get('T')) and _same_float64_bits(Y,bank.get('Y'))
+            and _same_float64_bits(problem.z,bank.get('z')) and _same_float64_bits(problem.dz,bank.get('dz'))
+            and _same_float64_bits(cached_properties[4],bank.get('lambda'))):
+        return False
+    ns,n=problem.ns,problem.n
+    for name,shape in (('multi',(n-1,ns,ns)),('thermal',(n-1,ns)),('lambda',(n-1,))):
+        array=bank.get(name)
+        if (not isinstance(array,np.ndarray) or array.shape!=shape or array.dtype!=np.float64
+            or not array.flags.c_contiguous or array.flags.writeable or not np.isfinite(array).all()):
+            return False
+    return True
+
+
+def face_properties_bank(problem,T,Y,bank):
     data=problem._compiled_data()
     ns,n=Y.shape
     lam,mu,J=np.empty(n-1),np.empty(n-1),np.empty((ns,n-1))
-    _split(diffusion_kernels.face_range,n-1,T,Y,problem.dz,float(problem.P),data['invW'],data['mw'],
-           data['mixture'],data['multi'],data['multicomponent'],bool(problem.soret_enabled),lam,mu,J,minimum=4)
+    arguments=(T,Y,problem.dz,float(problem.P),data['invW'],data['mw'],
+        data['mixture'],data.get('multi_certified',data['multi']),True,bool(problem.soret_enabled),
+        lam,mu,J,bank['multi'],bank['thermal'],bank['lambda'])
+    if problem.thermal_transport_tangents:
+        _split(diffusion_kernels.face_range_bank_thermal,n-1,*arguments,float(problem.Tref),
+               *bank['temperature_tangents'],minimum=4)
+    else:
+        _split(diffusion_kernels.face_range_bank,n-1,*arguments,minimum=4)
     return lam,mu,J
+
 
 @dataclass
 class DiffusionCase:
@@ -107,12 +235,29 @@ class DiffusionFlameProblem:
         self.assume_finite_y = True
         # Analytic production-rate columns; grouped differences otherwise.
         self.analytic_chemistry = True
+        # Large mechanisms stream derivatives into the local assembly. Zero
+        # keeps the full-grid path for diagnostics; the arithmetic is the same.
+        self.chemistry_tile_nodes = _CHEMISTRY_TILE_NODES
         # Multicomponent composition columns: 'exact' re-solves the face
         # system per column (O(ns^4) per face); 'frozen' keeps its base
         # coefficients (O(ns^3)); 'auto' is exact up to 20 species.
         self.multicomponent_jacobian = 'auto'
+        # Opt-in analytic composition rows with an admitted frozen face bank.
+        # The physical residual and the temperature columns are unchanged.
+        self.analytic_frozen_transport = False
+        # Opt-in algebraic finite trials; analytic rows take priority when valid.
+        self.algebraic_frozen_transport = False
+        # Experimental transport-only temperature derivatives; guarded per face.
+        self.thermal_transport_tangents = False
         # Compiled face properties for the residual; False keeps the NumPy path.
         self.compiled_faces = True
+        # Retain only the current Newton base's already evaluated properties.
+        # False keeps the independent residual/Jacobian preparation for checks.
+        self.reuse_base_properties = True
+        # Analytic frozen-transport Jacobian in diag + low-rank coupling form
+        # (mixture-averaged transport): 'auto', True or False.
+        self.structured_jacobian = 'auto'
+        self.temperature_pair_symmetry = True
         self.backend = NativeSpeciesBackend(self,mech)
         self.thermo = self.backend.thermo
         self.ns, self.nv = mech.n_species, mech.n_species+3
@@ -226,6 +371,9 @@ class DiffusionFlameProblem:
 
     def properties(self,fields, *, nodal_thermo=None):
         T,Y = fields['T'],fields['Y']
+        if self.compiled_faces:
+            # Pack a strided state once for both chemistry and face transport.
+            Y = _species_layout(Y)
         if nodal_thermo is None:
             omega,hk = np.empty_like(Y),np.empty_like(Y)
             rho,cp = self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
@@ -235,7 +383,7 @@ class DiffusionFlameProblem:
         if self.compiled_faces:
             # One parallel pass per face: lambda, Wilke viscosity and fluxes
             # (corrected mixture-averaged or Dixon--Lewis, optional Soret).
-            lam,viscosity,J=face_properties(self,np.ascontiguousarray(T),np.ascontiguousarray(Y))
+            lam,viscosity,J=face_properties(self,np.ascontiguousarray(T),_species_layout(Y))
             return rho,cp,omega,hk,lam,J,viscosity
         Tf,Yf = .5*(T[:-1]+T[1:]),.5*(Y[:,:-1]+Y[:,1:])
         if self.backend.uses_multicomponent_flux:
@@ -253,6 +401,36 @@ class DiffusionFlameProblem:
                 J -= self.backend.eval_mixture_thermal_diffusion(Tf,Yf)/Tf[None,:]*np.diff(T)[None,:]/self.dz
         viscosity = self.backend.transport.viscosity(Tf,self.thermo.Y_to_X(Yf))
         return rho,cp,omega,hk,lam,J,viscosity
+
+    def properties_for_newton(self,fields, *, nodal_thermo=None):
+        """Explicit local coefficients for this invocation; ordinary API still returns seven."""
+        if not _face_bank_available(self):
+            return self.properties(fields,nodal_thermo=nodal_thermo),None
+        T=np.ascontiguousarray(fields['T'])
+        Y=_species_layout(fields['Y'])
+        ns,n=Y.shape
+        bank=dict(multi=np.empty((n-1,ns,ns)),thermal=np.empty((n-1,ns)))
+        bank['lambda']=np.empty(n-1)
+        if self.thermal_transport_tangents:
+            bank['temperature_tangents']=(np.zeros((n-1,ns)),np.zeros((n-1,ns)),
+                                          np.zeros((n-1,3)))
+        if nodal_thermo is None:
+            omega,hk=np.empty_like(Y),np.empty_like(Y)
+            rho,cp=self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
+            hk*=self.mech_data.inv_molecular_weights[:,None]
+        else:
+            rho,cp,omega,hk=nodal_thermo
+        lam,viscosity,J=face_properties_bank(self,T,Y,bank)
+        props=(rho,cp,omega,hk,lam,J,viscosity)
+        for name in ('multi','thermal','lambda'):
+            bank[name].flags.writeable=False
+        for array in bank.get('temperature_tangents',()):
+            array.flags.writeable=False
+        bank.update(key=_face_bank_key(self),owner=self,T=T.copy(),Y=Y.copy(order='C'),
+                    z=self.z.copy(),dz=self.dz.copy())
+        for name in ('T','Y','z','dz'):
+            bank[name].flags.writeable=False
+        return props,bank
 
     def residual(self,x, *, fixed_temperature=None, previous=None, dt=None,cached_properties=None,nodal_thermo=None):
         f = self.unpack(x)
@@ -300,11 +478,17 @@ class DiffusionFlameProblem:
         nasa=(contiguous(thermo._lo),contiguous(thermo._hi),contiguous(thermo._Tmid))
         multi=backend.multicomponent_transport
         if multi is not None:
-            multi_data=(contiguous(multi._log_eps_pair),contiguous(multi.epsilon_k),contiguous(multi.crot),
-                        contiguous(multi.zrot),contiguous(multi.frot_298),contiguous(multi._viscosity_fit),
-                        contiguous(multi._diffusion_fit),contiguous(multi._astar_poly),
-                        contiguous(multi._bstar_poly),contiguous(multi._cstar_poly),
-                        multi.linear_solver=='dense',*nasa)
+            temperature_inputs,certified=multi.export_temperature_snapshot()
+            (snapshot_mw,log_eps_pair,epsilon,zrot,frot298,viscosity_fit,diffusion_fit,
+             astar_fit,bstar_fit,cstar_fit)=temperature_inputs
+            same_weights=(mw.shape==snapshot_mw.shape and mw.dtype==snapshot_mw.dtype
+                          and mw.tobytes()==snapshot_mw.tobytes())
+            certified=bool(certified and same_weights and self.temperature_pair_symmetry)
+            if certified:
+                mw=snapshot_mw
+            multi_data=(log_eps_pair,epsilon,contiguous(multi.crot),zrot,frot298,viscosity_fit,
+                        diffusion_fit,astar_fit,bstar_fit,cstar_fit,multi.linear_solver=='dense',
+                        *nasa)
         else:
             # Typed placeholders; the multicomponent branch is never executed.
             multi_data=(np.zeros((1,1)),np.zeros(1),np.zeros(1),np.zeros(1),np.zeros(1),np.zeros((1,5)),
@@ -316,8 +500,17 @@ class DiffusionFlameProblem:
                   k._sp_r_count,k._sp_p_idx,k._sp_p_nu,k._sp_p_count,k._sp_r_plan,k._sp_p_plan,
                   k._sp_net_idx,k._sp_net_nu,k._sp_net_count,k._sp_eff_idx,k._sp_eff_delta,
                   k._sp_eff_count,k._nb_delta_nu)
+        if k._plog_data is not None or k._sri_data is not None:
+            kinetics=(*kinetics,k._plog_data,k._sri_data)
         self._compiled=data=dict(mw=mw,invW=contiguous(self.mech_data.inv_molecular_weights),
             mixture=mixture,multi=multi_data,kinetics=kinetics,multicomponent=multi is not None)
+        if multi is None:
+            data['fast_mixture']=fast_transport.mixture_tables(transport,mw)
+            data['fast_soret']=fast_transport.soret_tables(transport)
+        if multi is not None:
+            # Keep the established fourteen-entry tuple for existing/raw
+            # consumers. Only owned compiled face paths use this tagged packet.
+            data['multi_certified']=(*multi_data,certified)
         return data
 
     def _frozen_multicomponent(self):
@@ -335,29 +528,82 @@ class DiffusionFlameProblem:
         solver time budget. Results are not used.
         """
         self.residual(x)
+        if _face_bank_available(self):
+            fields=self.unpack(x)
+            T=np.ascontiguousarray(fields['T']);Y=_species_layout(fields['Y'])
+            data=self._compiled_data();ns=self.ns
+            # Empty export outputs have the same Numba layouts/writeability
+            # as the real producer, and require no full-grid bank allocation.
+            diffusion_kernels.face_range_bank(0,0,T,Y,self.dz,float(self.P),data['invW'],data['mw'],
+                data['mixture'],data.get('multi_certified',data['multi']),True,bool(self.soret_enabled),
+                np.empty(0),np.empty(0),np.empty((ns,0)),
+                np.empty((0,ns,ns)),np.empty((0,ns)),np.empty(0))
+            if self.thermal_transport_tangents:
+                diffusion_kernels.face_range_bank_thermal(0,0,T,Y,self.dz,float(self.P),data['invW'],data['mw'],
+                    data['mixture'],data.get('multi_certified',data['multi']),True,bool(self.soret_enabled),
+                    np.empty(0),np.empty(0),np.empty((ns,0)),np.empty((0,ns,ns)),np.empty((0,ns)),np.empty(0),
+                    float(self.Tref),np.empty((0,ns)),np.empty((0,ns)),np.empty((0,3)))
         self.jacobian_blocks(x,compile_only=True)
+        if _use_structured(self):
+            try:
+                StructuredFactor(structured_blocks(self,x)).solve(np.zeros(len(x)))
+                StructuredFactor(structured_blocks(self,x,lazy=True)).solve(np.zeros(len(x)))
+            except ValueError:
+                pass
         one=np.ones((1,1,1))
         for kernel in (block_linear.twisted_top,block_linear.twisted_bottom,block_linear.twisted_middle):
             kernel(one,one,one,np.zeros((1,1)),0,np.empty((1,1,1)),np.empty((1,1,1)))
         block_linear.twisted_solve(one,one,one,one,0,np.ones(1))
 
-    def jacobian_blocks(self,x, *, fixed_temperature=None,compile_only=False):
+    def jacobian_blocks(self,x, *, fixed_temperature=None,compile_only=False,cached_properties=None,transport_bank=None):
         """Compiled steady Jacobian in bordered block-tridiagonal form.
 
-        Each column uses the same finite-difference step as ``jacobian``; only
-        the perturbed node, its two faces and three row blocks are recomputed.
+        The ordinary route uses the same finite-difference steps as
+        ``jacobian`` and recomputes only the local node/faces/neighbor rows.
+        With ``analytic_frozen_transport=True`` and an admitted face bank,
+        valid composition columns directly differentiate the frozen closure,
+        ideal-gas thermochemistry, advection and radiation. Alternatively,
+        ``algebraic_frozen_transport=True`` evaluates the original finite
+        face trials with algebraic updates. Valid analytic rows take priority
+        when both options are enabled. Unsafe algebraic trials fall back to
+        the ordered helper; absent/stale banks retain the ordinary route.
+        ``thermal_transport_tangents=True`` supplies guarded analytic transport
+        tangents to the temperature trial. Nodal thermo and row differences
+        retain their previous implementation; this option defaults to False.
+        All three options are experimental and disabled by default. Flow
+        columns and the complete physical residual are unchanged. Temperature
+        columns retain their ordinary route when the thermal option is off.
         The Lambda column is exact: one in every interior momentum row.
         Returns the blocks and the diagonal multiplying 1/dt in transient rows.
+        ``cached_properties`` must come from ``properties(unpack(x))`` on this
+        problem's compiled path with unchanged state, grid and configuration.
+        The Newton driver owns that tuple locally; no identity-based cache is
+        retained on the problem or reused across calls/grids.
         """
         data=self._compiled_data()
         f=self.unpack(x)
         T,Y=np.ascontiguousarray(f['T']),np.ascontiguousarray(f['Y'])
         m,V=np.ascontiguousarray(f['m']),np.ascontiguousarray(f['V'])
-        omega,hk=np.empty_like(Y),np.empty_like(Y)
-        rho,cp=self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
-        hk*=self.mech_data.inv_molecular_weights[:,None]
+        if cached_properties is not None:
+            rho,cp,omega,hk,lam0,J0,mu0=cached_properties
+        # The fused native kernel has fixed ordered node reductions. Its
+        # NumPy fallback can round differently for F residual inputs versus C
+        # Jacobian inputs; retain that original nodal evaluation in that case.
+        fused_nodal=(type(self.backend) is NativeSpeciesBackend
+                     and bool(getattr(self,'use_fused_numba_thermo_kinetics',True))
+                     and bool(getattr(self.backend.kinetics,'_sparse_numba_available',False)))
+        if cached_properties is None or not fused_nodal:
+            omega,hk=np.empty_like(Y),np.empty_like(Y)
+            rho,cp=self.backend.eval_grid_thermo_kinetics_into(T,Y,omega,hk)
+            hk*=self.mech_data.inv_molecular_weights[:,None]
+        else:
+            # The local assembler historically receives C nodal outputs even
+            # though residual evaluation packs node columns in Fortran order.
+            omega,hk=np.ascontiguousarray(omega),np.ascontiguousarray(hk)
+        if cached_properties is None or _fast_faces(self):
+            # Column trials use the scalar face kernels: so must their base.
+            lam0,mu0,J0=face_properties(self,T,Y,fast=False)
         soret=bool(self.soret_enabled)
-        lam0,mu0,J0=face_properties(self,T,Y)
         c=self.case
         scalars=(float(self.mref),float(self.aref),float(self.Tref),float(self.lref),float(self.species_scale),
                  float(self.energy_scale),float(c.fuel_mass_flux),float(c.oxidizer_mass_flux),
@@ -365,9 +611,16 @@ class DiffusionFlameProblem:
         fixed=fixed_temperature is not None
         Tfixed=np.ascontiguousarray(T if not fixed else fixed_temperature,dtype=float)
         analytic=False;jy=np.zeros((1,1,1));jt=np.zeros((1,1))
+        tile_nodes=int(self.chemistry_tile_nodes) if self.ns>20 else 0
+        if tile_nodes>0:
+            bytes_per_node=8*self.ns*(self.ns+1)
+            tile_nodes=min(tile_nodes,max(1,_CHEMISTRY_TILE_BUDGET_BYTES//bytes_per_node))
         if self.analytic_chemistry:
             try:
-                jy,jt=species_partials(self.backend,T,Y,_temperature=True)
+                if tile_nodes>0:
+                    T,Y=prepare_species_partials(self.backend,T,Y)
+                else:
+                    jy,jt=species_partials(self.backend,T,Y,_temperature=True)
                 analytic=True
             except ValueError:
                 # Non-elementary orders or a clipped mixture: grouped finite differences.
@@ -375,12 +628,88 @@ class DiffusionFlameProblem:
         ns,n,nv=self.ns,self.n,self.nv
         lower,diag,upper=np.zeros((n-1,nv,nv)),np.zeros((n,nv,nv)),np.zeros((n-1,nv,nv))
         border=np.zeros((2,nv))
-        _split(diffusion_kernels.jacobian_range,0 if compile_only else n,np.ascontiguousarray(x),m,V,T,Y,
+        arguments=(np.ascontiguousarray(x),m,V,T,Y,
             np.ascontiguousarray(rho),np.ascontiguousarray(cp),omega,hk,lam0,mu0,J0,self.dz,float(f['Lambda']),
             scalars,np.ascontiguousarray(c.fuel_Y,dtype=float),np.ascontiguousarray(c.oxidizer_Y,dtype=float),
             np.ascontiguousarray(self.excess,dtype=np.int64),fixed,Tfixed,float(self.P),data['invW'],data['mw'],
-            data['mixture'],data['multi'],data['multicomponent'],soret,data['kinetics'],analytic,jy,jt,
-            self.radiation,self._frozen_multicomponent(),lower,diag,upper,border,minimum=4)
+            data['mixture'],data.get('multi_certified',data['multi']),data['multicomponent'],
+            soret,data['kinetics'],analytic)
+        outputs=(self.radiation,self._frozen_multicomponent(),lower,diag,upper,border)
+        use_base_bank = analytic and tile_nodes>0 and _valid_face_bank(self,transport_bank,T,Y,cached_properties)
+        base_bank=(transport_bank['multi'],transport_bank['thermal'],transport_bank['lambda']) if use_base_bank else None
+        thermal_bank=None
+        if use_base_bank and self.thermal_transport_tangents:
+            tangents=transport_bank.get('temperature_tangents')
+            if (isinstance(tangents,tuple) and len(tangents)==3
+                and all(isinstance(a,np.ndarray) and a.dtype==np.float64
+                        and a.shape==shape and a.flags.c_contiguous
+                        and not a.flags.writeable and np.isfinite(a).all()
+                        for a,shape in zip(tangents,((n-1,ns),(n-1,ns),(n-1,3))))
+                and np.isin(tangents[2][:,2],(0.,1.)).all()):
+                thermal_bank=tangents
+        warm_bank=None
+        warm_thermal=None
+        if compile_only and _face_bank_available(self):
+            warm_bank=(np.empty((0,ns,ns)),np.empty((0,ns)),np.empty(0))
+            for array in warm_bank:
+                array.flags.writeable=False
+            if self.thermal_transport_tangents:
+                warm_thermal=(np.empty((0,ns)),np.empty((0,ns)),np.empty((0,3)))
+                for array in warm_thermal:
+                    array.flags.writeable=False
+        if analytic and tile_nodes>0:
+            temperature_cache_path = ns>=256 and outputs[1] and not data['multi'][10]
+            def tiled_range(start,stop):
+                use_temperature_cache = use_base_bank or (temperature_cache_path and (compile_only or
+                    diffusion_kernels._temperature_cache_eligible(start,stop,x,T,self.Tref,nv)))
+                # Large frozen systems otherwise lose face reuse at every one-node tile.
+                carried_ws=((diffusion_kernels._node_workspace_temperature_cache(ns,use_base_bank)
+                            if use_temperature_cache else diffusion_kernels._node_workspace(ns,True))
+                            if ns>=256 and outputs[1] else None)
+                # Compile both serial kernels even for the empty warmup range.
+                for first in range(start,max(start+1,stop),tile_nodes):
+                    last=min(first+tile_nodes,stop)
+                    dy,dt=species_partials_range(self.backend,T,Y,first,last,_validated=True)
+                    if carried_ws is None:
+                        diffusion_kernels.jacobian_range(first,last,*arguments,dy,dt,*outputs,True,first)
+                    elif use_base_bank:
+                        carried_ws=diffusion_kernels.jacobian_range_bank(
+                            first,last,*arguments,dy,dt,*outputs,
+                            carried_ws,first>start,base_bank,True,first,self.analytic_frozen_transport,self.algebraic_frozen_transport,thermal_bank)
+                    elif use_temperature_cache:
+                        carried_ws=diffusion_kernels.jacobian_range_temperature_cache(
+                            first,last,*arguments,dy,dt,*outputs,
+                            carried_ws,first>start,True,first)
+                    else:
+                        carried_ws=diffusion_kernels.jacobian_range_workspace(
+                            first,last,*arguments,dy,dt,*outputs,
+                            carried_ws,first>start,True,first)
+                    if compile_only:
+                        # Empty/single-node arrays appear C-contiguous to Numba,
+                        # while ordinary node-packed tiles have layout A. Load
+                        # both consumer specializations outside the solve timer.
+                        packed=np.empty((2,self.ns,self.ns)).transpose(1,0,2)
+                        diffusion_kernels.jacobian_range(0,0,*arguments,packed,dt,*outputs,True,0)
+                        if carried_ws is not None:
+                            ordinary_ws=diffusion_kernels._node_workspace(ns,True)
+                            for partials in (dy,packed):
+                                diffusion_kernels.jacobian_range_workspace(
+                                    0,0,*arguments,partials,dt,*outputs,ordinary_ws,False,True,0)
+                                if temperature_cache_path:
+                                    diffusion_kernels.jacobian_range_temperature_cache(
+                                        0,0,*arguments,partials,dt,*outputs,carried_ws,False,True,0)
+                                if warm_bank is not None:
+                                    diffusion_kernels.jacobian_range_bank(
+                                        0,0,*arguments,partials,dt,*outputs,carried_ws,False,warm_bank,True,0,
+                                        self.analytic_frozen_transport,self.algebraic_frozen_transport,warm_thermal)
+                        if temperature_cache_path:
+                            diffusion_kernels._temperature_cache_eligible(0,0,x,T,self.Tref,nv)
+                    del dy,dt  # Release this bank before allocating the next.
+            # Small grids of large frozen systems need more independent ranges;
+            # retain the existing partition for larger grids and other paths.
+            _split(tiled_range,0 if compile_only else n,minimum=2 if ns>=256 and outputs[1] and 8<=n<16 else 4)
+        else:
+            _split(diffusion_kernels.jacobian_range,0 if compile_only else n,*arguments,jy,jt,*outputs,minimum=4)
         mass=np.zeros((self.n,self.nv))
         mass[1:-1,1]=rho[1:-1]*self.aref/self.lref
         if not fixed:
@@ -508,6 +837,13 @@ class BorderedFactor:
         return out
 
 
+def _use_structured(problem):
+    mode=getattr(problem,'structured_jacobian',False)
+    if mode not in ('auto',True,False):
+        raise ValueError('structured_jacobian must be auto, True or False')
+    return bool(mode) and type(problem) is DiffusionFlameProblem and problem.compiled_faces and         problem.transport_model=='mixture-averaged' and not problem.backend.uses_multicomponent_flux and         (mode is True or problem.ns>=STRUCTURED_MIN_SPECIES)
+
+
 class _LinearModel:
     """Steady Jacobian at an anchor state; transient rows add ``mass/dt``.
 
@@ -517,8 +853,34 @@ class _LinearModel:
     against the complete current residual.
     """
 
-    def __init__(self,problem,x,fixed_temperature):
-        self.blocks=problem.jacobian_blocks(x,fixed_temperature=fixed_temperature)
+    def __init__(self,problem,x,fixed_temperature, *, cached_properties=None,transport_bank=None):
+        self.problem=problem
+        self.structured=None
+        if _use_structured(problem):
+            try:
+                # Large systems assemble their diagonal blocks chunk by chunk
+                # inside the factorization and never hold all of them.
+                large=(8*problem.n*problem.nv*problem.nv>=INPLACE_FACTOR_BYTES
+                       or problem.nv>=LAZY_MIN_VARIABLES)
+                self.structured=structured_blocks(problem,x,fixed_temperature=fixed_temperature,
+                                                  cached_properties=cached_properties,lazy=large)
+                self.state=(x.copy(),None if fixed_temperature is None else np.array(fixed_temperature))
+            except ValueError:
+                self.structured=None
+        if self.structured is not None:
+            self.blocks=self.structured
+        elif _fast_faces(problem):
+            # Vectorized residual faces round differently from the scalar
+            # column kernels: rebuild the base with the latter.
+            self.blocks=problem.jacobian_blocks(x,fixed_temperature=fixed_temperature)
+        elif transport_bank is not None:
+            self.blocks=problem.jacobian_blocks(x,fixed_temperature=fixed_temperature,
+                                               cached_properties=cached_properties,transport_bank=transport_bank)
+        elif cached_properties is None:
+            self.blocks=problem.jacobian_blocks(x,fixed_temperature=fixed_temperature)
+        else:
+            self.blocks=problem.jacobian_blocks(x,fixed_temperature=fixed_temperature,
+                                                cached_properties=cached_properties)
         self.fixed=fixed_temperature is not None
         self.age=0
         self.factors={}
@@ -526,12 +888,52 @@ class _LinearModel:
 
     def factor(self,rdt):
         factor=self.factors.get(rdt)
+        if factor is None and rdt>0. and self.structured is not None:
+            # As CVODE reuses M = I - gamma J while gamma/gamma_old stays
+            # close to one, a transient step whose 1/dt is within a factor
+            # TRANSIENT_FACTOR_REUSE of the cached one keeps that factor. It
+            # only shapes the correction; each step is still accepted on
+            # the true transient residual. Steady factors are always exact.
+            limit=KRYLOV_FACTOR_REUSE if _use_krylov(self.problem) else TRANSIENT_FACTOR_REUSE
+            for key,cached in self.factors.items():
+                if key>0. and max(rdt/key,key/rdt)<=limit:
+                    return cached
         if factor is None:
             # Keep the steady factorization and the current time step only.
             for key in [key for key in self.factors if key not in (0.,)]:
                 del self.factors[key]
-            factor=self.factors[rdt]=BorderedFactor(self.blocks,rdt)
+            if self.structured is None:
+                factor=self.factors[rdt]=BorderedFactor(self.blocks,rdt)
+            else:
+                factor=self.factors[rdt]=self._structured_factor(rdt)
         return factor
+
+    def _structured_factor(self,rdt):
+        pool=pool_of(self.problem)
+        if self.structured.lazy:
+            # One factor at a time: its pivot inverses are the largest array
+            # of the solve. Assembly is repeated for another time step.
+            self.factors.clear()
+            try:
+                return StructuredFactor(self.structured,rdt,pool=pool)
+            except np.linalg.LinAlgError:
+                x,fixed=self.state
+                self.structured=self.blocks=structured_blocks(self.problem,x,fixed_temperature=fixed)
+                return StructuredFactor(self.structured,rdt,pool=pool)
+        inplace=self.structured.diag.nbytes>=INPLACE_FACTOR_BYTES
+        if inplace:
+            self.factors.clear()
+        if self.structured.consumed:
+            # Recompute the analytic blocks at the same anchor state.
+            x,fixed=self.state
+            self.structured=self.blocks=None
+            self.structured=self.blocks=structured_blocks(self.problem,x,fixed_temperature=fixed)
+        try:
+            return StructuredFactor(self.structured,rdt,inplace=inplace,pool=pool)
+        except np.linalg.LinAlgError:
+            x,fixed=self.state
+            self.structured=self.blocks=structured_blocks(self.problem,x,fixed_temperature=fixed)
+            return StructuredFactor(self.structured,rdt,pool=pool)
 
 
 class _SparseModel:
@@ -547,6 +949,60 @@ class _SparseModel:
         return self.matrix
 
 
+def _gmres(apply_A,apply_M,b,z0,rtol,maxit):
+    """Right-preconditioned GMRES for A x = b, started from z0 = M^-1 b.
+
+    Returns (x, converged). x minimizes ||b - A x|| over M^-1 K_m(A M^-1, b);
+    its first direction is the preconditioned step itself, so the result is
+    never worse in residual norm than the optimally scaled z0.
+    """
+    beta=float(np.linalg.norm(b))
+    if not beta>0.:
+        return np.zeros_like(b),True
+    V=[b/beta];Z=[];H=np.zeros((maxit+1,maxit))
+    y=np.zeros(0);converged=False
+    for j in range(maxit):
+        z=z0/beta if j==0 else apply_M(V[j])
+        if not np.isfinite(z).all():
+            break
+        Z.append(z)
+        w=apply_A(z)
+        if not np.isfinite(w).all():
+            Z.pop();break
+        size=float(np.linalg.norm(w))
+        for i in range(j+1):
+            H[i,j]=float(w@V[i]);w-=H[i,j]*V[i]
+        H[j+1,j]=float(np.linalg.norm(w))
+        e=np.zeros(j+2);e[0]=beta
+        y,*_=np.linalg.lstsq(H[:j+2,:j+1],e,rcond=None)
+        residual=float(np.linalg.norm(e-H[:j+2,:j+1]@y))
+        if residual<=rtol*beta:
+            converged=True;break
+        if not H[j+1,j]>1e-14*size:
+            # Happy breakdown: the Krylov space is invariant; y is exact.
+            converged=residual<=rtol*beta;break
+        V.append(w/H[j+1,j])
+    if not Z:
+        return z0,False
+    return np.column_stack(Z)@y[:len(Z)],converged
+
+
+# Inexact Newton-Krylov acceleration of the factored (frozen-transport,
+# possibly aged) linear model: matrix-free J v from the complete residual.
+KRYLOV=dict(rtol=1e-2,iterations=12)
+
+
+# Below this size a fresh factorization is cheaper than Krylov residuals.
+KRYLOV_MIN_SPECIES=400
+
+
+def _use_krylov(problem):
+    mode=getattr(problem,'newton_krylov','auto')
+    if mode is True:
+        return True
+    return bool(mode) and _use_structured(problem) and problem.ns>=KRYLOV_MIN_SPECIES
+
+
 def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,max_iterations=25,
             correction_tolerance=False,max_age=4,max_damping=16,refresh_rate=None):
     """Damped Newton on the scaled counterflow residual.
@@ -556,31 +1012,63 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
     the weighted Newton correction is below one (relative 1e-4, absolute
     1e-11); they only advance the continuation and never certify a flame.
     """
-    fun = lambda value:problem.residual(value,fixed_temperature=fixed_temperature,previous=previous,dt=dt)
+    reuse_properties=(type(problem) is DiffusionFlameProblem and problem.compiled_faces
+                      and problem.reuse_base_properties)
+    reuse_bank=reuse_properties and _face_bank_available(problem)
+    evaluated_properties=None;evaluated_bank=None
+    def fun(value,export_bank=False):
+        nonlocal evaluated_properties,evaluated_bank
+        evaluated_bank=None
+        if reuse_properties:
+            if reuse_bank and export_bank:
+                evaluated_properties,evaluated_bank=problem.properties_for_newton(problem.unpack(value))
+            else:
+                evaluated_properties=problem.properties(problem.unpack(value))
+            return problem.residual(value,fixed_temperature=fixed_temperature,previous=previous,dt=dt,
+                                    cached_properties=evaluated_properties)
+        return problem.residual(value,fixed_temperature=fixed_temperature,previous=previous,dt=dt)
     blocked=hasattr(problem,'jacobian_blocks')
+    krylov=blocked and _use_krylov(problem)
     rdt=0. if previous is None else 1./dt
     model=getattr(problem,'_linear_model',None) if blocked else None
     if model is not None and (model.fixed!=(fixed_temperature is not None) or model.blocks.n!=problem.n):
         model=None
-    base=None;last_norm=None
+    base=None;base_properties=None;base_bank=None;last_norm=None;factor=None
     for iteration in range(max_iterations):
         if time.perf_counter() > deadline:
             return x,False,'time_limit'
         if base is None:
-            base = fun(x)
+            base = fun(x,export_bank=model is None or model.age>=max_age)
+            base_properties=evaluated_properties;base_bank=evaluated_bank;evaluated_bank=None
         if not np.isfinite(base).all():
             return x,False,'nonfinite_residual'
         norm = float(np.max(abs(base)))
         if norm < 1e-7:
             return x,True,'converged'
         if model is None or model.age>=max_age:
+            if blocked:
+                # Drop the previous Jacobian and its factors before building the
+                # next one: large mechanisms must never hold both (GBs each).
+                model=None;factor=None;problem._linear_model=None
             try:
-                model=_LinearModel(problem,x,fixed_temperature) if blocked else _SparseModel(problem,x,fun,base)
+                if blocked:
+                    if base_bank is None:
+                        model=_LinearModel(problem,x,fixed_temperature,cached_properties=base_properties)
+                    else:
+                        model=_LinearModel(problem,x,fixed_temperature,cached_properties=base_properties,
+                                           transport_bank=base_bank)
+                else:
+                    model=_SparseModel(problem,x,fun,base)
+                # Coefficients live only until this base's blocks are assembled.
+                # An unexpected refresh uses the ordinary exact path; it never
+                # borrows the coefficients of a rejected or earlier state.
+                base_bank=None
             except RuntimeError:
                 return x,False,'singular_jacobian'
             if blocked:
                 problem._linear_model=model
         try:
+            factor=None  # never pin a previous factor while a new one is built
             factor=model.factor(rdt)
         except RuntimeError:
             return x,False,'singular_jacobian'
@@ -588,14 +1076,32 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
         step = factor.solve(-base)
         if not np.isfinite(step).all():
             return x,False,'singular_jacobian'
-        b,delta = x[:-1].reshape(problem.n,problem.nv),step[:-1].reshape(problem.n,problem.nv)
+        b = x[:-1].reshape(problem.n,problem.nv)
         # Use the original correction before the trace-species bound changes it.
         mean=np.mean(abs(b),axis=0)
         scales=np.empty(len(x))
         scales[:-1].reshape(problem.n,problem.nv)[:]=1e-9+1e-4*mean
         scales[-1]=1e-4*max(abs(x[-1]),1.)
+        # Merit norm of the factored linear model (also used by damping).
         oldnorm=np.linalg.norm(step/scales)
-        if (refresh_rate is not None and last_norm is not None and model.age>1
+        if krylov:
+            def apply_jacobian(v):
+                peak=float(np.max(abs(v)/scales))
+                if not peak>0.:
+                    return np.zeros_like(v)
+                eps=1e-3/peak
+                return (problem.residual(x+eps*v,fixed_temperature=fixed_temperature,previous=previous,dt=dt)
+                        -base)/eps
+            accelerated,solved=_gmres(apply_jacobian,factor.solve,-base,step,KRYLOV['rtol'],KRYLOV['iterations'])
+            if np.isfinite(accelerated).all():
+                step=accelerated
+            if not solved and model.age>1:
+                # The factored model no longer preconditions this state.
+                model=None;last_norm=None
+                continue
+        delta = step[:-1].reshape(problem.n,problem.nv)
+        # With Krylov acceleration the stale model is judged by GMRES itself.
+        if (refresh_rate is not None and not krylov and last_norm is not None and model.age>1
                 and oldnorm>refresh_rate*last_norm):
             # A stale Jacobian contracts slowly: rebuild it at this state.
             model=None;last_norm=None
@@ -639,13 +1145,13 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
         # Raw chemistry rates span many decades and are a poor merit norm.
         for _ in range(max_damping):
             trial = x+length*step
-            candidate = fun(trial)
+            candidate = fun(trial,export_bank=model.age>=max_age)
             if np.isfinite(candidate).all():
                 # A root reached on the last allowed step is still converged.
                 if np.max(abs(candidate))<1e-7:
                     return trial,True,'converged'
                 if np.linalg.norm(factor.solve(candidate)/scales)<oldnorm*(1.-1e-4*length):
-                    x=trial;base=candidate;break
+                    x=trial;base=candidate;base_properties=evaluated_properties;base_bank=evaluated_bank;evaluated_bank=None;break
             length*=.5
         else:
             if model.age>1:
@@ -653,6 +1159,40 @@ def _newton(problem,x,deadline, *, fixed_temperature=None,previous=None,dt=None,
                 continue
             return x,False,'line_search'
     return x,False,'iteration_limit'
+
+
+@numba.njit(cache=True)
+def _refine_ratios_core(z,values,slope,curve,thresh,min_range):
+    """Largest slope/curvature criterion ratio of every interval (refiner rules)."""
+    n=z.shape[0]
+    out=np.zeros(n-1)
+    dz=np.empty(n-1)
+    for j in range(n-1):
+        dz[j]=z[j+1]-z[j]
+    slopes=np.empty(n-1)
+    for p in range(values.shape[0]):
+        v=values[p]
+        for j in range(n-1):
+            slopes[j]=(v[j+1]-v[j])/dz[j]
+        vmin,vmax=np.min(v),np.max(v)
+        smin,smax=np.min(slopes),np.max(slopes)
+        if vmax-vmin>min_range*max(abs(vmax),abs(vmin)):
+            change=slope*(vmax-vmin)
+            for j in range(n-1):
+                out[j]=max(out[j],abs(v[j+1]-v[j])/(change+thresh))
+        if smax-smin>min_range*max(abs(smax),abs(smin)):
+            change=curve*(smax-smin)
+            for j in range(n-2):
+                r=abs(slopes[j+1]-slopes[j])/(change+thresh/dz[j])
+                out[j]=max(out[j],r)
+                out[j+1]=max(out[j+1],r)
+    return out
+
+
+def _refine_ratios(z,profiles,refiner):
+    rows=[np.asarray(v,dtype=float) for v in profiles.values()]
+    return _refine_ratios_core(np.asarray(z,dtype=float),np.ascontiguousarray(np.stack(rows)),
+                               refiner.slope,refiner.curve,refiner._thresh,refiner._min_range)
 
 
 def _normalized(x,problem):
@@ -664,7 +1204,17 @@ def _normalized(x,problem):
 
 
 TRANSIENT=dict(growth=1.5,iterations=25,refresh_rate=.5,max_age=20)
+# Largest 1/dt ratio for which a cached transient factorization is reused.
+TRANSIENT_FACTOR_REUSE=2.
+# Structured factors at least this large are computed in place, one at a time.
+INPLACE_FACTOR_BYTES=256*1024**2
+# From this block size the diagonal blocks are assembled chunk by chunk in
+# the factorization and never held besides the pivot inverses.
+LAZY_MIN_VARIABLES=200
+# With Krylov acceleration the factor is only a preconditioner: reuse longer.
+KRYLOV_FACTOR_REUSE=8.
 STEADY=dict(max_age=12,refresh_rate=.5)
+WARM=dict(iterations=25)
 
 
 def _pseudo_transient(problem,x,deadline, *,dt=1e-7,dt_max=.05,schedule=(2,5,10,20),max_steps=400):
@@ -719,9 +1269,10 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
         problem.radiation=(False,)+tuple(radiation[1:]);problem._linear_model=None
     for mesh_round in range(32):
         start=x.copy()
-        x,ok,reason=_newton(problem,x,deadline,max_age=10 if mesh_round==0 else STEADY['max_age'],
-                            max_damping=6 if mesh_round==0 else 16,
-                            refresh_rate=None if mesh_round==0 else STEADY['refresh_rate'])
+        cold=mesh_round==0 and initial is None
+        x,ok,reason=_newton(problem,x,deadline,max_age=10 if cold else STEADY['max_age'],
+                            max_damping=6 if cold else 16,max_iterations=25 if cold else WARM['iterations'],
+                            refresh_rate=None if cold else STEADY['refresh_rate'])
         if not ok:
             # A failed steady attempt is discarded, as in Cantera.
             x,ok,reason=_pseudo_transient(problem,start,deadline)
@@ -761,12 +1312,32 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
         if problem.n+len(insert)>max_points:
             reason='grid_limit';break
         oldz=problem.z.copy()
-        newz=np.sort(np.r_[oldz,[.5*(oldz[j]+oldz[j+1]) for j in sorted(insert)]])
+        split=int(getattr(problem,'refine_split',2))
+        if split>2:
+            # Multi-point refinement: an interval whose worst criterion ratio
+            # is r receives min(split, ceil(r)) equal sub-intervals at once,
+            # so fewer intermediate grids (and their factorizations) are
+            # needed. The acceptance test is unchanged: the final grid must
+            # again produce no insertion with the standard criteria.
+            ratios=_refine_ratios(problem.z,profiles,refiner)
+            points=[]
+            for j in sorted(insert):
+                pieces=int(min(split,max(2,np.ceil(ratios[j]))))
+                points.extend(oldz[j]+(oldz[j+1]-oldz[j])*np.arange(1,pieces)/pieces)
+            if problem.n+len(points)>max_points:
+                points=[.5*(oldz[j]+oldz[j+1]) for j in sorted(insert)]
+            newz=np.sort(np.r_[oldz,points])
+        else:
+            newz=np.sort(np.r_[oldz,[.5*(oldz[j]+oldz[j+1]) for j in sorted(insert)]])
         interpolated={k:np.interp(newz,oldz,fields[k]) for k in ('m','V','T')}
         interpolated['Y']=np.array([np.interp(newz,oldz,row) for row in fields['Y']])
         interpolated['Lambda']=fields['Lambda']
         problem.set_grid(newz)
         x=problem.pack(interpolated)
+    # Release the last Jacobian/factors and the reusable buffers (GBs for
+    # large mechanisms) before the diagnostics; the problem may outlive us.
+    problem._linear_model=None
+    problem._buffer_pool=None
     fields=problem.unpack(x)
     rho,cp,omega,hk,lam,J,_=problem.properties(fields)
     fields.update(z=problem.z.copy(),u=fields['m']/rho,rho=rho,cp_mass=cp,

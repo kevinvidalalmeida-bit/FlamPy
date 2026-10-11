@@ -1,11 +1,17 @@
 # Ejemplos de FlamPy
 
-[Inicio](../README.md) · [API](../docs/api.md) · [Archivos y consulta](../docs/outputs.md)
+[Inicio](../README.md) · [Guía de lectura](../docs/README.md) · [API](../docs/api.md) · [Archivos y consulta](../docs/outputs.md)
 
 Desde la raíz del repositorio:
 
 ~~~sh
 python -m pip install -e ".[plots]"
+~~~
+
+Los ejemplos que comparan con Cantera requieren el extra `reference`:
+
+~~~sh
+python -m pip install -e ".[reference]"
 ~~~
 
 | Script | Qué hace |
@@ -15,6 +21,13 @@ python -m pip install -e ".[plots]"
 | [`query_fgm.py`](query_fgm.py) | Carga una tabla y consulta temperatura y composición por lotes |
 | [`example_heat_loss.py`](example_heat_loss.py) | Resuelve una familia con pérdidas hacia un quemador y construye un FGM `(c,h)` |
 | [`validate_burner.py`](validate_burner.py) | Compara llamas de quemador con Cantera y comprueba una llama retenida |
+| [`example_diffusion.py`](example_diffusion.py) | Resuelve contraflujo y construye un FGM `(Z,C)`; la comparación opcional con `--reference` requiere el extra `reference` |
+| [`example_diffusion_heat_loss.py`](example_diffusion_heat_loss.py) | Genera una familia radiativa `(Z,C,h)` y valida un flamelet reservado |
+| [`validate_diffusion_pollutants.py`](validate_diffusion_pollutants.py) | Resuelve y audita CO, NO y NO₂ frente a Cantera y FGM; requiere `reference` |
+| [`benchmark_diffusion_solver.py`](benchmark_diffusion_solver.py) | Mide resolución nativa/Cantera con repeticiones; requiere `reference` y una carpeta nueva indicada con `--output` |
+| [`benchmark_diffusion_mechanisms.py`](benchmark_diffusion_mechanisms.py) | Llamas de difusión completas para cada mecanismo instalado, camino nuevo frente al anterior (`--modes new legacy split4`), un proceso por caso; requiere `--output` nuevo |
+| [`benchmark_memory_layout.py`](benchmark_memory_layout.py) | Compara perfiles y tiempos entre dos árboles de código; requiere `--baseline-src` y una carpeta nueva con `--output` |
+| [`validate_mechanisms.py`](validate_mechanisms.py) | Comprueba el catálogo instalado, transporte nativo, cinética fusionada y entrada analítica contra Cantera; requiere `reference` y `--output` |
 
 Para la nueva familia no adiabática, consulta [el modelo y sus referencias](../docs/heat-loss.md).
 
@@ -73,9 +86,10 @@ python examples/example_fgm.py --table docs/assets/data/fgm-ch4.npz
 python examples/example_fgm.py --table docs/assets/data/fgm-h2.npz --fuel H2
 ~~~
 
-Reproducen el mapa de CH₄ con 40 flamelets y el de H₂ con 71 flamelets,
-respectivamente. Este último cubre `phi = 0.5–5` y utiliza 1001 puntos
+Reproducen el mapa de CH₄ con 40 flamelets y el de H₂ con 86 flamelets,
+respectivamente. Este último cubre `phi = 0.5–5` y utiliza 2001 puntos
 de progreso. `--output` permite indicar una carpeta nueva.
+Las condiciones se conservan en la [procedencia de los datos](../docs/assets/data/provenance.json).
 
 El ejemplo llama al [mismo generador](../docs/assets/generate_fgm_figures.py)
 que produce las figuras publicadas. Al leer una tabla antigua con coordenadas
@@ -128,6 +142,19 @@ La primera ejecución incluye compilación JIT y puede tardar más.
 
 Las funciones de dibujo de los ejemplos utilizan arrays guardados: puedes
 modificar colores, campos y límites sin cambiar el solver.
+
+## Transporte y HPC por mecanismo
+
+`benchmark_mechanisms.py` mide transporte multicomponente y Soret de los
+mecanismos instalados. Separa carga/JIT de las muestras en caliente y verifica
+también tasas químicas contra Cantera. Intersecta el intervalo solicitado con
+el intervalo común NASA de cada archivo; la salida debe ser nueva.
+
+```sh
+python examples/benchmark_mechanisms.py --faces 32 --threads 4 --repeats 7 --validate-cantera --output runs/mechanism_timings.json
+```
+
+[Antes/después, alcance y decisión CPU/GPU](../docs/hpc-mechanisms.md).
 
 ## Tolerancias y refinamiento no adiabático
 

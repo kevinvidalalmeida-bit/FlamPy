@@ -1,0 +1,307 @@
+{
+ "created": "2026-10-11",
+ "machine": {
+  "cpu": "AMD Ryzen 9 7845HX (12 cores, 24 threads)",
+  "ram_GiB": 32,
+  "os": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.0"
+ },
+ "scope": "Counterflow CH4/air (mixture-averaged), 31 initial nodes, ratio 3, slope 0.01, curve 0.02; after lazy chunked factorization, bounded buffer pool and row-pivoting fix.",
+ "priority": "high (Aramco 3.0 started below-normal and was raised after ~35 s)",
+ "heavy_threads": 10,
+ "full_flames": [
+  {
+   "name": "GRI-Mech 3.0",
+   "filename": "gri30.yaml",
+   "species": 53,
+   "reactions": 325,
+   "mode": "new",
+   "status": "ok",
+   "accepted": true,
+   "reason": "converged",
+   "solver_s": 1.941036799998983,
+   "nodes": 1322,
+   "levels": [
+    31,
+    61,
+    121,
+    241,
+    355,
+    553,
+    787,
+    1106,
+    1258,
+    1322
+   ],
+   "jacobians": 114,
+   "Tmax": 2050.1727415600935,
+   "residual": 2.990930699527403e-08
+  },
+  {
+   "name": "USC Mech II",
+   "filename": "uscmech2.yaml",
+   "species": 111,
+   "reactions": 784,
+   "mode": "new",
+   "status": "ok",
+   "accepted": true,
+   "reason": "converged",
+   "solver_s": 4.307275999999547,
+   "nodes": 1432,
+   "levels": [
+    31,
+    61,
+    121,
+    241,
+    354,
+    559,
+    855,
+    1222,
+    1368,
+    1432
+   ],
+   "jacobians": 90,
+   "Tmax": 2051.1167370077465,
+   "residual": 2.4651637284911815e-08
+  },
+  {
+   "name": "JetSurF 2.0",
+   "filename": "jetsurf2.yaml",
+   "species": 348,
+   "reactions": 2163,
+   "mode": "new",
+   "status": "ok",
+   "accepted": true,
+   "reason": "converged",
+   "solver_s": 36.05349959999876,
+   "nodes": 1510,
+   "levels": [
+    31,
+    61,
+    121,
+    241,
+    354,
+    559,
+    884,
+    1276,
+    1446,
+    1510
+   ],
+   "jacobians": 108,
+   "Tmax": 2050.337119430177,
+   "residual": 2.554905121816493e-08
+  }
+ ],
+ "aramcomech3_profile": {
+  "wall_s": 102.8258566000004,
+  "nodes": 1438,
+  "jacobians": 50,
+  "accepted": true,
+  "peak_working_set_MB": 5201,
+  "per_level_s": {
+   "31": {
+    "properties": 9.011897700027475,
+    "jacobian": 0.15900950000286684,
+    "factor": 12.196456899982877,
+    "solve": 9.50035070012018,
+    "gmres": 14.043260299982649,
+    "newton": 31.685976099983236
+   },
+   "61": {
+    "properties": 0.2808205999826896,
+    "jacobian": 0.011993600001005689,
+    "factor": 0.8996055999996315,
+    "solve": 0.3405799999854935,
+    "gmres": 0.50063930000033,
+    "newton": 1.564114900000277
+   },
+   "121": {
+    "properties": 0.35440799999196315,
+    "jacobian": 0.01963669999895501,
+    "factor": 1.7404967000002216,
+    "solve": 0.4556834000213712,
+    "gmres": 0.6285277999995742,
+    "newton": 2.6025023000001966
+   },
+   "241": {
+    "properties": 0.45544079998944653,
+    "jacobian": 0.021011699998780387,
+    "factor": 1.6339303999993717,
+    "solve": 0.5432534000028681,
+    "gmres": 0.7113857000003918,
+    "newton": 2.70904999999766
+   },
+   "354": {
+    "properties": 0.49319070000274223,
+    "jacobian": 0.034420300002238946,
+    "factor": 2.388570900002378,
+    "solve": 0.569435399997019,
+    "gmres": 0.6245481000078144,
+    "newton": 3.5312562999970396
+   },
+   "558": {
+    "properties": 0.7059841999907803,
+    "jacobian": 0.054696599996532314,
+    "factor": 3.685948599999392,
+    "solve": 0.7558234999924025,
+    "gmres": 0.7105880999988585,
+    "newton": 5.242202299999917
+   },
+   "849": {
+    "properties": 0.7216085999934876,
+    "jacobian": 0.06467200000042794,
+    "factor": 5.59217229999922,
+    "solve": 0.749374799997895,
+    "gmres": 0.6194355999941763,
+    "newton": 7.1657487000011315
+   },
+   "1191": {
+    "properties": 1.3670576000040455,
+    "jacobian": 0.07970080000086455,
+    "factor": 9.728127200000017,
+    "solve": 1.0951450000029581,
+    "gmres": 1.1179159000021173,
+    "newton": 12.278908299998875
+   },
+   "1377": {
+    "properties": 1.6012146999964898,
+    "jacobian": 0.1624651999991329,
+    "factor": 13.314573100000416,
+    "solve": 1.2334615000036138,
+    "gmres": 1.236169499996322,
+    "newton": 16.359830199999124
+   },
+   "1438": {
+    "properties": 1.7547214000005624,
+    "jacobian": 0.17336250000153086,
+    "factor": 14.783891500002937,
+    "solve": 1.2955503000011959,
+    "gmres": 1.1241989000009198,
+    "newton": 17.678438099999767
+   }
+  },
+  "per_level_calls": {
+   "31": {
+    "properties": 2660,
+    "jacobian": 41,
+    "factor": 48,
+    "solve": 2531,
+    "gmres": 407,
+    "newton": 69
+   },
+   "61": {
+    "properties": 50,
+    "jacobian": 2,
+    "factor": 2,
+    "solve": 47,
+    "gmres": 8,
+    "newton": 1
+   },
+   "121": {
+    "properties": 34,
+    "jacobian": 2,
+    "factor": 2,
+    "solve": 31,
+    "gmres": 6,
+    "newton": 1
+   },
+   "241": {
+    "properties": 21,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 18,
+    "gmres": 4,
+    "newton": 1
+   },
+   "354": {
+    "properties": 16,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 13,
+    "gmres": 4,
+    "newton": 1
+   },
+   "558": {
+    "properties": 14,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 11,
+    "gmres": 4,
+    "newton": 1
+   },
+   "849": {
+    "properties": 10,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 7,
+    "gmres": 3,
+    "newton": 1
+   },
+   "1191": {
+    "properties": 10,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 7,
+    "gmres": 3,
+    "newton": 1
+   },
+   "1377": {
+    "properties": 10,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 7,
+    "gmres": 3,
+    "newton": 1
+   },
+   "1438": {
+    "properties": 12,
+    "jacobian": 1,
+    "factor": 1,
+    "solve": 7,
+    "gmres": 3,
+    "newton": 1
+   }
+  },
+  "note": "wall includes profiling wrappers"
+ },
+ "aramcomech3_initial_grid": {
+  "settings": "31 nodes, refine=False, KFLAME_THREADS=4, below-normal priority",
+  "cases": [
+   {
+    "variant": "row pivoting, float64 inverses, full assembly",
+    "jacobians": 39,
+    "time_s": 39.3,
+    "Tmax": 2016.1058596447858,
+    "peak_MB": 917
+   },
+   {
+    "variant": "row pivoting, float64 inverses, fused chunked assembly (adopted)",
+    "jacobians": 39,
+    "time_s": 35.04,
+    "Tmax": 2016.1058596447858,
+    "peak_MB": 910
+   },
+   {
+    "variant": "row pivoting, float32 stored inverses, fused chunked assembly",
+    "jacobians": 55,
+    "time_s": 47.49,
+    "Tmax": 2016.1058591877809,
+    "peak_MB": 965
+   },
+   {
+    "variant": "column pivoting (transposed LU), float32 stored inverses",
+    "jacobians": 90,
+    "time_s": 67.18,
+    "Tmax": 2016.1058577228855,
+    "peak_MB": 855
+   },
+   {
+    "variant": "column pivoting (transposed LU), float64 full assembly",
+    "jacobians": 96,
+    "time_s": 77.23,
+    "Tmax": 2016.1058572552909,
+    "peak_MB": 917
+   }
+  ]
+ }
+}

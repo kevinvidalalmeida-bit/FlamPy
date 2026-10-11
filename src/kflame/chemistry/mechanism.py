@@ -82,6 +82,10 @@ class ReactionData:
     # Net stoichiometric coefficients  (n_sp,) — built after init
     net_stoich: np.ndarray | None = None
 
+    # PLOG rows: pressure [Pa], A [SI], b, Ea [J/kmol]. Repeated P is retained.
+    plog_rates: np.ndarray | None = None
+    sri_parameters: tuple[float, float, float, float, float] | None = None
+
 
 @dataclass
 class MechanismData:
@@ -182,6 +186,23 @@ def _A_to_SI(A_val: float, length_units: str, quantity_units: str,
     return A_val * conc_factor ** (1.0 - order) / time_factors[time_units]
 
 
+def _pressure_to_SI(value, default_units='Pa'):
+    factors = {'Pa': 1., 'kPa': 1e3, 'MPa': 1e6, 'bar': 1e5,
+               'atm': ONE_ATM, 'torr': ONE_ATM/760., 'dyn/cm^2': .1}
+    units = default_units
+    if isinstance(value, str):
+        parts = value.split()
+        if len(parts) != 2:
+            raise ValueError(f'Invalid PLOG pressure: {value!r}')
+        value, units = parts
+    if units not in factors:
+        raise ValueError(f'Unsupported pressure unit: {units}')
+    pressure = float(value)*factors[units]
+    if not np.isfinite(pressure) or pressure <= 0.:
+        raise ValueError('PLOG pressures must be positive and finite')
+    return pressure
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  Equation parser
 # ═══════════════════════════════════════════════════════════════════════════
@@ -194,9 +215,9 @@ def _parse_species_list(text: str, sp_index: dict[str, int]):
     has_M = False
 
     # Remove "(+M)" BEFORE splitting by "+" to avoid breaking species names
-    if "(+M)" in text:
+    if re.search(r'\(\s*\+\s*M\s*\)', text):
         has_M = True
-        text = text.replace("(+M)", "").strip()
+        text = re.sub(r'\(\s*\+\s*M\s*\)', '', text).strip()
 
     parts = [s.strip() for s in text.split("+")]
     indices: list[int] = []
@@ -207,6 +228,10 @@ def _parse_species_list(text: str, sp_index: dict[str, int]):
             continue
         if p == "M":
             has_M = True
+            continue
+        if p in sp_index:
+            indices.append(sp_index[p])
+            stoich.append(1.0)
             continue
         m = _COEFF_SPECIES.match(p)
         if not m:
@@ -223,7 +248,10 @@ def _parse_species_list(text: str, sp_index: dict[str, int]):
 def _parse_equation(eq: str, sp_index: dict[str, int]):
     """Parse full equation string → reactants, products, reversible."""
     # strip comments
-    eq = re.sub(r"#.*$", "", eq).strip()
+    # '#' is part of some Aramco species labels (e.g. C#CC). YAML has
+    # already removed its own comments; only whitespace-delimited comments
+    # may be discarded here.
+    eq = re.sub(r"\s+#.*$", "", eq).strip()
     reversible = "<=>" in eq
     if "<=>" in eq:
         left, right = eq.split("<=>")
@@ -251,6 +279,10 @@ def resolve_mechanism(filepath: str | Path) -> str:
         bundled = Path(__file__).parent / 'data' / filepath.name
         if bundled.is_file():
             return str(bundled.resolve())
+        from kflame.chemistry.catalog import catalog_path
+        catalog = catalog_path(filepath.name)
+        if catalog is not None:
+            return str(catalog)
     raise FileNotFoundError(f"Mechanism not found: {filepath}. Supply a local YAML path.")
 
 
@@ -383,21 +415,49 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
         eq_str = rxn["equation"]
         ri, rs, pi, ps, reversible, has_M = _parse_equation(eq_str, sp_index)
         rtype = rxn.get('type','three-body' if has_M else 'elementary')
-        if rtype not in ('elementary','three-body','falloff'):
+        if rtype not in ('elementary','three-body','falloff','pressure-dependent-Arrhenius'):
             raise ValueError(f'Unsupported reaction type {rtype!r}: {eq_str}')
         if rxn.get('orders'):
             raise ValueError(f'Explicit reaction orders are not supported: {eq_str}')
-        if any(field in rxn for field in ('SRI','Tsang')):
-            raise ValueError(f'Unsupported falloff function; use Lindemann or Troe: {eq_str}')
+        if 'Tsang' in rxn:
+            raise ValueError(f'Unsupported falloff function; use Lindemann, Troe or SRI: {eq_str}')
+        if 'SRI' in rxn and (rtype != 'falloff' or 'Troe' in rxn):
+            raise ValueError(f'SRI requires a falloff reaction without Troe: {eq_str}')
+        sri_parameters = None
+        if 'SRI' in rxn:
+            sri = rxn['SRI']
+            if not isinstance(sri, dict) or any(key not in sri for key in ('A', 'B', 'C')):
+                raise ValueError(f'SRI requires A, B and C: {eq_str}')
+            sri_parameters = tuple(float(sri.get(key, default)) for key, default in
+                (('A', 0.), ('B', 0.), ('C', 0.), ('D', 1.), ('E', 0.)))
+            if (not np.all(np.isfinite(sri_parameters))
+                    or sri_parameters[2] <= 0. or sri_parameters[3] <= 0.):
+                raise ValueError(f'SRI requires finite parameters, C > 0 and D > 0: {eq_str}')
         if 'units' in rxn or any('units' in rxn.get(field,{}) for field in
-                ('rate-constant','high-P-rate-constant','low-P-rate-constant','Troe')):
+                ('rate-constant','high-P-rate-constant','low-P-rate-constant','Troe','SRI')):
             raise ValueError(f'Nested reaction units are not supported: {eq_str}')
 
         # total reactant stoichiometric order (for unit conversion)
         total_order = float(rs.sum())
 
         # Arrhenius parameters
-        if rtype == "falloff":
+        plog_rates = None
+        if rtype == 'pressure-dependent-Arrhenius':
+            entries = rxn.get('rate-constants', [])
+            if not entries or any('units' in entry for entry in entries):
+                raise ValueError(f'PLOG requires rate-constants with top-level units: {eq_str}')
+            plog_rates = np.asarray([
+                (_pressure_to_SI(entry['P'], units.get('pressure', 'Pa')),
+                 _A_to_SI(entry['A'], length_u, quant_u, total_order, time_u),
+                 entry['b'], _ea_to_SI(entry['Ea'], ea_u)) for entry in entries
+            ], dtype=float)
+            if not np.all(np.isfinite(plog_rates)):
+                raise ValueError(f'Nonfinite PLOG parameters: {eq_str}')
+            # The compiled evaluator replaces this placeholder at the same
+            # reaction position; no reaction or reverse rate is omitted.
+            A_hi, b_hi, Ea_hi = 0., 0., 0.
+            A_lo, b_lo, Ea_lo = 0., 0., 0.
+        elif rtype == "falloff":
             rc_hi = rxn["high-P-rate-constant"]
             A_hi  = _A_to_SI(rc_hi["A"], length_u, quant_u, total_order,time_u)
             b_hi  = rc_hi["b"]
@@ -457,6 +517,8 @@ def load_mechanism(filepath: str | Path) -> MechanismData:
             reactant_indices=ri, reactant_stoich=rs,
             product_indices=pi, product_stoich=ps,
             reversible=reversible,
+            plog_rates=plog_rates,
+            sri_parameters=sri_parameters,
             A=A_hi, b=b_hi, Ea=Ea_hi,
             efficiencies=eff,
             A_low=A_lo, b_low=b_lo, Ea_low=Ea_lo,

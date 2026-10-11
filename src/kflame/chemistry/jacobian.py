@@ -13,6 +13,7 @@ import numpy as np
 from numba import njit, prange
 from kflame.chemistry.mechanism import R_UNIV
 from kflame.chemistry.kinetics import _mass_action_product
+from kflame.chemistry.pressure_rates import plog_rate, sri_falloff, troe_temperature_scale
 
 
 @njit(cache=True, parallel=True)
@@ -23,7 +24,7 @@ def grouped_core(
     troe_A, troe_T3, troe_T1, troe_T2,
     r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
     net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-    delta_nu, rho_out, cp_out, omega_out, hk_out,
+    delta_nu, rho_out, cp_out, omega_out, hk_out, plog_data=None, sri_data=None,
 ):
     nv = Y.shape[0] + 2
     for node in prange(Y.shape[1] // nv):
@@ -34,7 +35,7 @@ def grouped_core(
             troe_A, troe_T3, troe_T1, troe_T2,
             r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
             net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-            delta_nu, rho_out, cp_out, omega_out, hk_out,
+            delta_nu, rho_out, cp_out, omega_out, hk_out, plog_data, sri_data,
         )
 
 
@@ -46,7 +47,7 @@ def grouped_node(
     troe_A, troe_T3, troe_T1, troe_T2,
     r_idx, r_nu, r_count, p_idx, p_nu, p_count, r_plan, p_plan,
     net_idx, net_nu, net_count, eff_idx, eff_delta, eff_count,
-    delta_nu, rho_out, cp_out, omega_out, hk_out,
+    delta_nu, rho_out, cp_out, omega_out, hk_out, plog_data=None, sri_data=None,
 ):
     """One node block [base, T, Y...]; callable from other compiled loops."""
     n_sp = Y.shape[0]
@@ -77,6 +78,8 @@ def grouped_node(
         c_factor = 101325.0 / (R_UNIV * T)
         for r in range(n_rxn):
             kf = A_hi[r] * math.exp(b_hi[r] * logT - Ea_hi[r] * inv_RT)
+            if plog_data is not None and plog_data[0][r] >= 0:
+                kf = plog_rate(T, P, r, plog_data)[0]
             delta_g = 0.0
             for ii in range(net_count[r]):
                 delta_g += net_nu[r, ii] * g_RT[net_idx[r, ii]]
@@ -92,8 +95,8 @@ def grouped_node(
             if is_falloff[r]:
                 low_pressure[it, r] = A_lo[r] * math.exp(b_lo[r] * logT - Ea_lo[r] * inv_RT)
                 if has_troe[r]:
-                    t3 = max(troe_T3[r], 1.0e-300)
-                    t1 = max(troe_T1[r], 1.0e-300)
+                    t3 = troe_temperature_scale(troe_T3[r])
+                    t1 = troe_temperature_scale(troe_T1[r])
                     Fcent = ((1.0 - troe_A[r]) * math.exp(-T / t3)
                              + troe_A[r] * math.exp(-T / t1)
                              + math.exp(-troe_T2[r] / max(T, 1.0e-300)))
@@ -160,6 +163,8 @@ def grouped_node(
                     d_troe = 0.14
                     f1 = (logPr + c_troe) / (n_troe - d_troe * (logPr + c_troe))
                     F = 10.0 ** (logFcent / (1.0 + f1 * f1))
+                if sri_data is not None and sri_data[r, 0] != 0.:
+                    F = sri_falloff(T, Pr, sri_data[r])[0]
                 kf_falloff = kf * F_lind * F
                 Rf = kf_falloff * (Rf / max(kf, 1.0e-300))
                 if is_reversible[r]:

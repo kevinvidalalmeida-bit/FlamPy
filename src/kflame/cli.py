@@ -4,6 +4,7 @@ from importlib import import_module
 import sys
 
 COMMANDS = {
+    'mechanisms': 'kflame.chemistry.catalog',
     'diffusion': 'kflame.diffusion',
     'diffusion-fgm': 'kflame.fgm.diffusion',
     'reference-diffusion': 'kflame.reference.diffusion',

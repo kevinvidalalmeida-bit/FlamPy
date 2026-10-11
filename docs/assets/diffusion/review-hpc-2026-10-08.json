@@ -1,0 +1,433 @@
+{
+  "date_local": "2026-10-08",
+  "timezone": "America/Guayaquil",
+  "git_head": "93b7d8b",
+  "working_tree": "Existing uncommitted diffusion/FGM/pollutant code included; documentation edits during review",
+  "scope": "Warm compiled solve-only local samples; no profiling; each solve independent. One-thread campaign precedes four-thread campaign; native always precedes Cantera within each pair. No statistical guarantee or cluster scaling claim.",
+  "campaigns": {
+    "1": {
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+        "cpu_count": 24,
+        "numpy": "2.4.6",
+        "numba": "0.65.1",
+        "scipy": "1.17.1",
+        "numba_threads": 1,
+        "thread_overrides": {
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMBA_NUM_THREADS": "1",
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        }
+      },
+      "repeats": 3,
+      "radiation": false,
+      "profile_enabled": false,
+      "aggregates": {
+        "H2": {
+          "samples": 3,
+          "validation_passed": true,
+          "native_s": {
+            "median": 0.8044362000073306,
+            "minimum": 0.7840034999826457,
+            "maximum": 0.8709960000123829
+          },
+          "cantera_s": {
+            "median": 0.8934706999862101,
+            "minimum": 0.7784279999905266,
+            "maximum": 0.9156267999787815
+          },
+          "native_over_cantera": {
+            "median": 0.9748456217152123,
+            "minimum": 0.8785634059924551,
+            "maximum": 1.0071625121298142
+          }
+        },
+        "H2-MS": {
+          "samples": 3,
+          "validation_passed": true,
+          "native_s": {
+            "median": 2.458071300003212,
+            "minimum": 2.360462300013751,
+            "maximum": 2.660271000000648
+          },
+          "cantera_s": {
+            "median": 3.366068400006043,
+            "minimum": 3.2603184999898076,
+            "maximum": 3.5483201000024565
+          },
+          "native_over_cantera": {
+            "median": 0.7497268918885888,
+            "minimum": 0.7012520304131411,
+            "maximum": 0.7539359421513255
+          }
+        }
+      }
+    },
+    "4": {
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+        "cpu_count": 24,
+        "numpy": "2.4.6",
+        "numba": "0.65.1",
+        "scipy": "1.17.1",
+        "numba_threads": 4,
+        "thread_overrides": {
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMBA_NUM_THREADS": "4",
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1"
+        }
+      },
+      "repeats": 3,
+      "radiation": false,
+      "profile_enabled": false,
+      "aggregates": {
+        "H2": {
+          "samples": 3,
+          "validation_passed": true,
+          "native_s": {
+            "median": 0.6719281999976374,
+            "minimum": 0.6553477999987081,
+            "maximum": 0.8521949000132736
+          },
+          "cantera_s": {
+            "median": 0.8430217000131961,
+            "minimum": 0.7614798000140581,
+            "maximum": 1.051826600014465
+          },
+          "native_over_cantera": {
+            "median": 0.8102047428744947,
+            "minimum": 0.7970473357769077,
+            "maximum": 0.8606240112825176
+          }
+        },
+        "H2-MS": {
+          "samples": 3,
+          "validation_passed": true,
+          "native_s": {
+            "median": 1.2395931000064593,
+            "minimum": 1.1869640999939293,
+            "maximum": 1.422807399998419
+          },
+          "cantera_s": {
+            "median": 3.344514700002037,
+            "minimum": 2.9505480999941938,
+            "maximum": 3.7740964999829885
+          },
+          "native_over_cantera": {
+            "median": 0.37699285113796965,
+            "minimum": 0.37063466936046185,
+            "maximum": 0.40228596849387577
+          }
+        }
+      }
+    }
+  },
+  "samples": {
+    "1": {
+      "H2": [
+        {
+          "native_s": 0.8044362000073306,
+          "native_api_s": 0.8069557000126224,
+          "cantera_s": 0.9156267999787815,
+          "native_over_cantera": 0.8785634059924551,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 0.8709960000123829,
+          "native_api_s": 0.8728646000090521,
+          "cantera_s": 0.8934706999862101,
+          "native_over_cantera": 0.9748456217152123,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 0.7840034999826457,
+          "native_api_s": 0.7873075999959838,
+          "cantera_s": 0.7784279999905266,
+          "native_over_cantera": 1.0071625121298142,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        }
+      ],
+      "H2-MS": [
+        {
+          "native_s": 2.660271000000648,
+          "native_api_s": 2.6645942000031937,
+          "cantera_s": 3.5483201000024565,
+          "native_over_cantera": 0.7497268918885888,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 2.458071300003212,
+          "native_api_s": 2.4617905000050087,
+          "cantera_s": 3.2603184999898076,
+          "native_over_cantera": 0.7539359421513255,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 2.360462300013751,
+          "native_api_s": 2.3642861999978777,
+          "cantera_s": 3.366068400006043,
+          "native_over_cantera": 0.7012520304131411,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        }
+      ]
+    },
+    "4": {
+      "H2": [
+        {
+          "native_s": 0.8521949000132736,
+          "native_api_s": 0.8560995999723673,
+          "cantera_s": 1.051826600014465,
+          "native_over_cantera": 0.8102047428744947,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 0.6553477999987081,
+          "native_api_s": 0.6583572000090498,
+          "cantera_s": 0.7614798000140581,
+          "native_over_cantera": 0.8606240112825176,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 0.6719281999976374,
+          "native_api_s": 0.6751479000085965,
+          "cantera_s": 0.8430217000131961,
+          "native_over_cantera": 0.7970473357769077,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.502371001340862,
+            "species_absolute": 0.0005226546217951128,
+            "velocity_relative": 0.0017936732516156875,
+            "pressure_eigenvalue_relative": 0.00029527597055168466,
+            "heat_release_peak_relative": 0.0008882593692802412,
+            "peak_temperature_K": 0.18474960090679815
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1071,
+          "cantera_nodes": 1058,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 1.294483415458782e-08
+          },
+          "cantera_version": "3.2.0"
+        }
+      ],
+      "H2-MS": [
+        {
+          "native_s": 1.422807399998419,
+          "native_api_s": 1.426624300016556,
+          "cantera_s": 3.7740964999829885,
+          "native_over_cantera": 0.37699285113796965,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 1.2395931000064593,
+          "native_api_s": 1.2431102999835275,
+          "cantera_s": 3.344514700002037,
+          "native_over_cantera": 0.37063466936046185,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        },
+        {
+          "native_s": 1.1869640999939293,
+          "native_api_s": 1.19108970000525,
+          "cantera_s": 2.9505480999941938,
+          "native_over_cantera": 0.40228596849387577,
+          "validation_passed": true,
+          "metrics": {
+            "temperature_K": 4.284429270253668,
+            "species_absolute": 0.000574572126327999,
+            "velocity_relative": 0.0016627400750135965,
+            "pressure_eigenvalue_relative": 0.00019561057228786966,
+            "heat_release_peak_relative": 0.0008378171146239626,
+            "peak_temperature_K": 0.09498101072313148
+          },
+          "source_sha256": "70f89271c815aa01b365fc6c2fcfd2654bc458a5b1d4a9b6da6bdf727b8d3976",
+          "native_nodes": 1043,
+          "cantera_nodes": 1077,
+          "native_convergence": {
+            "criterion": "Maximum absolute scaled residual",
+            "threshold": 1e-07,
+            "value": 9.580064633071221e-09
+          },
+          "cantera_version": "3.2.0"
+        }
+      ]
+    }
+  }
+}

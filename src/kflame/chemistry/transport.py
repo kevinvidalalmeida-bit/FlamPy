@@ -74,6 +74,8 @@ if njit is not None:
         the (species, species, faces) temporaries. Faces run in parallel.
         """
         n, faces = Y.shape
+        # Keep public outputs C ordered: downstream NumPy reductions can
+        # depend on layout even though the face kernel uses F-order inputs.
         result = np.zeros((n, faces))
         for face in prange(faces):
             Tf = T[face]
@@ -143,6 +145,7 @@ if njit is not None:
         n_sp = Y.shape[0]
         n_faces = Y.shape[1]
         rho = np.empty(n_faces, dtype=np.float64)
+        # Preserve the public C layout and downstream NumPy reduction order.
         Dm = np.empty((n_sp, n_faces), dtype=np.float64)
         lam = np.empty(n_faces, dtype=np.float64)
         Wmix = np.empty(n_faces, dtype=np.float64)
@@ -241,6 +244,14 @@ def _host_array(arr):
     if hasattr(arr, "get"):
         return arr.get()
     return np.asarray(arr)
+
+
+def _species_columns(Y):
+    """Borrow C/F inputs; pack strided species columns once for CPU kernels."""
+    result = np.asarray(Y, dtype=np.float64)
+    if result.flags.c_contiguous or result.flags.f_contiguous:
+        return result
+    return np.asfortranarray(result)
 
 
 _PAIR_CACHE = OrderedDict()
@@ -383,7 +394,7 @@ class NativeTransport:
             return None
         return _eval_faces_poly_numba_core(
             np.asarray(T, dtype=np.float64),
-            np.ascontiguousarray(Y, dtype=np.float64),
+            _species_columns(Y),
             float(P),
             np.asarray(invW, dtype=np.float64),
             np.asarray(self.mw, dtype=np.float64),
@@ -405,7 +416,7 @@ class NativeTransport:
         if (_mix_soret_fused is not None and getattr(self.xp, "__name__", "") == "numpy"
                 and bool(self._has_visc_poly_cpu.all()) and bool(self._has_diff_poly_cpu.all())):
             return _mix_soret_fused(
-                np.ascontiguousarray(T, dtype=np.float64), float(P), np.ascontiguousarray(Y, dtype=np.float64),
+                np.ascontiguousarray(T, dtype=np.float64), float(P), _species_columns(Y),
                 np.asarray(self.mw, dtype=np.float64), np.ascontiguousarray(self._visc_poly, dtype=np.float64),
                 np.ascontiguousarray(self._diff_poly, dtype=np.float64),
                 np.ascontiguousarray(self._eps_pair, dtype=np.float64),

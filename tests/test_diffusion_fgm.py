@@ -96,3 +96,94 @@ def test_withheld_validation_reports_coverage_and_interpolated_sources(tmp_path)
     (native/'metadata.json').write_text(json.dumps(metadata))
     with pytest.raises(ValueError,match='transport'):
         validate_diffusion_fgm(tmp_path/'table',native,tmp_path/'wrong')
+
+
+def synthetic_heat_loss_family(strains=(.1,.2,.3),losses=(0.,.3,.6)):
+    mech=load_mechanism(resolve_mechanism('h2o2.yaml'));thermo=NativeThermo(mech)
+    names=mech.species_names
+    z=np.linspace(0.,1.,41);Z=1.-z
+    rows=[]
+    for strain in strains:
+        row=[]
+        for loss in losses:
+            reaction=(.3-strain)*4.*Z*(1.-Z)
+            Y=np.zeros((mech.n_species,len(z)))
+            Y[names.index('H2')]=.1*Z-reaction*.05
+            Y[names.index('O2')]=.2*(1.-Z)-reaction*.1
+            Y[names.index('H2O')]=reaction*.15
+            Y[names.index('N2')]=1.-Y.sum(axis=0)
+            # A loss level cools the hot region only: h decreases with loss.
+            T=300.+reaction*1500.*(1.-loss)
+            row.append(dict(z=z,Z=Z,Y=Y,T=T,h=thermo.enthalpy_mass(T,Y),omega_Y=np.zeros_like(Y),
+                            qdot=1000.*reaction,species_names=np.array(names)))
+        rows.append(row)
+    return rows,dict(mechanism=resolve_mechanism('h2o2.yaml'),pressure=101325.,
+                     fuel_Y=[1. if name=='H2' else 0. for name in names])
+
+
+def test_heat_loss_table_interpolates_connected_strain_and_loss_cells(tmp_path):
+    from kflame.fgm.diffusion import build_diffusion_heat_loss_manifold,DiffusionHeatLossFGM
+    rows,metadata=synthetic_heat_loss_family()
+    meta=build_diffusion_heat_loss_manifold(rows,metadata,tmp_path,mixture_points=21)
+    assert meta['controls']==['Z','C','h'] and meta['geometry']['excluded_folded_cells']==0
+    assert meta['progress_rule']=='products:H2O'  # oxidation product absent from the fuel
+    f=DiffusionHeatLossFGM(tmp_path)
+    points=f.table['controls'][f.table['cells']].mean(axis=1)
+    result=f.lookup_batch(Z=points[:,0],C=points[:,1],h=points[:,2])
+    assert result['covered'].all()
+    np.testing.assert_allclose(result['Y'].sum(axis=0),1.,atol=1e-12)
+    np.testing.assert_allclose(f.thermo.enthalpy_mass(result['T'],result['Y']),points[:,2],atol=1e-6)
+    # Cooled states lie below the adiabatic reference chart at the same (Z,C).
+    lossy=np.isfinite(result['delta_h'])
+    assert lossy.any() and np.nanmin(result['delta_h'])>-1e-6*np.ptp(f.table['h'])
+    masked=f.lookup_batch(Z=[.5],C=[1.],h=[0.],outside='mask')
+    assert not masked['covered'][0] and np.isnan(masked['T'][0])
+    with pytest.raises(OutsideManifoldError):
+        f.lookup(Z=.5,C=1.,h=0.)
+
+
+def test_adaptive_mixture_grid_bounds_the_sampling_error_of_every_flamelet():
+    from kflame.fgm.diffusion import _mixture_columns
+    rows,_=synthetic_heat_loss_family()
+    flat=[profile for row in rows for profile in row]
+    union,_,_,_,_=_mixture_columns(flat,11)
+    grid,fields,_,_,_=_mixture_columns(flat,11,1e-3)
+    assert 11<=len(grid)<=len(union)
+    for profile,T in zip(flat,fields['T']):
+        rebuilt=np.interp(profile['Z'][::-1],grid,T)
+        assert abs(rebuilt-profile['T'][::-1]).max()<=1e-3*np.ptp([p['T'] for p in flat])+1e-9
+
+
+def test_heat_loss_family_rejects_unordered_or_nonadiabatic_levels(tmp_path):
+    from kflame.fgm.diffusion import generate_diffusion_heat_loss_fgm
+    with pytest.raises(ValueError,match='radiation_scales'):
+        generate_diffusion_heat_loss_fgm(radiation_scales=(1.,2.),output=tmp_path/'a')
+    with pytest.raises(ValueError,match='radiation_scales'):
+        generate_diffusion_heat_loss_fgm(radiation_scales=(0.,2.,2.),output=tmp_path/'b')
+    with pytest.raises(ValueError,match='controls'):
+        generate_diffusion_heat_loss_fgm(radiation=True,output=tmp_path/'c')
+    assert not (tmp_path/'a').exists()
+
+
+def test_native_hydrogen_heat_loss_table_predicts_a_withheld_strain_and_loss(tmp_path):
+    from kflame import solve_diffusion_flame
+    from kflame.fgm.diffusion import generate_diffusion_heat_loss_fgm,validate_diffusion_heat_loss_fgm
+    base=dict(mechanism='h2o2.yaml',fuel='H2',fuel_mass_flux=.05,oxidizer_mass_flux=.15,max_time=120.)
+    family=generate_diffusion_heat_loss_fgm(**base,flow_scales=(.9,1.1),radiation_scales=(0.,15.,30.),
+                                            output=tmp_path/'table')
+    meta=family['metadata']
+    assert meta['geometry']['excluded_folded_cells']==0 and meta['maximum_enthalpy_deficit_J_kg']>1e5
+    withheld=solve_diffusion_flame(**{**base,'fuel_mass_flux':.05,'oxidizer_mass_flux':.15},radiation=True,
+                                   radiation_scale=22.,initial_solution=family['flamelets'][0][1]['output'],
+                                   output=tmp_path/'withheld')
+    report=validate_diffusion_heat_loss_fgm(tmp_path/'table',withheld['output'],tmp_path/'validation')
+    assert report['passed'],report['metrics']
+    assert report['reaction_coverage']>=.99 and report['metrics']['temperature_K']<10.
+
+
+def test_rounding_level_reversals_of_z_are_dropped_and_counted(tmp_path):
+    profiles,metadata=synthetic_family()
+    for profile in profiles:
+        profile['Z'][-2]=profile['Z'][-3]+1e-9  # reversal far below FOLD_TOLERANCE
+    report=build_diffusion_manifold(profiles,metadata,tmp_path,mixture_points=9,progress_weights={'H2O':1.})
+    assert report['geometry']['dropped_rounding_reversals_of_Z']==[1,1,1]

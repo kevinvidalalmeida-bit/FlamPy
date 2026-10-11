@@ -9,7 +9,8 @@ __version__ = '0.1.0'
 
 def __getattr__(name):
     # Keep CLI/help imports light; scientific modules load on first API access.
-    if name in ('generate_diffusion_fgm','DiffusionFGM','validate_diffusion_fgm'):
+    if name in ('generate_diffusion_fgm','DiffusionFGM','validate_diffusion_fgm',
+                'generate_diffusion_heat_loss_fgm','DiffusionHeatLossFGM','validate_diffusion_heat_loss_fgm'):
         from .fgm import diffusion
         return getattr(diffusion,name)
     if name == 'solve_diffusion_flame':
@@ -27,4 +28,5 @@ def __getattr__(name):
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 
-__all__ = ['solve_diffusion_flame', 'generate_diffusion_fgm', 'DiffusionFGM', 'validate_diffusion_fgm', 'solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm', 'solve_reduced_burner_fgm']
+__all__ = ['solve_diffusion_flame', 'generate_diffusion_fgm', 'DiffusionFGM', 'validate_diffusion_fgm',
+           'generate_diffusion_heat_loss_fgm', 'DiffusionHeatLossFGM', 'validate_diffusion_heat_loss_fgm', 'solve_flame', 'solve_burner_flame', 'generate_fgm', 'generate_burner_fgm', 'generate_nonadiabatic_fgm', 'generate_adaptive_nonadiabatic_fgm', 'solve_reduced_burner_fgm']
