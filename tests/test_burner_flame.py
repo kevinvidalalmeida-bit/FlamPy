@@ -54,6 +54,21 @@ def test_all_residual_routes_have_the_same_burner_boundary(burner):
     np.testing.assert_allclose(compiled[::nv], 0., atol=1e-12)
 
 
+def _with_convection_of(state, p, cache):
+    """Frozen-transport cache whose convective weights follow ``state``.
+
+    The analytic Jacobian differentiates the exponential weights through the
+    node Peclet number (u, rho, cp); face transport stays frozen.
+    """
+    from kflame.flame.equations import _convection_weights
+    current = build_local_jacobian_cache(state, p)
+    u = state.reshape(p.n_points, -1)[:, 0]
+    out = dict(cache)
+    out['convection'], out['conv_w'], out['conv_wy'] = _convection_weights(
+        p, u, current['rho'], current['cp_n'], cache['lam_face'], cache['z'], p.n_species)
+    return out
+
+
 def test_analytic_jacobian_matches_local_differences_and_is_full_rank(burner):
     p, x = burner
     jac = build_analytic_blocks(x, p)
@@ -66,8 +81,8 @@ def test_analytic_jacobian_matches_local_differences_and_is_full_rank(burner):
             plus, minus = x.copy(), x.copy()
             plus[col] += step
             minus[col] -= step
-            rows, fplus = residual_local_rows(plus, p, node, cache)
-            _, fminus = residual_local_rows(minus, p, node, cache)
+            rows, fplus = residual_local_rows(plus, p, node, _with_convection_of(plus, p, cache))
+            _, fminus = residual_local_rows(minus, p, node, _with_convection_of(minus, p, cache))
             direction = np.zeros_like(x)
             direction[col] = 1.
             np.testing.assert_allclose(jac.matvec(direction)[rows], (fplus - fminus) / (2 * step),

@@ -40,6 +40,10 @@ def tabulate_burner_family(results, mech, inlet_Y, weights, progress_points):
         c = (weights @ result['Y'] - beta_u) / span
         if np.any(np.diff(c) < -1e-6):
             raise ValueError(f'Flamelet {row}: progress is nonmonotone; choose different weights')
+        # Decreases below that tolerance are numerical noise (e.g. trace
+        # undershoots of second-order convection near c = 0): use the
+        # nondecreasing envelope, identical to c when c is monotone.
+        c = np.maximum.accumulate(c)
         # Keep the last sample of repeated plateaus, including the burned state.
         keep = []
         for j, value in enumerate(c):

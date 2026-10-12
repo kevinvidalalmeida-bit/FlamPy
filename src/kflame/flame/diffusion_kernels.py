@@ -22,6 +22,7 @@ from kflame.flame.analytic_frozen_rows import composition_row_derivative
 
 from kflame.chemistry.jacobian import grouped_node
 from kflame.chemistry.mechanism import R_UNIV
+from kflame.chemistry.multicomponent_trace import trace_face
 from kflame.chemistry.multicomponent_kernels import (composition_terms, composition_terms_ws,
                                                      composition_workspace, temperature_terms,
                                                      _temperature_terms_symmetric)
@@ -493,7 +494,11 @@ def _face_state_ws(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, mu
     if not reuse:
         if multicomponent:
             face_viscosity_temperature_data(Tf, visc_poly, quarter_ratio, wilke_den, root, phi)
-            _multi_temperature(Tf, multi_data, mw, mdata)
+            if len(multi_data) == 16:
+                # Pruned model: its kernel evaluates only the kept pairs.
+                _cp_r(Tf, multi_data[11], multi_data[12], multi_data[13], mdata[6])
+            else:
+                _multi_temperature(Tf, multi_data, mw, mdata)
         else:
             face_temperature_data(Tf, P, mw, cond_poly, diff_poly, visc_poly, quarter_ratio, wilke_den,
                                   soret, eps_pair, cstar_poly,
@@ -501,7 +506,18 @@ def _face_state_ws(TL, TR, YL, YR, spacing, P, invW, mw, mixture, multi_data, mu
     if multicomponent:
         crot, dense = multi_data[2], multi_data[10]
         mu, rot_relax, bdiff, a, b, c, cp_r = mdata
-        if dense:
+        traced = False
+        if len(multi_data) == 16:
+            rho, lam, wm, majors = trace_face(Tf, P, Yf, cp_r, mw, invW, crot, multi_data[0], multi_data[1],
+                                              multi_data[3], multi_data[4], multi_data[5], multi_data[6],
+                                              multi_data[7], multi_data[8], multi_data[9], multi_data[15],
+                                              multi, thermal)
+            traced = majors >= 0
+            if not traced:
+                _multi_temperature(Tf, multi_data, mw, mdata)
+        if traced:
+            pass
+        elif dense:
             rho, lam, wm = composition_terms(Tf, P, Yf, cp_r, mw, invW, crot, mu, rot_relax, bdiff,
                                              a, b, c, dense, multi, thermal)
         else:

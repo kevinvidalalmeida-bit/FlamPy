@@ -126,7 +126,7 @@ def test_multiple_probe_banks_reuse_new_profiles_and_recheck_physics(tmp_path, m
     monkeypatch.setattr(api,'solve_flame',unexpected_solve)
     monkeypatch.setattr(api,'solve_burner_flame',unexpected_solve)
     folder = api.generate_nonadiabatic_fgm(phis=[.8,1.2],mass_flux_fractions=[.4,.2],
-        mechanism='h2o2.yaml', fuel='H2', progress_species='H2O:1', reuse_from=banks,
+        mechanism='h2o2.yaml', fuel='H2', progress_species='H2O:1', reuse_from=banks, convection='upwind',
         output=tmp_path/'combined',raw_only=True)
     report = json.loads((folder/'generation.json').read_text())
     assert report['reused_profiles'] == 6

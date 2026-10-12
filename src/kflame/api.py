@@ -16,13 +16,29 @@ def _stream(value):
     return ', '.join(f'{name}:{amount}' for name, amount in value.items()) if isinstance(value, dict) else value
 
 
+def resolve_convection(convection, soret):
+    """Scheme of a premixed flame: 'auto' is exponential, or upwind with Soret.
+
+    The Il'in-Allen-Southwell (exponential) scheme is second order where
+    diffusion resolves the profile. With thermal diffusion, the central Soret
+    drift is no longer damped by upwind numerical diffusion and trace species
+    undershoot below the lower bound ahead of the flame (CO2 reaches -1e-7
+    with GRI-Mech 3.0, and the solve takes ~40 s instead of ~3 s), so 'auto'
+    keeps Cantera's upwind scheme there. An explicit choice is respected.
+    """
+    if convection == 'auto':
+        return 'upwind' if soret else 'exponential'
+    if convection not in ('upwind', 'exponential'):
+        raise ValueError("convection must be 'auto', 'upwind' or 'exponential'")
+    return convection
+
+
 def _settings(mechanism, temperature, pressure, width, transport, soret,
               initial_points, ratio, slope, curve, prune, max_points, max_time, verbose,
-              convection='upwind', time_step_ladder=None):
+              convection='auto', time_step_ladder=None):
     if transport not in ('mixture-averaged', 'multicomponent'):
         raise ValueError("transport must be 'mixture-averaged' or 'multicomponent'")
-    if convection not in ('upwind', 'exponential'):
-        raise ValueError("convection must be 'upwind' or 'exponential'")
+    convection = resolve_convection(convection, soret)
     for name, value in dict(temperature=temperature, pressure=pressure, width=width, max_time=max_time).items():
         if not np.isfinite(value) or value <= 0:
             raise ValueError(f'{name} must be finite and positive (SI units)')
@@ -82,6 +98,8 @@ def _output(path, label):
 # 1,3-butadiene/air: 236 s -> 178 s with the same flame speed to 1e-14).
 AUTO_TIME_STEP_LADDER = 4.0
 AUTO_LADDER_MIN_SPECIES = 100
+# Seed nodes kept when a continuation changes the mass flux (0 keeps all).
+CONTINUATION_POINTS = 80
 
 
 def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
@@ -90,9 +108,10 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 transport='mixture-averaged', soret=False, ratio=2.5, slope=0.04,
                 curve=0.08, prune=0.003, max_points=1600, rtol=1e-4, atol=1e-9,
                 max_time=180.0, output=None, plots=False, verbose=False,
-                species=('CH4', 'O2', 'CO2', 'H2O', 'OH'), mass_flux=None,
-                initial_solution=None, convection='upwind', time_step_ladder='auto',
-                radiation=False, radiation_scale=1.0, inlet_emissivity=0.0):
+                species=None, mass_flux=None,
+                initial_solution=None, convection='auto', time_step_ladder='auto',
+                radiation=False, radiation_scale=1.0, inlet_emissivity=0.0,
+                multicomponent_trace='auto'):
     """Solve a premixed free flame on the native CPU backend (adiabatic by default).
 
     All arguments are keyword-only. Temperature, pressure and width use SI
@@ -113,6 +132,14 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     dated directory in runs/flame. A rejected solve saves diagnostics before
     raising RuntimeError. See docs/api.md for all parameters and defaults.
 
+    convection='auto' (default) selects the Il'in-Allen-Southwell scheme
+    ('exponential'), second order where diffusion resolves the profile: on
+    the default mesh Su is within 0.2 % of the mesh-converged value (H2/air
+    phi=0.6: -0.1 %, against -4.6 % with first-order 'upwind'; CH4/air GRI:
+    0.05 % against +1.5 %) at nearly the same cost. With soret=True 'auto' is
+    'upwind' (see resolve_convection). 'upwind' is Cantera's scheme; use it
+    for like-for-like comparisons with Cantera.
+
     time_step_ladder='auto' rounds pseudo-time steps to a ratio-4 ladder for
     mechanisms of at least 100 species (the transient factorization is then
     reused while dt stays on a rung) and keeps continuous steps otherwise;
@@ -122,6 +149,12 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     counterflow solver (Cantera's Flow1D model) to the energy equation;
     radiation_scale multiplies it and inlet_emissivity lets the inlet or
     burner surface radiate back at the inlet temperature.
+
+    multicomponent_trace applies to transport='multicomponent': 'auto' (from
+    200 species) omits collisions between two trace species whose mole
+    fractions add up to at most 1e-8 at a face (O(x_trace) model change,
+    see docs/multicomponent-large-mechanisms.md); a tail value forces that
+    model and None keeps the complete Dixon--Lewis kernel.
 
     A positive mass_flux [kg/(m^2 s)] selects an isothermal burner instead;
     solve_burner_flame provides the explicit entry point for that mode.
@@ -171,6 +204,7 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         inlet = mole * mech.molecular_weights
         inlet /= inlet.sum()
     seed = None
+    continuation_changed = False
     if initial_solution is not None:
         seed_path = Path(initial_solution)
         seed_meta = json.loads((seed_path / 'metadata.json').read_text(encoding='utf-8'))
@@ -205,16 +239,31 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
                 or seed['Y'].shape != (mech.n_species, len(seed['z']))
                 or any(not np.isfinite(seed[k]).all() for k in ('z', 'T', 'Y'))):
             raise ValueError('Continuation profile must contain consistent finite T,Y and increasing z')
+        changed = mass_flux is not None and (seed_meta.get('flow_type') == 'free_flame' or not np.isclose(
+            float(seed_meta.get('mass_flux', np.nan)), mass_flux, rtol=1e-12))
+        continuation_changed = changed
         if mass_flux is not None and seed_meta.get('flow_type') == 'free_flame':
             seed = _burner_guess_from_free_flame(seed, temperature, width)
         if grid is None and np.isclose(seed['z'][-1], width, rtol=1e-12):
             grid = seed['z']
+            if changed and len(grid) > max(initial_points, CONTINUATION_POINTS) and CONTINUATION_POINTS > 0:
+                # A changed flux moves the flame: pseudo-time steps on the
+                # seed's fully refined grid are many and expensive. As in the
+                # counterflow continuation, keep the profile as a guess on a
+                # bounded subset of the seed nodes (its clustering is kept);
+                # the normal adaptive refinement then certifies the flame.
+                count = max(initial_points, CONTINUATION_POINTS)
+                grid = grid[np.unique(np.linspace(0, len(grid)-1, count).astype(int))]
     if grid is not None:
         grid = np.asarray(grid, dtype=float)
         if (grid.ndim != 1 or not 3 <= grid.size <= max_points or not np.isfinite(grid).all()
                 or grid[0] != 0 or not np.isclose(grid[-1], width, rtol=1e-12, atol=0)
                 or not np.all(np.diff(grid) > 0)):
             raise ValueError('grid must have 3..max_points increasing finite nodes, from 0 to width')
+    if species is None:
+        # Default CSV/plot species: the fuel's usual products present in this
+        # mechanism (H2-O2 has no carbon species).
+        species = tuple(name for name in ('CH4', 'H2', 'O2', 'CO2', 'H2O', 'OH') if name in mech.species_names)
     species = tuple(species)
     missing = set(species) - set(mech.species_names)
     if missing:
@@ -228,15 +277,20 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
         initial_grid=None if grid is None else tuple(grid), steady_rtol=rtol, steady_atol=atol,
         inlet_mass_flux=mass_flux, cantera_seed_grid=mass_flux is None,
         transport_model=transport, soret_enabled=soret, ratio=ratio, slope=slope, curve=curve, prune=prune,
-        convection_scheme=convection, radiation_enabled=bool(radiation),
+        convection_scheme=resolve_convection(convection, soret), radiation_enabled=bool(radiation),
         radiation_scale=float(radiation_scale), inlet_emissivity=float(inlet_emissivity),
+        multicomponent_trace_tail=multicomponent_trace,
     )
+    from kflame.chemistry.multicomponent_trace import resolve_trace_tail
+    trace_tail = resolve_trace_tail(multicomponent_trace, mech.n_species) if transport == 'multicomponent' else None
     folder = _output(output, 'burner' if mass_flux is not None else 'flame')
     started = time.perf_counter()
     def new_problem():
         created = FreeFlameProblem(case, n_points=initial_points, mech_data=mech)
         created.assume_finite_y = True
         created.backend_factory = NativeSpeciesBackend
+        # A continuation that moves the flame goes through upwind first.
+        created.seed_through_upwind = continuation_changed
         return created
 
     problem = new_problem()
@@ -300,8 +354,10 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     from kflame import effective_threads
     metadata = dict(software='FlamPy', backend='native_cpu', mechanism=args.mech, threads=effective_threads(),
                     species_names=problem.species_names, temperature=temperature,
-                    pressure=pressure, transport=transport, soret=soret, convection=convection,
+                    pressure=pressure, transport=transport, soret=soret,
+                    convection=resolve_convection(convection, soret),
                     time_step_ladder=time_step_ladder,
+                    multicomponent_trace=_trace_metadata(trace_tail),
                     radiation=dict(enabled=bool(radiation), scale=float(radiation_scale),
                                    inlet_emissivity=float(inlet_emissivity),
                                    model='optically thin H2O/CO2 (Planck-mean polynomials of Cantera Flow1D)'),
@@ -341,6 +397,43 @@ def solve_flame(*, mechanism='gri30.yaml', temperature=300.0, pressure=101325.0,
     return dict(**fields, **velocity, heat_loss=heat_loss, accepted=accepted, output=folder, report=report, runtime_s=elapsed)
 
 
+# Burner families: a flame above the energy-closure tolerance is solved again
+# from its own state with slope/curve halved (at most this many times).
+CLOSURE_REFINEMENTS = 2
+
+
+def _closed_burner(output, initial_solution, max_energy_error, settings):
+    """Burner flame within ``max_energy_error``, refining the mesh when needed.
+
+    The closure error is a discretization error: when it exceeds the
+    tolerance, the flame is solved again from its own state with the slope and
+    curve criteria halved (the previous attempt keeps its folder). Flames that
+    already satisfy the tolerance are returned unchanged.
+    """
+    import inspect
+    defaults = {name: parameter.default for name, parameter in inspect.signature(solve_flame).parameters.items()}
+    settings = dict(settings)
+    folder = Path(output)
+    result = solve_burner_flame(output=folder, initial_solution=initial_solution, **settings)
+    for attempt in range(1, CLOSURE_REFINEMENTS+1):
+        if result['heat_loss']['relative_energy_closure_error'] <= max_energy_error:
+            return result
+        slope, curve = (float(settings.get(k, defaults[k])) for k in ('slope', 'curve'))
+        prune = float(settings.get('prune', defaults['prune']))
+        settings.update(slope=slope/2, curve=curve/2, prune=min(prune, .5*min(slope, curve)/2))
+        result = solve_burner_flame(output=folder.with_name(f'{folder.name}_refined{attempt}'),
+                                    initial_solution=result['output'], **settings)
+    return result
+
+
+def _trace_metadata(tail):
+    """Record which multicomponent model a flame used."""
+    if tail is None:
+        return dict(model='complete Dixon--Lewis systems')
+    return dict(model='Dixon--Lewis without collisions between two trace species', trace_tail=float(tail),
+                reference='docs/multicomponent-large-mechanisms.md')
+
+
 def _burning_and_accepted(problem, state, ok, report, temperature):
     """Accepted, mesh-converged and, for a burner, on the reacting branch."""
     from kflame.flame.state import unpack_state
@@ -376,7 +469,7 @@ def generate_fgm(*, phis=(0.7, 0.9, 1.0, 1.1, 1.4), mechanism='gri30.yaml',
                  species=('CO2', 'H2O'), progress_species='CO2:1.0,H2O:1.0,CO:1.0,H2:0.5',
                  progress_points=241, adaptive_phi=True, target_defect=0.01,
                  max_bridges_per_round=10, max_adaptive_rounds=64,
-                 max_flamelets=256, convection='upwind', time_step_ladder=None, jobs=1):
+                 max_flamelets=256, convection='auto', time_step_ladder=None, jobs=1):
     """Build an accepted native FGM table on inlet composition Z and progress c.
 
     All arguments are keyword-only; physical inputs use SI units. Fuel and
@@ -511,8 +604,16 @@ def generate_burner_fgm(*, mass_fluxes=(.12, .08, .04),
     reference_meta = json.loads((reference['output'] / 'metadata.json').read_text(encoding='utf-8'))
     inlet_Y = np.array(reference_meta['inlet_Y'])
     burners = []
+    # Descending flux: the weakest-loss burner starts from the adiabatic
+    # profile (translated to the burner) and each next one from the previous
+    # burner, as in generate_nonadiabatic_fgm. Every flame is still solved
+    # and certified with its own boundary conditions.
+    burner_settings = {k: v for k, v in flame_settings.items() if k != 'initial_solution'}
+    previous = reference['output']
     for index, flux in enumerate(np.sort(fluxes)[::-1]):
-        result = solve_burner_flame(mass_flux=float(flux), output=folder / f'burner_{index:03d}', **flame_settings)
+        result = _closed_burner(folder / f'burner_{index:03d}', previous, max_energy_error,
+                                dict(burner_settings, mass_flux=float(flux)))
+        previous = result['output']
         if result['heat_loss']['relative_energy_closure_error'] > max_energy_error:
             raise RuntimeError(f'Burner energy closure exceeds {max_energy_error:g}; refine the mesh: {result["output"]}')
         result['pressure'] = pressure
@@ -573,7 +674,7 @@ def _reuse_profile(kind, phi, fraction, destination, *, reuse_sources, flame_set
                 and meta['temperature'] == target('temperature') and meta['pressure'] == target('pressure')
                 and meta['initial_width'] == target('width') and meta['transport'] == target('transport')
                 and meta['soret'] == target('soret')
-                and meta.get('convection', 'upwind') == target('convection')
+                and meta.get('convection', 'upwind') == resolve_convection(target('convection'), target('soret'))
                 and all(v == target(k) for k, v in meta['refinement'].items())
                 and all(v == target(k) for k, v in meta['tolerances'].items()))
         if not matching:
@@ -629,8 +730,8 @@ def _generate_family(task):
             if result is not None and not np.isclose(result['mass_flux'], flux, rtol=1e-12):
                 raise ValueError('Reused burner mass flux differs from the new family')
             if result is None:
-                result = solve_burner_flame(phi=phi, mass_flux=flux, output=destination,
-                                            initial_solution=previous_burner, **flame_settings)
+                result = _closed_burner(destination, previous_burner, max_energy_error,
+                                        dict(flame_settings, phi=phi, mass_flux=flux))
             else:
                 reused += 1
             if result['heat_loss']['relative_energy_closure_error'] > max_energy_error:

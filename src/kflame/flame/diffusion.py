@@ -4,7 +4,7 @@ The unknowns are axial mass flux, radial spread rate, temperature, all mass
 fractions, and one radial pressure eigenvalue. Chemistry and transport use the
 same native kernels as premixed flames; no reference solution seeds the solve.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import os
 import time
 
@@ -26,6 +26,7 @@ from kflame.flame.diffusion_kernels import assemble_residual
 from kflame.flame.structured_jacobian import structured_blocks
 from kflame.flame.structured_linear import StructuredFactor
 from kflame.flame.buffer_pool import pool_of
+from kflame.flame.krylov import gmres
 
 _THERMO_BATCH_BUDGET_BYTES=96*1024**2
 _EXACT_MULTICOMPONENT_SPECIES=20
@@ -111,10 +112,13 @@ def face_properties(problem,T,Y,fast=True):
         return lam,mu,J
     # Keep public J in C order: downstream NumPy reductions depend on layout.
     lam,mu,J=np.empty(n-1),np.empty(n-1),np.empty((ns,n-1))
+    # Multicomponent faces of large mechanisms are O(ns^2)-O(ns^3) each: use
+    # the heavy-kernel thread count (other calls keep the default split).
+    heavy=dict(threads=heavy_threads()) if data['multicomponent'] and ns>=100 else {}
     _split(diffusion_kernels.face_range,n-1,T,Y,problem.dz,float(problem.P),data['invW'],data['mw'],
-           data['mixture'],data.get('multi_certified',data['multi']),data['multicomponent'],
+           data['mixture'],data.get('multi_trace',data.get('multi_certified',data['multi'])),data['multicomponent'],
            bool(problem.soret_enabled),lam,mu,J,
-           minimum=24 if ns<=20 and not data["multicomponent"] else 4)
+           minimum=24 if ns<=20 and not data["multicomponent"] else 4,**heavy)
     return lam,mu,J
 
 _FACE_BANK_BUDGET_BYTES=96*1024**2
@@ -130,6 +134,7 @@ def _face_bank_key(problem):
 
 def _face_bank_available(problem):
     if (problem.ns<256 or not problem.compiled_faces or not problem._frozen_multicomponent()
+        or getattr(problem,'trace_tail',None) is not None
         or not problem.analytic_chemistry or problem.chemistry_tile_nodes<=0):
         return False
     size=8*(problem.n-1)*(problem.ns*problem.ns+problem.ns+1)
@@ -198,6 +203,10 @@ class DiffusionCase:
     radiation_enabled: bool = False
     radiation_scale: float = 1.
     boundary_emissivities: tuple = (0., 0.)
+    # Multicomponent transport of large mechanisms: 'auto' omits collisions
+    # between two trace species (total mole fraction <= 1e-8) from 200
+    # species on; None keeps the complete Dixon--Lewis kernel.
+    multicomponent_trace_tail: object = 'auto'
 
 
 def upwind_gradient(values, z, mass_flux):
@@ -260,6 +269,9 @@ class DiffusionFlameProblem:
         self.temperature_pair_symmetry = True
         self.backend = NativeSpeciesBackend(self,mech)
         self.thermo = self.backend.thermo
+        # Tail of the pruned multicomponent model, or None (complete kernel).
+        multi = self.backend.multicomponent_transport
+        self.trace_tail = None if multi is None else multi.trace_tail
         self.ns, self.nv = mech.n_species, mech.n_species+3
         self.rhof = float(self.thermo.density(case.fuel_temperature,case.P,case.fuel_Y))
         self.rhoo = float(self.thermo.density(case.oxidizer_temperature,case.P,case.oxidizer_Y))
@@ -504,13 +516,18 @@ class DiffusionFlameProblem:
             kinetics=(*kinetics,k._plog_data,k._sri_data)
         self._compiled=data=dict(mw=mw,invW=contiguous(self.mech_data.inv_molecular_weights),
             mixture=mixture,multi=multi_data,kinetics=kinetics,multicomponent=multi is not None)
-        if multi is None:
+        if multi is None or self.trace_tail is not None:
+            # Mixture tables also serve as the structured preconditioner of the
+            # pruned multicomponent model.
             data['fast_mixture']=fast_transport.mixture_tables(transport,mw)
             data['fast_soret']=fast_transport.soret_tables(transport)
         if multi is not None:
             # Keep the established fourteen-entry tuple for existing/raw
             # consumers. Only owned compiled face paths use this tagged packet.
             data['multi_certified']=(*multi_data,certified)
+            if self.trace_tail is not None and certified and not multi_data[10]:
+                # Residual faces of the pruned model (multicomponent_trace).
+                data['multi_trace']=(*multi_data,certified,float(self.trace_tail))
         return data
 
     def _frozen_multicomponent(self):
@@ -900,7 +917,24 @@ def _use_structured(problem):
     mode=getattr(problem,'structured_jacobian',False)
     if mode not in ('auto',True,False):
         raise ValueError('structured_jacobian must be auto, True or False')
-    return bool(mode) and type(problem) is DiffusionFlameProblem and problem.compiled_faces and         problem.transport_model=='mixture-averaged' and not problem.backend.uses_multicomponent_flux and         (mode is True or problem.ns>=STRUCTURED_MIN_SPECIES)
+    if not (bool(mode) and type(problem) is DiffusionFlameProblem and problem.compiled_faces):
+        return False
+    if _trace_preconditioned(problem):
+        return True
+    return (problem.transport_model=='mixture-averaged' and not problem.backend.uses_multicomponent_flux
+            and (mode is True or problem.ns>=STRUCTURED_MIN_SPECIES))
+
+
+def _trace_preconditioned(problem):
+    """Pruned multicomponent model: structured mixture-form preconditioner and GMRES.
+
+    Its O(ns^2) composition coupling has no low-rank form; the analytic
+    structured Jacobian with mixture-averaged face coefficients around the
+    multicomponent base fluxes preconditions Newton--Krylov on the complete
+    residual (matrix-free J v), and every step is accepted on that residual.
+    """
+    return (getattr(problem,'trace_tail',None) is not None and problem.compiled_faces
+            and 'multi_trace' in problem._compiled_data())
 
 
 class _LinearModel:
@@ -1008,42 +1042,8 @@ class _SparseModel:
         return self.matrix
 
 
-def _gmres(apply_A,apply_M,b,z0,rtol,maxit):
-    """Right-preconditioned GMRES for A x = b, started from z0 = M^-1 b.
-
-    Returns (x, converged). x minimizes ||b - A x|| over M^-1 K_m(A M^-1, b);
-    its first direction is the preconditioned step itself, so the result is
-    never worse in residual norm than the optimally scaled z0.
-    """
-    beta=float(np.linalg.norm(b))
-    if not beta>0.:
-        return np.zeros_like(b),True
-    V=[b/beta];Z=[];H=np.zeros((maxit+1,maxit))
-    y=np.zeros(0);converged=False
-    for j in range(maxit):
-        z=z0/beta if j==0 else apply_M(V[j])
-        if not np.isfinite(z).all():
-            break
-        Z.append(z)
-        w=apply_A(z)
-        if not np.isfinite(w).all():
-            Z.pop();break
-        size=float(np.linalg.norm(w))
-        for i in range(j+1):
-            H[i,j]=float(w@V[i]);w-=H[i,j]*V[i]
-        H[j+1,j]=float(np.linalg.norm(w))
-        e=np.zeros(j+2);e[0]=beta
-        y,*_=np.linalg.lstsq(H[:j+2,:j+1],e,rcond=None)
-        residual=float(np.linalg.norm(e-H[:j+2,:j+1]@y))
-        if residual<=rtol*beta:
-            converged=True;break
-        if not H[j+1,j]>1e-14*size:
-            # Happy breakdown: the Krylov space is invariant; y is exact.
-            converged=residual<=rtol*beta;break
-        V.append(w/H[j+1,j])
-    if not Z:
-        return z0,False
-    return np.column_stack(Z)@y[:len(Z)],converged
+# Right-preconditioned GMRES, shared with the premixed solver.
+_gmres=gmres
 
 
 # Inexact Newton-Krylov acceleration of the factored (frozen-transport,
@@ -1058,6 +1058,8 @@ KRYLOV_MIN_SPECIES=400
 def _use_krylov(problem):
     mode=getattr(problem,'newton_krylov','auto')
     if mode is True:
+        return True
+    if bool(mode) and _use_structured(problem) and _trace_preconditioned(problem):
         return True
     return bool(mode) and _use_structured(problem) and problem.ns>=KRYLOV_MIN_SPECIES
 
@@ -1311,12 +1313,41 @@ def _pseudo_transient(problem,x,deadline, *,dt=1e-7,dt_max=.05,schedule=(2,5,10,
     return x,False,reason
 
 
+def _mixture_bootstrap(problem,max_time,ratio,slope,curve,max_points,refine):
+    """Accepted mixture-averaged flame on its own adaptive grid, or None.
+
+    Multicomponent and Soret flames start from it (as the premixed
+    ``multicomponent_bootstrap``): the cold pseudo-transient, the most
+    expensive part of a solve, then runs with the cheap transport. Only the
+    initial state changes; the requested flame is solved, refined and
+    accepted on its own complete residual.
+    """
+    twin=DiffusionFlameProblem(replace(problem.case,transport_model='mixture-averaged',soret_enabled=False),
+                               problem.mech_data,problem.z)
+    twin.refine_split=getattr(problem,'refine_split',2)
+    fields,accepted,report=solve_diffusion_problem(twin,max_time=max_time,ratio=ratio,slope=slope,curve=curve,
+                                                   max_points=max_points,refine=refine)
+    summary=dict(accepted=bool(accepted),nodes=len(fields['z']),runtime_s=float(report['runtime_s']),
+                 reason=report['reason'])
+    if not accepted:
+        return None,summary
+    return dict(z=fields['z'],**{key:fields[key] for key in ('m','V','T','Y','Lambda')}),summary
+
+
 def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slope=.04,curve=.08,max_points=1600,refine=True):
+    bootstrap=None;bootstrap_time=0.
+    if (initial is None and getattr(problem,'transport_bootstrap',True) and type(problem) is DiffusionFlameProblem
+            and (problem.backend.uses_multicomponent_flux or problem.soret_enabled)):
+        seed,bootstrap=_mixture_bootstrap(problem,max_time,ratio,slope,curve,max_points,refine)
+        bootstrap_time=bootstrap['runtime_s']
+        if seed is not None:
+            problem.set_grid(seed.pop('z'))
+            initial=seed
     x = problem.pack(problem.initial_fields() if initial is None else initial)
     # JIT compilation (first use or changed sources) is not solver time.
     problem.compile_kernels(x)
-    started = time.perf_counter();deadline=started+max_time
-    history=[]
+    started = time.perf_counter()-bootstrap_time;deadline=started+max_time
+    history=[] if bootstrap is None else [dict(stage='mixture_averaged_bootstrap',**bootstrap)]
     refiner=AdaptiveRefiner(ratio=ratio,slope=slope,curve=curve,prune=-1.,max_points=max_points)
     reason='not_started';grid_converged=False
     # A cold radiative start first finds the adiabatic burning branch: the

@@ -66,7 +66,20 @@ convergida, del mismo tipo (libre o quemador), con la misma química, alimentaci
 presión y temperatura de entrada. Permite continuar un caudal de quemador o
 refinar una llama libre conservando su perfil como estimación inicial. Cada
 nueva llama se vuelve a resolver y certificar; en modo libre la velocidad
-de propagación se vuelve a calcular.
+de propagación se vuelve a calcular. Si la continuación cambia el caudal
+(otro quemador, o de llama libre a quemador), el perfil se coloca sobre 80
+nodos de la malla de la semilla (`kflame.api.CONTINUATION_POINTS`, con su
+agrupamiento) y la adaptación normal certifica la malla final: el
+pseudo-transitorio sobre la malla fina anterior era lento (una llama rica de
+GRI con pérdida fuerte pasa de 15 s a 2 s). Con el mismo caudal se conserva
+la malla de la semilla.
+
+En `generate_burner_fgm` y `generate_nonadiabatic_fgm`, el primer quemador
+parte de la llama adiabática y cada uno continúa al anterior. Si un quemador
+supera `max_energy_error`, se resuelve de nuevo desde su estado con `slope` y
+`curve` a la mitad, como mucho dos veces (`CLOSURE_REFINEMENTS`). El intento
+anterior conserva su carpeta, y los quemadores que ya cumplen no cambian.
+[Matriz de variantes por mecanismo](estado-mecanismos.md).
 
 ## `solve_flame`
 
@@ -220,7 +233,7 @@ las corrientes `fuel` u `oxidizer`.
 | `radiation` | `False` | Solo `solve_flame`/`solve_burner_flame`. Pérdida radiativa ópticamente delgada de H₂O y CO₂ (el mismo modelo que en contraflujo, con los polinomios de Cantera Flow1D). Necesita el Jacobiano analítico, que es el valor por defecto |
 | `radiation_scale` | `1.0` | Multiplica la pérdida radiativa; 1 es el modelo físico |
 | `inlet_emissivity` | `0.0` | Emisividad de la entrada o del quemador, que radia a la temperatura de entrada |
-| `convection` | `"upwind"` | Solo `solve_flame`/`solve_burner_flame`. `"upwind"`: primer orden, como Cantera. `"exponential"`: Il'in–Allen–Southwell, segundo orden donde la difusión resuelve el perfil; recomendado para el calor al quemador cerca del límite adiabático |
+| `convection` | `"auto"` | `solve_flame`, `solve_burner_flame` y `generate_fgm`. `"exponential"`: Il'in–Allen–Southwell, segundo orden donde la difusión resuelve el perfil. `"upwind"`: primer orden, como Cantera. `"auto"` es exponencial salvo con `soret=True`, que usa upwind (ver abajo). El esquema usado queda en `metadata.json` |
 | `ratio` | `2.5` | Criterio de relación entre tamaños de intervalos, al menos 2 |
 | `slope` | `0.04` | Umbral normalizado de variación, en `(0, 1]` |
 | `curve` | `0.08` | Umbral normalizado de cambio de pendiente, en `(0, 1]` |
@@ -232,7 +245,19 @@ las corrientes `fuel` u `oxidizer`.
 | `verbose` | `False` | Mostrar la traza del solver; FGM mantiene sus resúmenes por llama |
 | `species` | Véase abajo | Especies de salida para las gráficas y, en una llama, el CSV |
 
-`species` es `("CH4", "O2", "CO2", "H2O", "OH")` en `solve_flame`
+Con la malla por defecto, el esquema exponencial da Su dentro del 0,2 % del
+valor convergido en malla. Con upwind el error es de −4,6 % en H₂/aire con
+φ = 0,6 y de +1,5 % en CH₄/aire con GRI-Mech 3.0, y para igualar esa
+precisión hace falta unas siete veces más nodos. El coste es casi el mismo:
+GRI tarda 1,8 s frente a 1,6 s.
+
+Con Soret, la deriva térmica centrada deja de estar amortiguada por la
+difusión numérica de upwind, y las especies traza bajan de la cota inferior
+delante de la llama. Por eso `"auto"` usa upwind en ese caso; está pendiente
+una deriva térmica discretizada con la celda donante. Las comparaciones con
+Cantera deben pedir `convection="upwind"`.
+
+`species` es, por defecto, la parte de `("CH4", "H2", "O2", "CO2", "H2O", "OH")` presente en el mecanismo en `solve_flame`
 y `("CO2", "H2O")` en `generate_fgm`. Las figuras FGM requieren
 exactamente dos especies presentes en el mecanismo. La exportación FGM
 activada con `export=True` conserva todas las especies.

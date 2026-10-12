@@ -224,7 +224,7 @@ def _offdiag(j, col, x, z, rho, cp, h, drho, cp_molar, flux, face, lam, invW,
 @njit(cache=True)
 def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux, FM, FP,
                 lam, invW, yin, energy, fixed, outlet_flux, inlet_mass_flux, convection,
-                conv_w, conv_wy, B, a, g, T_all, Y_all, radiation, dq_dY):
+                conv_w, conv_wy, B, a, g, T_all, Y_all, radiation, dq_dY, conv_slope, sv):
     """Dense block A[j, j] (as ``analytic_jacobian.assemble_blocks``, column j).
 
     dy[k, b, v] and dt[k, b] are the chemistry partials of node j.
@@ -295,6 +295,13 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
     else:
         gradT = wp*(x[j+1, 1]-x[j, 1])+wm*(x[j, 1]-x[j-1, 1])
         cT = wm-wp
+    # Peclet dependence of the exponential weights: dw/dv = slope*sv[v].
+    sm, sp = conv_slope[j, 0], conv_slope[j, 1]
+    weighted = convection != 0 and u != 0. and (sm != 0. or sp != 0.)
+    for v in range(nv):
+        sv[v] = 0.
+        if weighted:
+            sv[v] = (1./u if v == 0 else 0.)+drho[j, v]/rho[j]+dcp[j, v]/cp[j]
     cond = -2.*(lam[j]*(x[j+1, 1]-x[j, 1])/dzp-lam[j-1]*(x[j, 1]-x[j-1, 1])/dzm)/dz2
     dcond = 2.*(lam[j]/dzp+lam[j-1]/dzm)/dz2
     en = 0.
@@ -332,6 +339,10 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
             row[v] = (dw-ddiff)/rho[j]-source*drho[j, v]
             a[v] += hk*dw+gk*(fm_row[v]+fp_row[v])
         row[k+2] -= u*cY
+        if weighted:
+            eY = u*(sp*(x[j+1, k+2]-x[j, k+2])+sm*(x[j, k+2]-x[j-1, k+2]))
+            for v in range(nv):
+                row[v] -= eY*sv[v]
         g[k] = gk
     # Optically thin radiative loss: local to the node.
     en += radiative_loss(T_all, Y_all, j, radiation)
@@ -341,12 +352,13 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
     if energy:
         rc = 1./(rho[j]*cp[j])
         base = (cond+en)*rc
+        eT = u*(sp*(x[j+1, 1]-x[j, 1])+sm*(x[j, 1]-x[j-1, 1])) if weighted else 0.
         for v in range(nv):
             du = 1. if v == 0 else 0.
             dtv = 1. if v == 1 else 0.
             dgradT = cT*dtv
             den = a[v]+dtv*den_t
-            B[1, v] = (-du*gradT-u*dgradT-(dcond*dtv+den)*rc
+            B[1, v] = (-du*gradT-u*dgradT-eT*sv[v]-(dcond*dtv+den)*rc
                        + base*(drho[j, v]/rho[j]+dcp[j, v]/cp[j]))
     else:
         for v in range(nv):
@@ -357,7 +369,7 @@ def _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, b, cp_molar, flux
 def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt, first,
                         cp_molar, flux, face, lam, invW, yin, energy, has_profile, fixed,
                         outlet_flux, inlet_mass_flux, convection, conv_w, conv_wy,
-                        diag, diag_offset, lowD, lowP, lowQ, upD, upP, upQ, radiation):
+                        diag, diag_offset, lowD, lowP, lowQ, upD, upP, upQ, radiation, conv_slope):
     """Rows of nodes [start, stop); dy/dt hold the chemistry tile from ``first``."""
     nodes, nv = x.shape
     ns = nv-2
@@ -366,6 +378,7 @@ def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt,
     a = np.empty(nv)
     g = np.empty(ns)
     dq_dY = np.empty(ns)
+    sv = np.empty(nv)
     T_all = np.ascontiguousarray(x[:, 1])
     Y_all = np.ascontiguousarray(x[:, 2:].T)
     for j in range(start, stop):
@@ -379,7 +392,8 @@ def premixed_rows_range(start, stop, x, z, rho, cp, omega, h, drho, dcp, dy, dt,
             FP[:, :] = 0.
         _diag_block(j, x, z, rho, cp, omega, h, drho, dcp, dy, dt, j-first, cp_molar, flux,
                     FM, FP, lam, invW, yin, energy, fixed, outlet_flux, inlet_mass_flux,
-                    convection, conv_w, conv_wy, diag[j-diag_offset], a, g, T_all, Y_all, radiation, dq_dY)
+                    convection, conv_w, conv_wy, diag[j-diag_offset], a, g, T_all, Y_all, radiation, dq_dY,
+                    conv_slope, sv)
         if j > 0:
             _offdiag(j, j-1, x, z, rho, cp, h, drho, cp_molar, flux, face, lam, invW,
                      energy, has_profile, fixed, outlet_flux, inlet_mass_flux, convection,
@@ -414,6 +428,8 @@ class PremixedStructuredJacobian:
 
     def __init__(self, blocks):
         self.blocks = blocks
+        # True for the mixture-form preconditioner of a multicomponent problem.
+        self.approximate = False
         self.n_blocks = int(blocks.n)
         self.block_size = int(blocks.nv)
         n = self.n_blocks*self.block_size
@@ -425,7 +441,7 @@ class PremixedStructuredJacobian:
         out = PremixedStructuredJacobian(StructuredBlocks(
             b.diag.copy(), b.lowD.copy(), b.lowP.copy(), b.lowQ.copy(),
             b.upD.copy(), b.upP.copy(), b.upQ.copy(), None, None))
-        for name in ('_profile_problem', 'use_compiled_substitution'):
+        for name in ('_profile_problem', 'use_compiled_substitution', 'approximate'):
             if hasattr(self, name):
                 setattr(out, name, getattr(self, name))
         return out
@@ -581,7 +597,8 @@ def build_structured(x, problem, cache):
             int(cache['j_fixed']), bool(_outlet_species_flux_bc(problem)),
             float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']),
             np.ascontiguousarray(cache['conv_w'], dtype=float), np.ascontiguousarray(cache['conv_wy'], dtype=float),
-            diag, 0, lowD, lowP, lowQ, upD, upP, upQ, _radiation_of(problem))
+            diag, 0, lowD, lowP, lowQ, upD, upP, upQ, _radiation_of(problem),
+            np.ascontiguousarray(cache.get('conv_slope', np.zeros((nodes, 2))), dtype=float))
 
     def rows(start, stop):
         dy = np.empty((tile, ns, ns)).transpose(1, 0, 2)

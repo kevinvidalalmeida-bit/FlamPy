@@ -1010,6 +1010,13 @@ def newton_solve(
             status = -5
             break
 
+        if hasattr(jac_state.lu, "set_anchor"):
+            # GMRES on the complete residual at this iterate (also for the
+            # damping trials below, which reuse the same linear model).
+            x_r = x.reshape(-1, 2 + int(problem.n_species))
+            weights = (float(getattr(problem, "steady_rtol", 1e-4))*np.mean(np.abs(x_r), axis=0)
+                       + float(getattr(problem, "steady_atol", 1e-9)))
+            jac_state.lu.set_anchor(full_fun, x, f, np.tile(weights, x_r.shape[0]))
         try:
             step0 = solve_linear(jac_state.lu, -f)
         except Exception as exc:
@@ -1308,7 +1315,10 @@ class SolveOptions:
     reset_bad_after_failures: int = 3
     # Refinamiento (defaults de Refiner::setCriteria)
     refine_grid: bool = True
-    max_refine_passes: int = 6
+    # Passes stop as soon as the grid no longer changes: a grid converged in
+    # fewer passes is unaffected; a continuation started on a coarse subset
+    # may need a few more single-point passes to certify its mesh.
+    max_refine_passes: int = 12
     # A capped refinement loop is useful for fast screening, but it must not
     # be reported as a mesh-converged solution in a certified calculation.
     require_grid_convergence: bool = False
@@ -2605,6 +2615,13 @@ def solve_free_flame(
         return _solve_flame_auto(problem, x0, options)
     opts = options or SolveOptions()
     started = time.perf_counter()
+    if x0 is not None and bool(getattr(problem, "seed_through_upwind", False)):
+        # A continuation that moves the flame (changed mass flux): the
+        # monotone upwind pseudo-transient reaches the new flame in far fewer
+        # steps, and the requested scheme then corrects it with a few Newton
+        # steps (GRI rich burner with strong loss: 10.6 s -> 1.1 s, same
+        # flame to 7e-3 K), as for a cold start.
+        return _solve_flame_seeded_through_upwind(problem, x0, opts, started)
     if x0 is not None:
         # A continuation seed is usually close enough for the requested scheme.
         # A far predictor can stall it; then restart from the same seed and grid
@@ -2619,6 +2636,16 @@ def solve_free_flame(
         x_start, ok_start, startup = _solve_flame_seeded_through_upwind(problem, x0, opts, started)
         startup["direct_requested_convection_attempt"] = direct
         return x_start, ok_start, startup
+    if bool(opts.multicomponent_bootstrap) and bool(
+        getattr(problem.backend, "uses_multicomponent_flux", False) or problem.soret_enabled
+    ):
+        # The mixture-averaged bootstrap reaches the requested scheme by
+        # itself (through upwind, with the cheap transport); the
+        # multicomponent/Soret corrector then starts from a flame of the same
+        # scheme. Seeding through upwind here would instead jump from an
+        # upwind multicomponent flame to the requested scheme with the
+        # expensive transport (GRI: 322 pseudo-time steps, 41 s against 2 s).
+        return _solve_flame_auto(problem, None, opts)
     return _solve_flame_seeded_through_upwind(problem, None, opts, started)
 
 

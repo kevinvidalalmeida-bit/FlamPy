@@ -1,0 +1,462 @@
+{
+ "created": "2026-10-12T10:14:28",
+ "mechanisms": {
+  "h2o2.yaml": {
+   "fuel": "H2",
+   "cases": {
+    "premixed": {
+     "status": "accepted",
+     "wall_s": 1.422675399997388,
+     "Su_m_s": 1.6607325880223225,
+     "nodes": 199
+    },
+    "burner": {
+     "status": "accepted",
+     "wall_s": 0.2905408000078751,
+     "mass_flux": 0.7454592361689242,
+     "wall_loss_W_m2": 262228.9168254529,
+     "radiation_W_m2": 0.0,
+     "energy_closure": 0.00248950774889651,
+     "nodes": 153
+    },
+    "premixed_radiation": {
+     "status": "accepted",
+     "wall_s": 0.27729830000316724,
+     "Su_m_s": 1.6608077046573497,
+     "nodes": 209
+    },
+    "burner_radiation": {
+     "status": "accepted",
+     "wall_s": 0.3221510000003036,
+     "mass_flux": 0.7454592361689242,
+     "wall_loss_W_m2": 262129.43755617586,
+     "radiation_W_m2": 32187.757784315185,
+     "energy_closure": 0.011532516073906797,
+     "nodes": 154
+    },
+    "premixed_multicomponent": {
+     "status": "accepted",
+     "wall_s": 0.5888240999920527,
+     "Su_m_s": 1.469660383556762,
+     "nodes": 197
+    },
+    "counterflow": {
+     "status": "accepted",
+     "wall_s": 1.1782702000054996,
+     "Tmax_K": 2487.591517868671,
+     "nodes": 1071
+    },
+    "counterflow_radiation": {
+     "status": "accepted",
+     "wall_s": 0.5386349000036716,
+     "Tmax_K": 2462.3095831857922,
+     "nodes": 1077
+    },
+    "counterflow_multicomponent": {
+     "status": "accepted",
+     "wall_s": 1.3066469999903347,
+     "Tmax_K": 2491.1095394316544,
+     "nodes": 1106
+    },
+    "fgm_premixed": {
+     "status": "accepted",
+     "wall_s": 2.2177617000124883,
+     "flamelets": 12,
+     "bridges": 9
+    },
+    "fgm_burner": {
+     "status": "accepted",
+     "wall_s": 0.5159442000003764,
+     "burners": 2
+    },
+    "fgm_nonadiabatic": {
+     "status": "accepted",
+     "wall_s": 1.550875700006145,
+     "table": "fgm_nonadiabatic"
+    },
+    "fgm_diffusion": {
+     "status": "accepted",
+     "wall_s": 1.6011524999921676,
+     "flamelets": 3
+    },
+    "fgm_diffusion_heat_loss": {
+     "status": "accepted",
+     "wall_s": 1.9500318000063999,
+     "flamelets": 4
+    }
+   }
+  },
+  "drm19.yaml": {
+   "fuel": "CH4",
+   "cases": {
+    "premixed": {
+     "status": "accepted",
+     "wall_s": 1.1254928999987897,
+     "Su_m_s": 0.3966771740840924,
+     "nodes": 239
+    },
+    "burner": {
+     "status": "accepted",
+     "wall_s": 1.0554416999948444,
+     "mass_flux": 0.2226404513208454,
+     "wall_loss_W_m2": 80504.13311488912,
+     "radiation_W_m2": 0.0,
+     "energy_closure": 0.00027640534606696493,
+     "nodes": 215
+    },
+    "premixed_radiation": {
+     "status": "accepted",
+     "wall_s": 1.094618500006618,
+     "Su_m_s": 0.3960648567003882,
+     "nodes": 265
+    },
+    "burner_radiation": {
+     "status": "accepted",
+     "wall_s": 2.270594899993739,
+     "mass_flux": 0.2226404513208454,
+     "wall_loss_W_m2": 79637.69117091075,
+     "radiation_W_m2": 137158.6122701777,
+     "energy_closure": 0.01592569799803348,
+     "nodes": 241
+    },
+    "premixed_multicomponent": {
+     "status": "accepted",
+     "wall_s": 0.7495627000025706,
+     "Su_m_s": 0.40207380236712326,
+     "nodes": 225
+    },
+    "counterflow": {
+     "status": "accepted",
+     "wall_s": 1.8129642999992939,
+     "Tmax_K": 2050.05611925604,
+     "nodes": 1183
+    },
+    "counterflow_radiation": {
+     "status": "accepted",
+     "wall_s": 1.1079491999989841,
+     "Tmax_K": 2020.470109752207,
+     "nodes": 1168
+    },
+    "counterflow_multicomponent": {
+     "status": "accepted",
+     "wall_s": 1.9606892000010703,
+     "Tmax_K": 2034.827073644328,
+     "nodes": 1197
+    },
+    "fgm_premixed": {
+     "status": "accepted",
+     "wall_s": 4.078343800007133,
+     "flamelets": 15,
+     "bridges": 12
+    },
+    "fgm_burner": {
+     "status": "accepted",
+     "wall_s": 1.3223982000054093,
+     "burners": 2
+    },
+    "fgm_nonadiabatic": {
+     "status": "accepted",
+     "wall_s": 4.6542663000000175,
+     "table": "fgm_nonadiabatic"
+    },
+    "fgm_diffusion": {
+     "status": "accepted",
+     "wall_s": 2.160653500002809,
+     "flamelets": 3
+    },
+    "fgm_diffusion_heat_loss": {
+     "status": "accepted",
+     "wall_s": 3.0914664000010816,
+     "flamelets": 4
+    }
+   }
+  },
+  "drm22.yaml": {
+   "fuel": "CH4",
+   "cases": {
+    "premixed": {
+     "status": "accepted",
+     "wall_s": 0.8927825999999186,
+     "Su_m_s": 0.3995922520848608,
+     "nodes": 247
+    },
+    "burner": {
+     "status": "accepted",
+     "wall_s": 1.0150717000069562,
+     "mass_flux": 0.2242765784391379,
+     "wall_loss_W_m2": 81202.68934265443,
+     "radiation_W_m2": 0.0,
+     "energy_closure": 0.0002585538677283619,
+     "nodes": 223
+    },
+    "premixed_radiation": {
+     "status": "accepted",
+     "wall_s": 1.0710876000084681,
+     "Su_m_s": 0.3989817750245523,
+     "nodes": 273
+    },
+    "burner_radiation": {
+     "status": "accepted",
+     "wall_s": 2.2214743999938946,
+     "mass_flux": 0.2242765784391379,
+     "wall_loss_W_m2": 80344.92289891203,
+     "radiation_W_m2": 137427.77050657876,
+     "energy_closure": 0.015925483225532864,
+     "nodes": 251
+    },
+    "premixed_multicomponent": {
+     "status": "accepted",
+     "wall_s": 0.889389799995115,
+     "Su_m_s": 0.4035110927205115,
+     "nodes": 234
+    },
+    "counterflow": {
+     "status": "accepted",
+     "wall_s": 1.2595965999935288,
+     "Tmax_K": 2052.2943816514976,
+     "nodes": 1196
+    },
+    "counterflow_radiation": {
+     "status": "accepted",
+     "wall_s": 1.2276781999971718,
+     "Tmax_K": 2022.37738573437,
+     "nodes": 1192
+    },
+    "counterflow_multicomponent": {
+     "status": "accepted",
+     "wall_s": 1.693069300003117,
+     "Tmax_K": 2038.3827249565595,
+     "nodes": 1217
+    },
+    "fgm_premixed": {
+     "status": "accepted",
+     "wall_s": 4.519151400003466,
+     "flamelets": 15,
+     "bridges": 12
+    },
+    "fgm_burner": {
+     "status": "accepted",
+     "wall_s": 1.2178218999906676,
+     "burners": 2
+    },
+    "fgm_nonadiabatic": {
+     "status": "accepted",
+     "wall_s": 4.0139971999888076,
+     "table": "fgm_nonadiabatic"
+    },
+    "fgm_diffusion": {
+     "status": "accepted",
+     "wall_s": 2.4603024999960326,
+     "flamelets": 3
+    },
+    "fgm_diffusion_heat_loss": {
+     "status": "accepted",
+     "wall_s": 3.2043281000078423,
+     "flamelets": 4
+    }
+   }
+  },
+  "ffcm1.yaml": {
+   "fuel": "CH4",
+   "cases": {
+    "premixed": {
+     "status": "accepted",
+     "wall_s": 1.48194009999861,
+     "Su_m_s": 0.3404461051931782,
+     "nodes": 254
+    },
+    "burner": {
+     "status": "accepted",
+     "wall_s": 1.3791742000030354,
+     "mass_flux": 0.19108000021841293,
+     "wall_loss_W_m2": 68598.70804476853,
+     "radiation_W_m2": 0.0,
+     "energy_closure": 0.00034909401114703717,
+     "nodes": 231
+    },
+    "premixed_radiation": {
+     "status": "accepted",
+     "wall_s": 2.0232958999986295,
+     "Su_m_s": 0.3396726678899203,
+     "nodes": 281
+    },
+    "burner_radiation": {
+     "status": "accepted",
+     "wall_s": 4.213022899988573,
+     "mass_flux": 0.19108000021841293,
+     "wall_loss_W_m2": 67547.6772544976,
+     "radiation_W_m2": 134649.15072971556,
+     "energy_closure": 0.016207451337605705,
+     "nodes": 264
+    },
+    "premixed_multicomponent": {
+     "status": "accepted",
+     "wall_s": 1.1252774000022328,
+     "Su_m_s": 0.3424476412389115,
+     "nodes": 244
+    },
+    "counterflow": {
+     "status": "accepted",
+     "wall_s": 2.1080837000044994,
+     "Tmax_K": 2021.5226484516015,
+     "nodes": 1297
+    },
+    "counterflow_radiation": {
+     "status": "accepted",
+     "wall_s": 1.5886532999866176,
+     "Tmax_K": 1994.123835459163,
+     "nodes": 1287
+    },
+    "counterflow_multicomponent": {
+     "status": "accepted",
+     "wall_s": 3.4503073999949265,
+     "Tmax_K": 2009.3936144480965,
+     "nodes": 1315
+    },
+    "fgm_premixed": {
+     "status": "accepted",
+     "wall_s": 6.616829500009771,
+     "flamelets": 15,
+     "bridges": 12
+    },
+    "fgm_burner": {
+     "status": "accepted",
+     "wall_s": 2.4150397000048542,
+     "burners": 2
+    },
+    "fgm_nonadiabatic": {
+     "status": "accepted",
+     "wall_s": 8.0489385999972,
+     "table": "fgm_nonadiabatic"
+    },
+    "fgm_diffusion": {
+     "status": "accepted",
+     "wall_s": 3.4530738000030397,
+     "flamelets": 3
+    },
+    "fgm_diffusion_heat_loss": {
+     "status": "accepted",
+     "wall_s": 4.972436200012453,
+     "flamelets": 4
+    }
+   }
+  },
+  "gri30.yaml": {
+   "fuel": "CH4",
+   "cases": {
+    "premixed": {
+     "status": "accepted",
+     "wall_s": 1.7186595999955898,
+     "Su_m_s": 0.37333950154894424,
+     "nodes": 264
+    },
+    "burner": {
+     "status": "accepted",
+     "wall_s": 2.693378299998585,
+     "mass_flux": 0.20954186565606148,
+     "wall_loss_W_m2": 72691.53978671267,
+     "radiation_W_m2": 0.0,
+     "energy_closure": 0.00028255983604640137,
+     "nodes": 234
+    },
+    "premixed_radiation": {
+     "status": "accepted",
+     "wall_s": 2.138219199987361,
+     "Su_m_s": 0.37262270546617415,
+     "nodes": 277
+    },
+    "burner_radiation": {
+     "status": "accepted",
+     "wall_s": 7.2147598000010476,
+     "mass_flux": 0.20954186565606148,
+     "wall_loss_W_m2": 71727.81035025942,
+     "radiation_W_m2": 137992.10603240793,
+     "energy_closure": 0.016282903559196565,
+     "nodes": 272
+    },
+    "premixed_multicomponent": {
+     "status": "accepted",
+     "wall_s": 1.6463048000005074,
+     "Su_m_s": 0.37602838089893287,
+     "nodes": 254
+    },
+    "counterflow": {
+     "status": "accepted",
+     "wall_s": 2.1966810999874724,
+     "Tmax_K": 2050.1727415600935,
+     "nodes": 1322
+    },
+    "counterflow_radiation": {
+     "status": "accepted",
+     "wall_s": 2.126018599999952,
+     "Tmax_K": 2021.1078421488805,
+     "nodes": 1294
+    },
+    "counterflow_multicomponent": {
+     "status": "accepted",
+     "wall_s": 4.745379500003764,
+     "Tmax_K": 2037.7166764489386,
+     "nodes": 1333
+    },
+    "fgm_premixed": {
+     "status": "accepted",
+     "wall_s": 8.534834200007026,
+     "flamelets": 15,
+     "bridges": 12
+    },
+    "fgm_burner": {
+     "status": "accepted",
+     "wall_s": 3.1884285999985877,
+     "burners": 2
+    },
+    "fgm_nonadiabatic": {
+     "status": "accepted",
+     "wall_s": 9.212819799999124,
+     "table": "fgm_nonadiabatic"
+    },
+    "fgm_diffusion": {
+     "status": "accepted",
+     "wall_s": 4.926375399998506,
+     "flamelets": 3
+    },
+    "fgm_diffusion_heat_loss": {
+     "status": "accepted",
+     "wall_s": 6.592112800004543,
+     "flamelets": 4
+    }
+   }
+  }
+ },
+ "cases": [
+  "premixed",
+  "burner",
+  "premixed_radiation",
+  "burner_radiation",
+  "premixed_multicomponent",
+  "counterflow",
+  "counterflow_radiation",
+  "counterflow_multicomponent",
+  "fgm_premixed",
+  "fgm_burner",
+  "fgm_nonadiabatic",
+  "fgm_diffusion",
+  "fgm_diffusion_heat_loss"
+ ],
+ "labels": {
+  "premixed": "free",
+  "burner": "burner",
+  "premixed_radiation": "free + rad",
+  "burner_radiation": "burner + rad",
+  "premixed_multicomponent": "free MC+Soret",
+  "counterflow": "counterflow",
+  "counterflow_radiation": "CF + rad",
+  "counterflow_multicomponent": "CF MC+Soret",
+  "fgm_premixed": "FGM (Z,c)",
+  "fgm_burner": "FGM (c,h)",
+  "fgm_nonadiabatic": "FGM (Z,C,h)",
+  "fgm_diffusion": "diff. FGM (Z,C)",
+  "fgm_diffusion_heat_loss": "diff. FGM (Z,C,h)"
+ },
+ "machine": "AMD Ryzen 9 7845HX (12 cores), 32 GiB, Windows 11; high priority; warm Numba cache",
+ "note": "Wall time per case including the API overhead; each case solved once after a previous run (warm Numba cache). Default settings: convection auto (exponential, upwind with Soret)."
+}

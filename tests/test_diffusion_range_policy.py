@@ -36,10 +36,10 @@ def test_small_large_ranges_preserve_coarse_ownership(monkeypatch, name, nodes, 
     real_split = diffusion._split
     monkeypatch.setattr(diffusion.numba, 'get_num_threads', lambda: 4)
 
-    def coarse_split(function, count, *args, minimum=24):
+    def coarse_split(function, count, *args, minimum=24, threads=None):
         if function.__name__ == 'tiled_range':
             minimum = 4
-        return real_split(function, count, *args, minimum=minimum)
+        return real_split(function, count, *args, minimum=minimum, threads=threads)
 
     def cycle(x):
         props = problem.properties(problem.unpack(x))

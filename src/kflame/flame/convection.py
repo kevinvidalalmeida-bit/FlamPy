@@ -29,6 +29,47 @@ def upwind_fraction(peclet):
     return np.where(small, pe/6.0 - pe**3/360.0, 1.0/np.tanh(0.5*safe) - 2.0/safe)
 
 
+def upwind_fraction_slope(peclet):
+    """Pe * d(theta)/d(Pe) for theta = coth(Pe/2) - 2/Pe (|Pe|; series below 1e-3)."""
+    pe = np.abs(np.asarray(peclet, dtype=float))
+    small = pe < 1e-3
+    safe = np.where(small, 1.0, pe)
+    half = np.minimum(0.5*safe, 300.0)        # sinh overflow: the first term vanishes
+    derivative = -0.5/np.sinh(half)**2+2.0/safe**2
+    return np.where(small, pe/6.0-pe**3/120.0, safe*derivative)
+
+
+def exponential_slopes(u, rho, cp, lam_face, z):
+    """d(wm, wp)/d(ln Pe) of the thermal (and species) weights, shape (nodes, 2).
+
+    The Peclet number of node j is |rho_j u_j| cp_j dz_up / lambda_up, so a
+    Jacobian column of node j changes the weights by these slopes times
+    (du/u + drho/rho + dcp/cp); lambda is frozen as the face transport is.
+    Zero on boundary rows and on the outflow-adjacent node, whose derivative
+    is the fixed one-sided upwind one.
+    """
+    z = np.asarray(z, dtype=float)
+    n = len(z)
+    slopes = np.zeros((n, 2))
+    if n < 3:
+        return slopes
+    dzm, dzp, dz2 = z[1:-1]-z[:-2], z[2:]-z[1:-1], z[2:]-z[:-2]
+    hm, hp = dzp/(dzm*dz2), dzm/(dzp*dz2)
+    u_j = np.asarray(u, dtype=float)[1:-1]
+    forward = u_j > 0.0
+    upwind_cell = np.where(forward, dzm, dzp)
+    lam_face = np.asarray(lam_face, dtype=float)
+    lam = np.where(forward, lam_face[1:], lam_face[:-1])
+    peclet = (np.abs(np.asarray(rho, dtype=float)[1:-1]*u_j)*np.asarray(cp, dtype=float)[1:-1]
+              * upwind_cell/np.maximum(lam, 1e-300))
+    slope = upwind_fraction_slope(peclet)
+    slopes[1:-1, 0] = (np.where(forward, 1.0/dzm, 0.0)-hm)*slope
+    slopes[1:-1, 1] = (np.where(forward, 0.0, 1.0/dzp)-hp)*slope
+    if forward[-1]:
+        slopes[n-2] = 0.0
+    return slopes
+
+
 def _blend(theta, forward, hm, hp, dzm, dzp):
     wm = (1.0-theta)*hm + theta*np.where(forward, 1.0/dzm, 0.0)
     wp = (1.0-theta)*hp + theta*np.where(forward, 0.0, 1.0/dzp)

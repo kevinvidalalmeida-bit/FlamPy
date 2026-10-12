@@ -186,6 +186,10 @@ class NativeMulticomponentTransport:
             raise ValueError("Unknown transport linear solver")
         self.linear_solver = linear_solver
         self.use_compiled_faces = True
+        # None: complete Dixon--Lewis systems. A tail selects the pruned model
+        # of multicomponent_trace (no trace--trace collisions) for eval_faces.
+        self.trace_tail = None
+        self.last_majors = None
         stars, self._viscosity_fit, self._diffusion_fit = native_transport_fits(mech, self.base_transport)
         self._astar_poly, self._bstar_poly, self._cstar_poly = stars
         self._log_eps_pair = np.log(np.maximum(self.base_transport._eps_pair, 1.0e-300))
@@ -336,6 +340,15 @@ class NativeMulticomponentTransport:
             snapshot = self._temperature_snapshot
             if snapshot._matches_bindings(self._temperature_inputs(),
                                           self._temperature_snapshot_bindings):
+                if self.trace_tail is not None and snapshot.certified and self.linear_solver != "dense":
+                    from kflame.chemistry.multicomponent_trace import evaluate_faces_trace
+                    mw, log_eps, epsilon, zrot, frot, visc, diff, astar, bstar, cstar = snapshot._inputs
+                    rho, lam, wmix, multi, thermal, majors = evaluate_faces_trace(
+                        temperature, float(pressure), mass_fractions, cp_r, mw, self.inv_w, log_eps,
+                        epsilon, self.crot, zrot, frot, visc, diff, astar, bstar, cstar,
+                        float(self.trace_tail))
+                    self.last_majors = majors
+                    return rho, lam, wmix, multi, thermal
                 return snapshot.evaluate_faces(
                     temperature, float(pressure), mass_fractions, cp_r,
                     self.inv_w, self.crot, self.linear_solver == "dense",

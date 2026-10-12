@@ -77,7 +77,7 @@ def _dflux(df, face, col, k, v):
 def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                     flux, df, lam, invW, yin, energy, has_profile, fixed,
                     outlet_flux, threshold, active_columns, inlet_mass_flux,
-                    convection, conv_w, conv_wy, radiation):
+                    convection, conv_w, conv_wy, radiation, conv_slope):
     nodes, nv = x.shape
     ns = nv-2
     blocks = np.zeros((nodes, 3, nv, nv))
@@ -147,12 +147,18 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                 down = up-1
                 dzup = z[up]-z[down]
                 wm, wp, hm, hp = conv_w[j, 0], conv_w[j, 1], conv_w[j, 2], conv_w[j, 3]
+                # Peclet dependence of the exponential weights (own node only).
+                spe = 0.0
+                if convection != 0 and col == j and u != 0.0:
+                    spe = du/u+rr/rho[j]+cc/cp[j]
+                sm, sp = conv_slope[j, 0]*spe, conv_slope[j, 1]*spe
                 if convection == 0:
                     gradT = (x[up, 1]-x[down, 1])/dzup
                     dgradT = (_delta(up, col, v, 1)-_delta(down, col, v, 1))/dzup
                 else:
                     gradT = wp*(x[j+1, 1]-x[j, 1])+wm*(x[j, 1]-x[j-1, 1])
-                    dgradT = wp*(_delta(j+1, col, v, 1)-dt)+wm*(dt-_delta(j-1, col, v, 1))
+                    dgradT = (wp*(_delta(j+1, col, v, 1)-dt)+wm*(dt-_delta(j-1, col, v, 1))
+                              + sp*(x[j+1, 1]-x[j, 1])+sm*(x[j, 1]-x[j-1, 1]))
                 cond = -2*(lam[j]*(x[j+1, 1]-x[j, 1])/dzp
                            -lam[j-1]*(x[j, 1]-x[j-1, 1])/dzm)/dz2
                 dcond = -2*(lam[j]*(_delta(j+1, col, v, 1)-dt)/dzp
@@ -182,7 +188,8 @@ def assemble_blocks(x, z, rho, cp, omega, h, drho, dcp, domega, cp_molar,
                         dy = _delta(j, col, v, k+2)
                         ym, yp = conv_wy[k, j, 0], conv_wy[k, j, 1]
                         gradY = yp*(x[j+1, k+2]-x[j, k+2])+ym*(x[j, k+2]-x[j-1, k+2])
-                        dgradY = yp*(_delta(j+1, col, v, k+2)-dy)+ym*(dy-_delta(j-1, col, v, k+2))
+                        dgradY = (yp*(_delta(j+1, col, v, k+2)-dy)+ym*(dy-_delta(j-1, col, v, k+2))
+                                  + sp*(x[j+1, k+2]-x[j, k+2])+sm*(x[j, k+2]-x[j-1, k+2]))
                     diff = 2*(fp-fm)/dz2
                     ddiff = 2*(dfp-dfm)/dz2
                     blocks[j, side, k+2, v] = (-du*gradY-u*dgradY+(dw-ddiff)/rho[j]
@@ -210,12 +217,50 @@ def _radiation_of(problem):
     return radiation
 
 
+# Dense multicomponent blocks of AramcoMech (~6 GB on a premixed grid) do
+# not fit beside the solver; JetSurF keeps them (validated: same Su to 10
+# digits, 38 s). See docs/multicomponent-large-mechanisms.md.
+MIXTURE_PRECONDITIONER_MIN_SPECIES = 400
+
+
+def mixture_preconditioned(problem):
+    """Multicomponent transport of a very large mechanism (pruned model of
+    multicomponent_trace): its O(ns^2) composition coupling has no low-rank
+    form, so Newton uses GMRES preconditioned by the structured
+    mixture-averaged Jacobian instead of dense multicomponent blocks."""
+    backend = getattr(problem, 'backend', None)
+    multi = getattr(backend, 'multicomponent_transport', None)
+    setting = getattr(problem, 'mixture_preconditioner', 'auto')
+    if setting is False:
+        return False
+    large = setting is True or int(problem.n_species) >= MIXTURE_PRECONDITIONER_MIN_SPECIES
+    return (large and bool(getattr(backend, 'uses_multicomponent_flux', False)) and multi is not None
+            and getattr(multi, 'trace_tail', None) is not None
+            and getattr(problem, 'structured_jacobian', 'auto') is not False
+            and float(getattr(problem, 'jacobian_threshold', 0.0)) == 0.0)
+
+
 def build_analytic_blocks(x, problem, column_nodes=None):
     from kflame.flame.equations import (build_local_jacobian_cache, BlockTridiagJacobian,
                                        _profile_start, _profile_record, _outlet_species_flux_bc,
                                        _jacobian_backend)
     from kflame.chemistry.analytic import thermochemical_partials
     start = _profile_start(problem)
+    if column_nodes is None and mixture_preconditioned(problem):
+        from kflame.flame import premixed_structured
+        backend = problem.backend
+        # Mixture-averaged form of the faces: the exact derivative of the
+        # mixture residual, used as the factored preconditioner of GMRES on
+        # the complete multicomponent residual (kflame.flame.krylov).
+        backend.uses_multicomponent_flux = False
+        try:
+            cache = build_local_jacobian_cache(x, problem)
+            result = premixed_structured.build_structured(x, problem, cache)
+        finally:
+            backend.uses_multicomponent_flux = True
+        result.approximate = True
+        _profile_record(problem, 'jacobian_build', start)
+        return result
     cache = build_local_jacobian_cache(x, problem)
     if column_nodes is None:
         from kflame.flame import premixed_structured
@@ -256,7 +301,8 @@ def build_analytic_blocks(x, problem, column_nodes=None):
         cache['Y_in'], cache['solve_energy'], cache['has_T_prof'], cache['j_fixed'],
         _outlet_species_flux_bc(problem), float(getattr(problem, 'jacobian_threshold', 0.0)), active,
         float(getattr(problem, 'inlet_mass_flux', -1.0)), int(cache['convection']), cache['conv_w'],
-        cache['conv_wy'], _radiation_of(problem))
+        cache['conv_wy'], _radiation_of(problem),
+        np.ascontiguousarray(cache.get('conv_slope', np.zeros((nodes, 2))), dtype=float))
     result = BlockTridiagJacobian(np.ascontiguousarray(blocks[1:, 0]),
         np.ascontiguousarray(blocks[:, 1]), np.ascontiguousarray(blocks[:-1, 2]))
     result.use_compiled_substitution = bool(getattr(problem, 'use_compiled_block_substitution', True))

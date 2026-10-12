@@ -19,8 +19,9 @@ def make(mechanism='jetsurf2.yaml'):
     for text in (fuel,'O2:1,N2:3.76'):
         y=_composition(text,mech.species_names)*mech.molecular_weights
         feeds.append(y/y.sum())
+    # The face bank belongs to the complete Dixon--Lewis kernel.
     p=diffusion.DiffusionFlameProblem(diffusion.DiffusionCase(path,*feeds,
-         transport_model='multicomponent',soret_enabled=True),mech,np.linspace(0.,.02,9))
+         transport_model='multicomponent',soret_enabled=True,multicomponent_trace_tail=None),mech,np.linspace(0.,.02,9))
     fields=p.initial_fields()
     fields['T'][:]=np.linspace(600.,2300.,9)
     y=np.arange(1.,p.ns+1.);y/=y.sum()

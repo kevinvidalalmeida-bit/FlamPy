@@ -22,6 +22,21 @@
 - **Contaminantes**: [CO, NO y NO₂ con GRI-Mech 3.0](docs/pollutants.md) en perfiles y en FGM.
 - **Llamas no adiabáticas y pérdidas hacia el quemador**: FGM `(Z,C,h)` validado
   ([modelo](docs/nonadiabatic-fgm.md), [pérdidas](docs/heat-loss.md)).
+- **Todas las variantes con H₂-O₂, DRM19, DRM22, FFCM-1 y GRI-Mech 3.0**,
+  validadas en una matriz de 13 variantes por mecanismo
+  ([estado por mecanismo](docs/estado-mecanismos.md),
+  [`validate_variants.py`](examples/validate_variants.py)):
+  - premezclada libre y de quemador, con radiación y con multicomponente + Soret;
+  - contraflujo de mezcla, radiante y multicomponente;
+  - los cinco generadores FGM.
+- **Esquema convectivo exponencial por defecto** en premezcladas (`convection='auto'`).
+  Con la misma malla, Su queda dentro del 0,2 % del valor convergido,
+  frente al −4,6 % de upwind con H₂ pobre y al +1,5 % con CH₄/GRI. Con
+  Soret se usa upwind.
+- **Transporte multicomponente con mecanismos grandes**: desde 200 especies cada
+  cara omite las colisiones entre dos especies traza (fracciones molares que
+  suman ≤ 10⁻⁸), con Newton–Krylov y arranque de mezcla; JetSurF y Aramco en
+  premezcladas y contraflujo ([modelo y validación](docs/multicomponent-large-mechanisms.md)).
 - **Radiación en llamas premezcladas y de quemador** (`radiation=True`), con el
   mismo modelo que en contraflujo y el balance de energía cerrado con pérdida
   radiativa ([radiación](docs/heat-loss.md#radiación)).

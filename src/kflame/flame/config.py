@@ -24,6 +24,11 @@ class FlameCase:
     transport_model: str = "mixture-averaged"
     flux_gradient_basis: str = "molar"    # "molar" | "mass"
     soret_enabled: bool = False
+    # Multicomponent transport of large mechanisms: 'auto' omits collisions
+    # between two trace species (total mole fraction <= 1e-8) from 200
+    # species on; None keeps the complete Dixon--Lewis kernel. See
+    # kflame.chemistry.multicomponent_trace.
+    multicomponent_trace_tail: object = "auto"
     outlet_species_bc: str = "zero_gradient"  # "zero_gradient" | "cantera_flux"
 
     # Optically thin H2O/CO2 radiation (Cantera Flow1D model), off by default.

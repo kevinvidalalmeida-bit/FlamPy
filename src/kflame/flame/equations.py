@@ -9,7 +9,7 @@ from scipy import sparse
 from scipy.linalg import get_lapack_funcs, lu_solve
 from scipy.sparse.linalg import splu
 
-from kflame.flame.convection import exponential_weights
+from kflame.flame.convection import exponential_weights, exponential_slopes
 from kflame.flame.state import C_T, C_U, C_Y, build_transient_mask
 
 # Cache LAPACK dispatch outside the per-block factorization loop.
@@ -872,6 +872,10 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
     # Convective weights are frozen at the base state, like transport.
     convection, conv_w, conv_wy = _convection_weights(
         problem, u, rho, cp_n, lam_face, z, n_sp, cache_rho_diffusivity)
+    # The exponential weights follow the Peclet number of each node: their
+    # derivative enters the analytic Jacobian columns of that node.
+    conv_slope = (exponential_slopes(u, rho, cp_n, lam_face, z) if convection != 0
+                  else np.zeros((len(z), 2)))
 
     cache = {
         "n_pts": n_pts,
@@ -880,6 +884,7 @@ def build_local_jacobian_cache(x: np.ndarray, problem) -> dict:
         "convection": int(convection),
         "conv_w": conv_w,
         "conv_wy": conv_wy,
+        "conv_slope": conv_slope,
         "z": np.asarray(z, dtype=float),
         "W": W,
         "invW": invW,
@@ -2754,6 +2759,11 @@ def factorize(jmat) -> dict:
     from kflame.flame.premixed_structured import PremixedStructuredFactor, PremixedStructuredJacobian
     if isinstance(jmat, PremixedStructuredJacobian):
         out = PremixedStructuredFactor(jmat)
+        if getattr(jmat, "approximate", False):
+            # Mixture-form preconditioner of a multicomponent problem: Newton
+            # anchors GMRES on the complete residual (kflame.flame.krylov).
+            from kflame.flame.krylov import KrylovFactor
+            out = KrylovFactor(out)
         if problem is not None:
             _profile_record(problem, "linear_factorize", t_profile)
         return out

@@ -1077,8 +1077,8 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--curve",             type=float, default=0.08)
     p.add_argument("--prune",             type=float, default=0.003)
     p.add_argument("--max-grid-points",   type=int,   default=1600)
-    p.add_argument("--max-refine-passes", type=int,   default=6,
-                   help="Máximo de ciclos solve/refine por flamelet.")
+    p.add_argument("--max-refine-passes", type=int,   default=12,
+                   help="Máximo de ciclos solve/refine por flamelet (cada uno sólo si la malla cambia).")
     p.add_argument(
         "--require-grid-convergence",
         action=argparse.BooleanOptionalAction,

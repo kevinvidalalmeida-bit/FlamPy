@@ -7,6 +7,7 @@
 | Objetivo | Leer en este orden |
 |---|---|
 | Instalar y resolver la primera llama | [README](../README.md) → [Compatibilidad](compatibility.md) → [Ejemplos](../examples/README.md) |
+| Saber qué está validado y qué falta en cada mecanismo y variante | [Estado por mecanismo](estado-mecanismos.md) |
 | Elegir DRM, FFCM, USC, JetSurF o Aramco | [Mecanismos, instalación local y validación](mechanisms.md) |
 | Resolver llamas de difusión y premezcladas con JetSurF, Aramco 2.0 o Aramco 3.0 en minutos | [Jacobiano estructurado, Newton–Krylov y transporte vectorizado](hpc-large-mechanisms.md) → [Datos](assets/diffusion/hpc-large-mechanisms-2026-10-10.json) → [Benchmark](../examples/benchmark_diffusion_mechanisms.py) |
 | Entender el núcleo numérico | [Arquitectura](architecture.md) → [API](api.md) → [Archivos de salida](outputs.md) |
@@ -14,6 +15,7 @@
 | Validar CO, NO y NO₂ | [Contaminantes](pollutants.md) → [Script de validación](../examples/validate_diffusion_pollutants.py) |
 | Trabajar con quemador y FGM no adiabático | [Quemador](heat-loss.md) → [FGM no adiabático](nonadiabatic-fgm.md) → [Adaptación](adaptive-fgm.md) |
 | Entender el modelo reducido | [Transporte reducido y HPC](reduced-burner.md) → [Ejemplo](../examples/example_reduced_burner.py) |
+| Transporte multicomponente con JetSurF y Aramco | [Modelo sin colisiones traza–traza y Newton–Krylov](multicomponent-large-mechanisms.md) → [Validación](../examples/validate_multicomponent_trace.py) |
 | Optimizar transporte multicomponente y Soret | [Perfil, cambios y papers](hpc-multicomponent.md) → [Muestras y comparación exacta](assets/diffusion/hpc-multicomponent-2026-10-08.json) |
 | Comparar HPC entre DRM, FFCM, GRI, USC, JetSurF y Aramco | [Antes/después y decisión CPU/GPU](hpc-mechanisms.md) → [Datos y comprobaciones](assets/chemistry/hpc-mechanisms-2026-10-09.json) |
 | Ver el banco de transporte y su coste dentro de Newton | [Fuente final, tiempos y memoria](hpc-transport-bank.md) → [Datos completos](assets/chemistry/hpc-transport-bank-2026-10-09.json) |

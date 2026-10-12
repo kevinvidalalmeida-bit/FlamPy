@@ -550,8 +550,11 @@ def structured_blocks(problem, x, *, fixed_temperature=None, cached_properties=N
     from kflame.chemistry.analytic import prepare_species_partials, species_partials_range_into
     from kflame.flame.buffer_pool import pool_of
     from kflame.flame.diffusion import _split, heavy_threads
-    if problem.transport_model != 'mixture-averaged' or problem.backend.uses_multicomponent_flux:
+    multicomponent = problem.transport_model != 'mixture-averaged' or problem.backend.uses_multicomponent_flux
+    if multicomponent and getattr(problem, 'trace_tail', None) is None:
         raise ValueError('Structured Jacobian requires mixture-averaged transport')
+    # Pruned multicomponent model: mixture-form face derivatives around the
+    # multicomponent base fluxes, conductivity and viscosity (a preconditioner).
     data = problem._compiled_data()
     f = problem.unpack(x)
     T, Y = np.ascontiguousarray(f['T']), np.ascontiguousarray(f['Y'])

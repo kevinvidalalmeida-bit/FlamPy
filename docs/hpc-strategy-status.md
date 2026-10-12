@@ -1,5 +1,16 @@
 # Estado de las propuestas HPC de los agentes
 
+**Variantes hasta GRI-Mech 3.0, 12 de octubre:** [matriz de 13 variantes con 5 mecanismos, todas aceptadas](estado-mecanismos.md#variantes-hasta-gri-mech-30). Cambios adoptados:
+
+- continuaciones que cambian el caudal reiniciadas sobre 80 nodos de la semilla (familia no adiabática de GRI, 21 → 10 s);
+- FGM de quemador encadenado (FFCM-1, 25 → 3 s);
+- refinamiento automático por cierre de energía;
+- 12 pasadas de refinamiento.
+
+La escalera de Δt por debajo de 100 especies y el quemador radiante continuado se midieron y se descartaron.
+
+**Multicomponente con mecanismos grandes, 11 de octubre:** [Dixon–Lewis sin colisiones traza–traza y Newton–Krylov](multicomponent-large-mechanisms.md). El núcleo de cara pasa de O(n³) a O(m²t + t²m + m³), con m especies mayoritarias y t traza, y es 6–60× más rápido en Aramco 3.0. Se añaden el precondicionador de mezcla con GMRES (premezclada y contraflujo) y el arranque de mezcla.
+
 **Mecanismos grandes, 10 de octubre:** [Jacobiano estructurado, Newton–Krylov y transporte vectorizado](hpc-large-mechanisms.md): AramcoMech 3.0 completa pasa de no terminar a 115 s; JetSurF 3,6×; GRI 1,5×.
 
 **Jacobiano térmico, 10 de octubre:** [derivadas implícitas y tiempos inclusivos](hpc-thermal-jacobian.md), con validación contra Cantera y opción experimental desactivada.

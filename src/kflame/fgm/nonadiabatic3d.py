@@ -49,6 +49,9 @@ def _trajectory_samples(profile, weights, samples):
     span = float(progress[-1] - progress[0])
     if span <= 1e-10 or np.any(np.diff(progress) < -1e-6 * span):
         raise ValueError('Progress is degenerate or nonmonotone; revise species weights')
+    # Tolerated decreases are numerical noise: nondecreasing envelope (no-op
+    # for a monotone progress).
+    progress = np.maximum.accumulate(progress)
     keep = []
     for j, value in enumerate(progress):
         if keep and value <= progress[keep[-1]] + 1e-12 * span:

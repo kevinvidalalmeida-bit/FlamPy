@@ -179,3 +179,29 @@ def test_saved_generation_settings_without_convection_default_to_upwind():
     mech = g.load_mechanism(args.mech)
     record, _, _ = g.solve_flame_native(1.0, args, mech, g.make_solve_options(args), {'H2O': 1.0})
     assert record.solve_ok and record.final_accepted
+
+
+def test_exponential_weight_slopes_match_differences():
+    """d(weights)/d(ln Pe): series branch, regular branch and overflow-safe large Pe."""
+    from kflame.flame.convection import (exponential_slopes, exponential_weights, upwind_fraction,
+                                         upwind_fraction_slope)
+    pe = np.array([1e-5, 5e-4, 2e-3, .3, 2., 40., 900., 5000.])
+    # coth(Pe/2) - 2/Pe cancels terms of size 1/Pe near the series switch:
+    # a central difference needs a step well above that rounding.
+    h = 1e-4
+    fd = (upwind_fraction(pe*(1+h))-upwind_fraction(pe*(1-h)))/(2*h)
+    np.testing.assert_allclose(upwind_fraction_slope(pe), fd, rtol=2e-5, atol=1e-12)
+    h = 1e-6
+    rng = np.random.default_rng(3)
+    z = np.cumsum(rng.uniform(.5, 1.5, 12))*1e-4
+    u = np.r_[np.full(6, .4), np.full(6, -.3)]
+    rho, cp = rng.uniform(.3, 1.2, 12), rng.uniform(1100., 1500., 12)
+    lam = rng.uniform(.03, .12, 11)
+    slopes = exponential_slopes(u, rho, cp, lam, z)
+    # Perturbing u_j by a relative h changes ln Pe_j by h: dw = slope * h.
+    for j in range(1, 11):
+        up, down = u.copy(), u.copy()
+        up[j] *= 1+h
+        down[j] *= 1-h
+        dw = (exponential_weights(up, rho, cp, lam, z)[0][j, :2]-exponential_weights(down, rho, cp, lam, z)[0][j, :2])/(2*h)
+        np.testing.assert_allclose(slopes[j], dw, rtol=1e-5, atol=1e-9*np.abs(dw).max())

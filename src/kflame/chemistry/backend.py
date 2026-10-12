@@ -19,6 +19,7 @@ from kflame.chemistry.mechanism import MechanismData, load_mechanism, R_UNIV
 from kflame.chemistry.thermo import NativeThermo
 from kflame.chemistry.transport import NativeTransport, _species_columns
 from kflame.chemistry.multicomponent import NativeMulticomponentTransport
+from kflame.chemistry.multicomponent_trace import resolve_trace_tail
 from kflame.chemistry.kinetics import NativeKinetics, _mass_action_product
 from kflame.chemistry.pressure_rates import plog_rate, sri_falloff, troe_temperature_scale
 
@@ -252,6 +253,10 @@ class NativeSpeciesBackend:
                 mechanism_path=problem.case.mech,
                 base_transport=self.transport,
             )
+            self.multicomponent_transport.trace_tail = resolve_trace_tail(
+                getattr(problem, "multicomponent_trace_tail",
+                        getattr(problem.case, "multicomponent_trace_tail", "auto")),
+                int(mech_data.n_species))
         # Grid refinement rebuilds the backend; the reaction arrays depend only on
         # the mechanism, and NativeKinetics never mutates them after __init__.
         template = getattr(mech_data, "_native_kinetics_template", None)

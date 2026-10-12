@@ -20,7 +20,7 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
                           ratio=3., slope=.01, curve=.02, max_points=2400, max_time=600.,
                           initial_solution=None, refine=True, output=None, plots=False,
                           radiation=False, radiation_scale=1., boundary_emissivities=(0., 0.),
-                          refine_split=2):
+                          refine_split=2, multicomponent_trace='auto'):
     """Solve a native axisymmetric diffusion flame with two separate inflows.
 
     Streams are mole-basis strings/dictionaries. Both mass fluxes are positive
@@ -35,6 +35,13 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     is adiabatic. ``radiation_scale`` multiplies that loss to generate deeper
     enthalpy defects for tabulation (1 is the physical model), and
     ``boundary_emissivities`` are the (fuel, oxidizer) inlet emissivities.
+
+    ``multicomponent_trace`` (transport='multicomponent'): 'auto' omits, from
+    200 species on, collisions between two trace species whose mole fractions
+    add up to at most 1e-8 at a face, and solves with Newton--Krylov; a tail
+    value forces that model and None keeps the complete Dixon--Lewis kernel.
+    Multicomponent and Soret flames start from the accepted mixture-averaged
+    flame unless ``initial_solution`` is given.
 
     ``refine_split`` > 2 enables multi-point refinement: an interval whose
     worst refinement ratio is r is split into min(refine_split, ceil(r))
@@ -62,6 +69,9 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     if not isinstance(refine_split,int) or not 2<=refine_split<=8:
         raise ValueError('refine_split must be an integer in [2, 8]')
     mechanism=resolve_mechanism(str(mechanism));mech=load_mechanism(mechanism)
+    from kflame.api import _trace_metadata
+    from kflame.chemistry.multicomponent_trace import resolve_trace_tail
+    trace_tail=resolve_trace_tail(multicomponent_trace,mech.n_species) if transport=='multicomponent' else None
     fuel,oxidizer=_stream(fuel),_stream(oxidizer)
     feeds=[]
     for text in (fuel,oxidizer):
@@ -113,7 +123,7 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
     case=DiffusionCase(mechanism,*feeds,fuel_temperature,oxidizer_temperature,
                        fuel_mass_flux,oxidizer_mass_flux,pressure,width,transport,bool(soret),
                        radiation_enabled=bool(radiation),radiation_scale=float(radiation_scale),
-                       boundary_emissivities=emissivities)
+                       boundary_emissivities=emissivities,multicomponent_trace_tail=multicomponent_trace)
     source_root=Path(__file__).parent
     digest=hashlib.sha256()
     for source in sorted(source_root.rglob('*.py')):
@@ -154,7 +164,8 @@ def solve_diffusion_flame(*, mechanism='gri30.yaml', fuel='CH4', oxidizer='O2:1,
         fuel=fuel,oxidizer=oxidizer,fuel_Y=feeds[0].tolist(),oxidizer_Y=feeds[1].tolist(),
         fuel_temperature=fuel_temperature,oxidizer_temperature=oxidizer_temperature,pressure=pressure,
         fuel_mass_flux=fuel_mass_flux,oxidizer_mass_flux=oxidizer_mass_flux,width=width,
-        transport=transport,soret=bool(soret),radiation=bool(radiation),radiation_scale=float(radiation_scale),
+        transport=transport,soret=bool(soret),multicomponent_trace=_trace_metadata(trace_tail),
+        radiation=bool(radiation),radiation_scale=float(radiation_scale),
         boundary_emissivities=list(emissivities),refine=bool(refine),report=report,runtime_s=runtime,
         source_sha256=source_sha256,
         numerical_settings=dict(initial_points=len(z),ratio=ratio,slope=slope,curve=curve,

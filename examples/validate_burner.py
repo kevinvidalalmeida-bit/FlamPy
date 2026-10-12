@@ -58,6 +58,7 @@ def solve_matching_burner(metadata, mass_flux, *, finer=False):
         width=metadata['initial_width'], initial_points=24, max_time=240.,
         ratio=refinement['ratio'], slope=factor * refinement['slope'], curve=factor * refinement['curve'],
         prune=factor * refinement['prune'], max_points=refinement['max_points'],
+        convection=metadata.get('convection', 'upwind'),
         species=tuple(name for name in ('CH4', 'H2', 'O2', 'H2O', 'CO2', 'OH') if name in names))
 
 
@@ -83,7 +84,8 @@ def main():
             cases.append(result)
     if args.h2:
         print('Comparing H2-air with multicomponent transport and Soret', flush=True)
-        h2 = solve_burner_flame(mechanism='h2o2.yaml', fuel='H2', phi=.7, mass_flux=.08,
+        # Cantera's scheme, for a like-for-like comparison.
+        h2 = solve_burner_flame(mechanism='h2o2.yaml', fuel='H2', phi=.7, mass_flux=.08, convection='upwind',
                                transport='multicomponent', soret=True, initial_points=24,
                                max_time=240., species=('H2', 'O2', 'H2O', 'OH'))
         meta = json.loads((h2['output'] / 'metadata.json').read_text(encoding='utf-8'))
