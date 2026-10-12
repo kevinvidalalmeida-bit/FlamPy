@@ -16,6 +16,7 @@ from kflame.chemistry.initialization import _composition, oxygen_demand
 from kflame.chemistry.kinetics import NativeKinetics
 from kflame.chemistry.mechanism import load_mechanism, resolve_mechanism
 from kflame.chemistry.thermo import NativeThermo
+from kflame.fgm.common import post_flame_relaxation
 from kflame.fgm.search import build_hierarchy, locate_many
 
 
@@ -47,10 +48,10 @@ def bilger_coefficients(mech, fuel, oxidizer):
 def _trajectory_samples(profile, weights, samples):
     progress = weights @ profile['Y']
     span = float(progress[-1] - progress[0])
-    if span <= 1e-10 or np.any(np.diff(progress) < -1e-6 * span):
+    if span <= 1e-10 or post_flame_relaxation(progress / span) is None:
         raise ValueError('Progress is degenerate or nonmonotone; revise species weights')
-    # Tolerated decreases are numerical noise: nondecreasing envelope (no-op
-    # for a monotone progress).
+    # Tolerated decreases are numerical noise or the post-flame relaxation to
+    # equilibrium: nondecreasing envelope (no-op for a monotone progress).
     progress = np.maximum.accumulate(progress)
     keep = []
     for j, value in enumerate(progress):

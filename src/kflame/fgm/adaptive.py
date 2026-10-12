@@ -18,6 +18,7 @@ import numpy as np
 from kflame.fgm.common import (
     build_adaptive_c_grid,
     build_global_indicator,
+    post_flame_relaxation,
     validate_fgm_table,
 )
 from kflame.fgm.refine import _defects
@@ -74,15 +75,14 @@ def _check_progress_coordinate(record: native.FlameRecord) -> None:
     if not np.isfinite(record.beta).all() or abs(span) <= 1.0e-14:
         raise RuntimeError(f"Degenerate progress coordinate at phi={record.phi:g}.")
     raw_c = (record.beta - record.beta[0]) / span
-    # Sub-ppm post-flame overshoots of a higher-order convective scheme on the
-    # coarse outflow cells are accepted: tabulation monotonicizes c, and 1e-6
-    # stays three orders below the progress-grid resolution.
+    # Sub-ppm undershoots of a higher-order convective scheme are noise, and
+    # a post-flame relaxation towards equilibrium (high pressure) is physical:
+    # c is clipped to one there, so both are tabulated on the burnt end.
     tolerance = 1.0e-6
     if (
         not np.isfinite(raw_c).all()
         or raw_c.min() < -tolerance
-        or raw_c.max() > 1.0 + tolerance
-        or np.diff(raw_c).min() < -tolerance
+        or post_flame_relaxation(raw_c, tolerance) is None
     ):
         raise RuntimeError(f"Progress coordinate is not monotone and bounded at phi={record.phi:g}.")
 

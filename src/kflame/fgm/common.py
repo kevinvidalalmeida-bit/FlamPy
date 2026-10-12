@@ -156,6 +156,33 @@ def compute_progress_variable(
     return np.clip(c, 0.0, 1.0), beta, used
 
 
+# Largest post-flame relaxation of the progress variable (fraction of its span).
+POST_FLAME_RELAXATION = 1.0e-2
+
+
+def post_flame_relaxation(progress: np.ndarray, noise: float = 1.0e-6) -> float | None:
+    """Post-flame decrease of a normalized progress profile, or None if invalid.
+
+    progress is expressed in units of its span. It must be nondecreasing (to
+    ``noise``) up to its maximum. Past the maximum the burnt gas may relax
+    towards equilibrium: stoichiometric CH4/air at 20 atm (GRI-Mech 3.0)
+    overshoots by 1.3 K, and CO2+H2O+CO+H2/2 then falls by 6.4e-4 of its span
+    to the end value. That relaxation is accepted up to POST_FLAME_RELAXATION
+    and never below the end value, so the tabulators place it on the burnt
+    end (clipped c, or the nondecreasing envelope).
+    """
+    progress = np.asarray(progress, dtype=float)
+    if progress.size < 2 or not np.isfinite(progress).all():
+        return None
+    peak = int(np.argmax(progress))
+    if peak and np.diff(progress[:peak + 1]).min() < -noise:
+        return None
+    relaxation = float(progress[peak] - progress[-1])
+    if relaxation > POST_FLAME_RELAXATION or progress[peak:].min() < progress[-1] - noise:
+        return None
+    return relaxation
+
+
 def monotonicize_on_c(
     c: np.ndarray,
     fields: dict[str, np.ndarray],

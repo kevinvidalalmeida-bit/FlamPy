@@ -13,6 +13,7 @@ from scipy.optimize import brentq
 from kflame.chemistry.kinetics import NativeKinetics
 from kflame.chemistry.mechanism import load_mechanism
 from kflame.chemistry.thermo import NativeThermo
+from kflame.fgm.common import post_flame_relaxation
 
 
 def tabulate_burner_family(results, mech, inlet_Y, weights, progress_points):
@@ -38,11 +39,12 @@ def tabulate_burner_family(results, mech, inlet_Y, weights, progress_points):
     table['valid'] = np.zeros(shape, dtype=bool)
     for row, result in enumerate(results):
         c = (weights @ result['Y'] - beta_u) / span
-        if np.any(np.diff(c) < -1e-6):
+        if post_flame_relaxation(c) is None:
             raise ValueError(f'Flamelet {row}: progress is nonmonotone; choose different weights')
-        # Decreases below that tolerance are numerical noise (e.g. trace
-        # undershoots of second-order convection near c = 0): use the
-        # nondecreasing envelope, identical to c when c is monotone.
+        # Accepted decreases are numerical noise (e.g. trace undershoots of
+        # second-order convection near c = 0) or the post-flame relaxation to
+        # equilibrium: use the nondecreasing envelope, identical to c when c
+        # is monotone (the burnt end state keeps the peak progress).
         c = np.maximum.accumulate(c)
         # Keep the last sample of repeated plateaus, including the burned state.
         keep = []

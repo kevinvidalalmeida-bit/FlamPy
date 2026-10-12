@@ -73,6 +73,13 @@ from kflame.flame.config import FlameCase
 from kflame.flame.solver import solve_free_flame, SolveOptions, _solve_flame_auto
 
 POLISH_TIME_BUDGET_S = 3.0  # a successful polish of a converged upwind flamelet takes ~0.3 s
+# A continuation from a neighbouring flamelet gets at most this multiple of
+# the source flamelet's solve time (and at least the floor); a failed or
+# stalled continuation is solved again from a cold start. Stoichiometric to
+# rich CH4/air at 20 atm: the phi=1.095 bridge from phi=1 stalled for 34 s
+# in pseudo-time with any predictor (copy or secant), and solves cold in 5 s.
+CONTINUATION_BUDGET_FACTOR = 2.0
+CONTINUATION_BUDGET_FLOOR_S = 3.0
 from kflame.flame.problem import FreeFlameProblem
 from kflame.flame.state import interpolate_state, pack_state, unpack_state
 from kflame.chemistry.mechanism import load_mechanism, resolve_mechanism as _resolve_mechanism
@@ -643,6 +650,11 @@ def solve_flame_native(
             continuation_jac_age = int(args.continuation_max_jac_age)
             if continuation_jac_age > 0:
                 run_opts.max_jac_age = continuation_jac_age
+            reference = float(np.asarray((prev_solution or {}).get("solve_time_s", np.nan)).ravel()[0])
+            if np.isfinite(reference) and reference > 0.0:
+                run_opts.max_total_time_s = min(
+                    float(run_opts.max_total_time_s),
+                    max(CONTINUATION_BUDGET_FLOOR_S, CONTINUATION_BUDGET_FACTOR * reference))
 
         # The local-defect rescue is a certified continuation corrector, not
         # an alternative cold-start globalization strategy. Restricting it
@@ -663,6 +675,24 @@ def solve_flame_native(
         continuation_state = None
         t0 = time.perf_counter()
         x_sol, solve_ok, report = solve_free_flame(problem, options=run_opts, x0=x0)
+        if x0 is not None and not bool(solve_ok):
+            # The continuation stalled or failed: this phi is solved afresh
+            # through the cold route, with the full time budget.
+            failed = dict(time_s=float(time.perf_counter() - t0), budget_s=float(run_opts.max_total_time_s),
+                          final_accepted=report.get("final_accepted"))
+            factory = problem.backend_factory
+            problem = FreeFlameProblem(flame_case, n_points=max(2, int(args.initial_grid_points)),
+                                       mech_data=mech_data)
+            problem.assume_finite_y = True
+            problem.backend_factory = factory
+            problem.backend = factory(problem)
+            problem.convection_code = 0
+            cold_opts = copy.copy(run_opts)
+            cold_opts.max_jac_age = int(opts.max_jac_age)
+            cold_opts.local_jacobian_refresh = False
+            cold_opts.max_total_time_s = float(opts.max_total_time_s)
+            x_sol, solve_ok, report = solve_free_flame(problem, options=cold_opts, x0=None)
+            report["continuation_fallback"] = failed
         report["max_jac_age_used"] = int(run_opts.max_jac_age)
         base_report = report
 
@@ -841,6 +871,7 @@ def solve_flame_native(
         "phi": np.array([float(phi)], dtype=float),
         "z": np.asarray(seed_state["z"], dtype=float).copy(),
         "x": np.asarray(seed_state["x"], dtype=float).copy(),
+        "solve_time_s": np.array([float(dt)], dtype=float),
     }
     continuation_trace = {
         "predictor_kind": predictor_kind,

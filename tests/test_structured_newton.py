@@ -219,6 +219,40 @@ def test_pivot_inverse_pivots_the_rows_of_the_block():
     np.testing.assert_allclose(G, np.linalg.inv(A), rtol=1e-9)
 
 
+@pytest.mark.parametrize('rdt', [0., 1e3, 1e12])
+def test_every_factorization_reports_the_sign_of_the_bordered_determinant(rdt, monkeypatch):
+    from scipy.sparse.linalg import splu
+    p = problem(points=13)
+    x = generic_state(p, 4)
+    p.compile_kernels(x)
+    blocks = S.structured_blocks(p, x)
+    dense = blocks.dense()
+    sign, _ = np.linalg.slogdet(dense.tocsc(rdt).toarray())
+    assert sign != 0
+    assert L.StructuredFactor(blocks, rdt).determinant_sign() == sign
+    assert D.BorderedFactor(dense, rdt).determinant_sign() == sign
+    assert D._lu_determinant_sign(splu(dense.tocsc(rdt))) == sign
+    monkeypatch.setattr(L, 'CHUNK_BYTES', 3*8*13*13)
+    assert L.StructuredFactor(S.structured_blocks(p, x, lazy=True), rdt).determinant_sign() == sign
+
+
+def test_pivot_inverse_returns_the_sign_of_its_determinant():
+    rng = np.random.default_rng(5)
+    ipiv = np.empty(12, dtype=L.F_INT_nptype)
+    for _ in range(20):
+        A = rng.standard_normal((12, 12))
+        G = A.copy()
+        assert L._invert_pivot(G, ipiv, np.empty((12, 0)), np.empty((0, 0))) == np.sign(np.linalg.det(A))
+    assert L._invert_pivot(np.zeros((12, 12)), ipiv, np.empty((12, 0)), np.empty((0, 0))) == 0
+
+
+def test_permutation_sign_counts_transpositions():
+    assert D._permutation_sign(np.arange(5)) == 1
+    assert D._permutation_sign(np.array([1, 0, 2, 3])) == -1
+    assert D._permutation_sign(np.array([1, 2, 0])) == 1
+    assert D._permutation_sign(np.array([3, 2, 1, 0])) == 1
+
+
 def test_buffer_pool_reuses_idle_buffers_and_bounds_idle_memory(monkeypatch):
     from kflame.flame import buffer_pool
     pool = buffer_pool.Pool()

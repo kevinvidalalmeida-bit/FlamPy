@@ -212,6 +212,19 @@ Los pesos se comprueban sobre las trayectorias calculadas. El defecto por
 exclusión dirige el refinamiento; no es una cota rigurosa del error en
 todos los estados ni sustituye la comprobación con llamas independientes.
 
+El progreso debe ser creciente hasta su máximo. Después del máximo se acepta
+una **relajación hacia el equilibrio** de hasta el 1 % del intervalo, siempre
+que no baje del valor final; se tabula en el extremo quemado (`c` = 1). Es
+física. Por ejemplo, la llama estequiométrica de CH₄/aire a 20 atm supera su
+equilibrio en 1,3 K y el progreso cae 6,4·10⁻⁴ hasta su valor final. Los
+tabuladores de quemador y no adiabáticos aplican la misma regla.
+
+Cada composición nueva parte de sus vecinas (continuación) con un tiempo
+máximo de max(3 s, 2× el tiempo de la llama de origen). Si no converge, se
+resuelve desde el arranque en frío. A 20 atm, el puente φ = 1,095 se atascaba
+34 s en pseudotiempo con cualquier predictor y fallaba la tabla; ahora la
+familia de 23 llamas se acepta en 51 s.
+
 `X`, `Y`, `diluent`, `dilution`, `grid`, `rtol` y `atol` pertenecen
 a `solve_flame`. Para diluir una familia FGM, incluye el diluyente en
 las corrientes `fuel` u `oxidizer`.

@@ -90,6 +90,40 @@ que `-1e-7`. La rama de llama debe alcanzar una temperatura al menos 100 K
 superior a ambas entradas; configuraciones de entrada muy calientes pueden
 necesitar otro criterio físico de identificación de combustión.
 
+Además, la llama debe estar en la **rama estable** de la curva en S. Entre las
+deformaciones de ignición y de extinción hay tres soluciones estacionarias:
+la llama encendida, la apagada y una rama intermedia inestable. Newton puede
+converger a cualquiera de ellas. Cada factorización registra el signo de su
+determinante a partir de los factores LU de cada pivote, sin coste adicional.
+El solver compara el signo de `det J` con el de `det(J + sM)` para `s` grande,
+con `M` la matriz de masa del pseudotransitorio. Ese determinante se anula en
+`s = λ` por cada modo real que crece con tasa `λ > 0`, así que un cambio de
+signo indica un número impar de modos inestables, como en la rama intermedia.
+
+El criterio no depende de la llama. La pendiente de Tmax frente a la
+deformación no sirve como alternativa: cambia de signo en la rama encendida
+cuando la llama pierde calor hacia las entradas (deformación baja) o por
+efectos de número de Lewis.
+
+`report['branch']` guarda los dos signos, y una llama inestable no se acepta.
+Un arranque en frío que queda apagado o inestable en su primera malla se
+repite automáticamente. El reintento usa una malla inicial que resuelve la
+capa de mezcla `√(2D/a)` con 16 intervalos (al menos cuatro veces más
+intervalos), y el siguiente duplica la malla. Si una malla que ya resuelve esa
+capa también queda apagada, la extinción se acepta como física. Con GRI-Mech
+3.0 y 10× los caudales por defecto ocurre lo siguiente:
+
+| Malla inicial | Resultado | Tmax |
+|---|---|---:|
+| 31 nodos | apagada | — |
+| 61 nodos | rama intermedia, inestable | 1628 K |
+| 121 nodos | encendida | 1917,0 K |
+
+La llama encendida coincide con la continuación desde una deformación menor.
+Ahora un arranque en frío acepta 10× y 15× los caudales en 5 s y declara
+apagada la de 20×. La comprobación cuesta una factorización adicional (0,15 s
+en GRI) y no cambia las llamas que ya convergían.
+
 Los valores predeterminados son `ratio=3`, `slope=.01`, `curve=.02`,
 `max_points=2400` y `max_time=600` s. La cota temporal corresponde a la fase de
 resolución y puede sobrepasarse durante una operación individual. Una malla

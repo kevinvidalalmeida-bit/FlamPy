@@ -331,9 +331,7 @@ class DiffusionFlameProblem:
         uf, uo = c.fuel_mass_flux/self.rhof, c.oxidizer_mass_flux/self.rhoo
         momentum_f, momentum_o = np.sqrt(c.fuel_mass_flux*uf),np.sqrt(c.oxidizer_mass_flux*uo)
         xstagnation = c.width*momentum_f/(momentum_f+momentum_o)
-        _, D, _, _ = self.backend.eval_faces(np.array([self.Teq]),self.Yeq[:,None])
-        diffusivity = float(np.mean(D[:,0]))
-        mixing = .5*erfc(np.sqrt(self.aref/(2.*diffusivity))*(z-xstagnation))
+        mixing = .5*erfc((z-xstagnation)/self.mixing_layer_thickness())
         rich = np.maximum((mixing-self.Zst)/(1.-self.Zst),0.)
         lean = np.minimum(mixing/self.Zst,1.)
         Y = np.where((mixing > self.Zst)[None,:],
@@ -348,6 +346,11 @@ class DiffusionFlameProblem:
         m[0],m[-1] = c.fuel_mass_flux,-c.oxidizer_mass_flux
         V = np.interp(z,[0.,xstagnation,c.width],[0.,self.aref,0.])
         return dict(T=T,Y=Y,m=m,V=V,Lambda=-self.lref)
+
+    def mixing_layer_thickness(self):
+        """sqrt(2 D/a) of the burnt equilibrium mixture at the nominal strain aref."""
+        _, D, _, _ = self.backend.eval_faces(np.array([self.Teq]),self.Yeq[:,None])
+        return float(np.sqrt(2.*float(np.mean(D[:,0]))/self.aref))
 
     def pack(self,fields):
         blocks = np.column_stack([fields['m']/self.mref,fields['V']/self.aref,
@@ -902,6 +905,13 @@ class BorderedFactor:
                 return self.sparse.solve(rhs)
         return out
 
+    def determinant_sign(self):
+        """Sign of the bordered determinant (pivot inverses keep the sign of their pivots)."""
+        if self.sparse is not None:
+            return _lu_determinant_sign(self.sparse)
+        signs,_=np.linalg.slogdet(self.inverse)
+        return int(np.prod(np.sign(signs)))*int(np.sign(self.schur))
+
     def _eliminate(self,rhs):
         n,nv=self.n,self.nv
         u=block_linear.twisted_solve(self.lower,self.upper,self.inverse,self.coupling,self.k,
@@ -911,6 +921,77 @@ class BorderedFactor:
         np.subtract(u,self.v*delta,out=out[:-1])
         out[-1]=delta
         return out
+
+
+def _permutation_sign(order):
+    """+1 for an even permutation, -1 for an odd one (cycle decomposition)."""
+    order=np.asarray(order);seen=np.zeros(len(order),dtype=bool);sign=1
+    for start in range(len(order)):
+        if seen[start]:
+            continue
+        length=0;j=start
+        while not seen[j]:
+            seen[j]=True;j=order[j];length+=1
+        if length%2==0:
+            sign=-sign
+    return sign
+
+
+def _lu_determinant_sign(lu):
+    """Sign of det A from SuperLU factors Pr A Pc = L U (unit lower L)."""
+    diagonal=lu.U.diagonal()
+    if not np.all(diagonal):
+        return 0
+    return (int(np.prod(np.sign(diagonal)))*_permutation_sign(lu.perm_r)
+            *_permutation_sign(lu.perm_c))
+
+
+# 1/dt [1/s] at which the pseudo-transient matrix J + M/dt is dominated by M.
+STABILITY_SHIFT=1e12
+
+
+def branch_stability(problem,x):
+    """Parity of the real unstable modes of a converged counterflow flame.
+
+    The pseudo-transient M dx/dt = -F(x) linearized about a steady state has
+    a real growth rate lambda > 0 exactly where det(J + s M) = 0 at s =
+    lambda. Comparing the sign of det J (s = 0) with det(J + s M) for large s
+    gives the parity of the real unstable modes: the burning and extinct
+    branches of the S-curve have none, and the middle branch, between the
+    extinction and ignition turning points, one. Unlike the slope of Tmax
+    against strain (which changes sign on the burning branch with heat loss
+    to the inlets or Lewis-number effects), the parity does not depend on
+    the flame. Each sign comes from the factorization: the LU of every pivot.
+
+    Returns dict(stable, steady_sign, transient_sign, time_s), or None when a
+    factorization fails (the flame is then not judged).
+    """
+    started=time.perf_counter()
+    model=None
+    try:
+        model=_LinearModel(problem,x,None)
+        steady=model.factor(0.).determinant_sign()
+        transient=model.factor(STABILITY_SHIFT).determinant_sign()
+    except (np.linalg.LinAlgError,RuntimeError,FloatingPointError,ValueError,ZeroDivisionError):
+        return None
+    finally:
+        model=None
+    if steady==0 or transient==0:
+        return None
+    return dict(stable=bool(steady==transient),steady_sign=int(steady),transient_sign=int(transient),
+                time_s=time.perf_counter()-started)
+
+
+# A cold start that ends extinct or on the unstable middle branch is solved
+# again on finer initial grids. The coarse grid's numerical diffusion can
+# quench a strained flame that burns on finer grids (GRI CH4/air at 10x the
+# default fluxes: 31 nodes extinct, 61 nodes middle branch at 1628 K, 121
+# nodes burning at 1917 K, as continuation gives). The first retry resolves
+# the mixing layer sqrt(2D/a) with this many intervals (at least four times
+# the previous count); later ones double the count. Extinction on a grid
+# that already resolves the mixing layer is accepted as physical.
+COLD_START_RETRIES=2
+MIXING_LAYER_INTERVALS=16
 
 
 def _use_structured(problem):
@@ -1334,7 +1415,10 @@ def _mixture_bootstrap(problem,max_time,ratio,slope,curve,max_points,refine):
     return dict(z=fields['z'],**{key:fields[key] for key in ('m','V','T','Y','Lambda')}),summary
 
 
-def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slope=.04,curve=.08,max_points=1600,refine=True):
+def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slope=.04,curve=.08,max_points=1600,refine=True,
+                            cold_retries=None):
+    entered=time.perf_counter()
+    retries=COLD_START_RETRIES if cold_retries is None else cold_retries
     bootstrap=None;bootstrap_time=0.
     if (initial is None and getattr(problem,'transport_bootstrap',True) and type(problem) is DiffusionFlameProblem
             and (problem.backend.uses_multicomponent_flux or problem.soret_enabled)):
@@ -1343,6 +1427,25 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
         if seed is not None:
             problem.set_grid(seed.pop('z'))
             initial=seed
+    cold_start=initial is None
+    cold_grid=problem.z.copy()
+
+    span=float(cold_grid[-1]-cold_grid[0])
+    resolved=int(np.ceil(MIXING_LAYER_INTERVALS*span/problem.mixing_layer_thickness()))
+    def retry_cold(history,burning,stability):
+        """Cold start again on a finer uniform initial grid."""
+        intervals=len(cold_grid)-1
+        nodes=(max(4*intervals,resolved) if intervals<resolved else 2*intervals)+1
+        problem.set_grid(np.linspace(cold_grid[0],cold_grid[-1],nodes))
+        attempt=dict(stage='cold_start_retry',nodes=int(len(cold_grid)),burning=bool(burning),branch=stability,
+                     runtime_s=time.perf_counter()-entered,next_initial_nodes=int(nodes))
+        fields,accepted,report=solve_diffusion_problem(problem,initial=None,
+            max_time=max_time-(time.perf_counter()-entered),ratio=ratio,slope=slope,curve=curve,
+            max_points=max_points,refine=refine,cold_retries=retries-1)
+        report['history']=list(history)+[attempt]+list(report['history'])
+        report['runtime_s']=time.perf_counter()-entered
+        return fields,accepted,report
+
     x = problem.pack(problem.initial_fields() if initial is None else initial)
     # JIT compilation (first use or changed sources) is not solver time.
     problem.compile_kernels(x)
@@ -1392,6 +1495,16 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
         if not ok:
             break
         fields=problem.unpack(x)
+        if (mesh_round==0 and cold_start and retries>0
+                and max_time-(time.perf_counter()-entered)>0.):
+            # The branch is decided by the cold start: judge it on this coarse
+            # grid, before refining an extinct or unstable state.
+            burning=bool(fields['T'].max()>max(problem.case.fuel_temperature,problem.case.oxidizer_temperature)+100.)
+            stability=branch_stability(problem,x) if burning else None
+            if ((not burning and len(cold_grid)-1<resolved)
+                    or (stability is not None and not stability['stable'])):
+                problem._linear_model=None;problem._buffer_pool=None
+                return retry_cold(history,burning,stability)
         if not refine:
             break
         profiles={'T':fields['T'],'m':fields['m'],'V':fields['V']}
@@ -1451,8 +1564,11 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
                   radial_enthalpy_export_density=radial)
     maximum=float(np.max(abs(problem.residual(x))))
     burning=bool(fields['T'].max()>max(problem.case.fuel_temperature,problem.case.oxidizer_temperature)+100.)
+    # Branch of the S-curve: a converged burning flame must be stable.
+    stability=branch_stability(problem,x) if ok and burning else None
+    problem._linear_model=None;problem._buffer_pool=None
     report=dict(converged=bool(ok),grid_converged=grid_converged,
-                grid_mode='adaptive' if refine else 'fixed',burning=burning,
+                grid_mode='adaptive' if refine else 'fixed',burning=burning,branch=stability,
                 maximum_scaled_residual=maximum,reason=reason,history=history,
                 stoichiometric_mixture_fraction=problem.Zst,
                 maximum_species_sum_error=float(np.max(abs(fields['Y'].sum(axis=0)-1.))),
@@ -1475,7 +1591,12 @@ def solve_diffusion_problem(problem, *, initial=None,max_time=180.,ratio=3.,slop
                     note='Continuity-compatible face mass flux and radial export; finite-grid estimate. '
                          'Relative defect normalized by mref*cpref*Tref, independent of the enthalpy zero.'),
                 runtime_s=time.perf_counter()-started)
-    accepted=bool(ok and (grid_converged or not refine) and burning and maximum<1e-7
+    stable=stability is None or stability['stable']
+    accepted=bool(ok and (grid_converged or not refine) and burning and stable and maximum<1e-7
                   and report['minimum_mass_fraction']>=-1e-7 and report['maximum_species_sum_error']<1e-7)
     report['accepted']=accepted
+    if (cold_start and ok and retries>0 and max_time-(time.perf_counter()-entered)>0.
+            and ((not burning and len(cold_grid)-1<resolved) or (burning and not stable))):
+        # Refinement moved the flame to another branch: cold start again.
+        return retry_cold([],burning,stability)
     return fields,accepted,report

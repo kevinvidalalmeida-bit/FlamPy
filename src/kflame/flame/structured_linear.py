@@ -68,7 +68,11 @@ def _transpose_inplace(A):
 
 @njit(cache=True, nogil=True)
 def _invert_pivot(Gi, ipiv, GPi, P):
-    """Gi <- Gi^-1 in place and GPi = Gi P; False if singular or non-finite.
+    """Gi <- Gi^-1 in place and GPi = Gi P; 0 if singular or non-finite.
+
+    Otherwise returns the sign (+1 or -1) of det(Gi) read from the LU factors
+    (pivot swaps and the diagonal of U); the product over all pivots is the
+    sign of the determinant of the block-tridiagonal matrix.
 
     LAPACK reads the C-ordered buffer as its Fortran transpose, so the block
     is transposed first: the LU then pivots over the rows of A itself, as
@@ -80,24 +84,30 @@ def _invert_pivot(Gi, ipiv, GPi, P):
     n = Gi.shape[0]
     _transpose_inplace(Gi)
     if _getrf(_KIND, n, n, Gi.ctypes, n, ipiv.ctypes) != 0:
-        return False
+        return 0
+    sign = 1
+    for a in range(n):
+        if Gi[a, a] < 0.:
+            sign = -sign
+        if ipiv[a] != a+1:
+            sign = -sign
     if _getri(_KIND, n, Gi.ctypes, n, ipiv.ctypes) != 0:
-        return False
+        return 0
     _transpose_inplace(Gi)
     for a in range(n):
         if not np.isfinite(Gi[a, a]):
-            return False
+            return 0
     if P.shape[0] == n:
         GPi[:, :] = np.dot(Gi, P)
         for a in range(n):
             for t in range(GPi.shape[1]):
                 if not np.isfinite(GPi[a, t]):
-                    return False
-    return True
+                    return 0
+    return sign
 
 
 @njit(cache=True, nogil=True)
-def structured_top(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy):
+def structured_top(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy, signs):
     """Top sweep; ``copy`` False means G is diag itself (in-place pivots)."""
     nv = diag.shape[1]
     ipiv = np.empty(nv, dtype=F_INT_nptype)
@@ -110,13 +120,14 @@ def structured_top(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy)
         if i > 0:
             _schur_subtract(S, G[i-1], GP[i-1], lowD[i-1], lowP[i-1], lowQ[i-1],
                             upD[i-1], upP[i-1], upQ[i-1])
-        if not _invert_pivot(S, ipiv, GP[i], upP[i]):
+        signs[i] = _invert_pivot(S, ipiv, GP[i], upP[i])
+        if signs[i] == 0:
             return False
     return True
 
 
 @njit(cache=True, nogil=True)
-def structured_bottom(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy):
+def structured_bottom(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy, signs):
     n, nv = diag.shape[0], diag.shape[1]
     ipiv = np.empty(nv, dtype=F_INT_nptype)
     for i in range(n-1, k, -1):
@@ -129,13 +140,14 @@ def structured_bottom(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, co
             # U_i G_{i+1} L_i with U_i = A[i,i+1] and L_i = A[i+1,i].
             _schur_subtract(S, G[i+1], GP[i+1], upD[i], upP[i], upQ[i],
                             lowD[i], lowP[i], lowQ[i])
-        if not _invert_pivot(S, ipiv, GP[i], lowP[i-1]):
+        signs[i] = _invert_pivot(S, ipiv, GP[i], lowP[i-1])
+        if signs[i] == 0:
             return False
     return True
 
 
 @njit(cache=True, nogil=True)
-def structured_middle(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy):
+def structured_middle(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, copy, signs):
     n, nv = diag.shape[0], diag.shape[1]
     ipiv = np.empty(nv, dtype=F_INT_nptype)
     S = G[k]
@@ -149,7 +161,8 @@ def structured_middle(diag, shift, lowD, lowP, lowQ, upD, upP, upQ, k, G, GP, co
     if k < n-1:
         _schur_subtract(S, G[k+1], GP[k+1], upD[k], upP[k], upQ[k],
                         lowD[k], lowP[k], lowQ[k])
-    return _invert_pivot(S, ipiv, GP[k], np.empty((0, 0)))
+    signs[k] = _invert_pivot(S, ipiv, GP[k], np.empty((0, 0)))
+    return signs[k] != 0
 
 
 @njit(cache=True)
@@ -256,7 +269,7 @@ def _store(S, out):
 
 
 @njit(cache=True, nogil=True)
-def chunk_top(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, prev):
+def chunk_top(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, signs, prev):
     """Top sweep over nodes [a, b); chunk[i-a] holds the assembled block of node i.
 
     Pivots are inverted in the chunk and copied to G (``STORAGE`` dtype).
@@ -271,7 +284,8 @@ def chunk_top(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, prev):
         if i > 0:
             Gp = prev if i == a else chunk[i-1-a]
             _schur_subtract(S, Gp, GP[i-1], lowD[i-1], lowP[i-1], lowQ[i-1], upD[i-1], upP[i-1], upQ[i-1])
-        if not _invert_pivot(S, ipiv, GP[i], upP[i]):
+        signs[i] = _invert_pivot(S, ipiv, GP[i], upP[i])
+        if signs[i] == 0:
             return False
         _store(S, G[i])
     prev[:, :] = chunk[b-1-a]
@@ -279,7 +293,7 @@ def chunk_top(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, prev):
 
 
 @njit(cache=True, nogil=True)
-def chunk_bottom(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, prev):
+def chunk_bottom(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, signs, prev):
     """Bottom sweep over nodes b-1 down to a; ``prev`` holds G_b on entry, G_a on exit."""
     n, nv = G.shape[0], chunk.shape[1]
     ipiv = np.empty(nv, dtype=F_INT_nptype)
@@ -290,7 +304,8 @@ def chunk_bottom(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, pre
         if i < n-1:
             Gn = prev if i == b-1 else chunk[i+1-a]
             _schur_subtract(S, Gn, GP[i+1], upD[i], upP[i], upQ[i], lowD[i], lowP[i], lowQ[i])
-        if not _invert_pivot(S, ipiv, GP[i], lowP[i-1]):
+        signs[i] = _invert_pivot(S, ipiv, GP[i], lowP[i-1])
+        if signs[i] == 0:
             return False
         _store(S, G[i])
     prev[:, :] = chunk[0]
@@ -298,7 +313,7 @@ def chunk_bottom(chunk, a, b, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, pre
 
 
 @njit(cache=True, nogil=True)
-def chunk_middle(chunk, k, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, top, bottom):
+def chunk_middle(chunk, k, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, signs, top, bottom):
     n, nv = G.shape[0], chunk.shape[1]
     ipiv = np.empty(nv, dtype=F_INT_nptype)
     S = chunk[0]
@@ -308,7 +323,8 @@ def chunk_middle(chunk, k, shift, lowD, lowP, lowQ, upD, upP, upQ, G, GP, top, b
         _schur_subtract(S, top, GP[k-1], lowD[k-1], lowP[k-1], lowQ[k-1], upD[k-1], upP[k-1], upQ[k-1])
     if k < n-1:
         _schur_subtract(S, bottom, GP[k+1], upD[k], upP[k], upQ[k], lowD[k], lowP[k], lowQ[k])
-    if not _invert_pivot(S, ipiv, GP[k], np.empty((0, 0))):
+    signs[k] = _invert_pivot(S, ipiv, GP[k], np.empty((0, 0)))
+    if signs[k] == 0:
         return False
     _store(S, G[k])
     return True
@@ -322,7 +338,7 @@ CHUNK_BYTES = 48*1024**2
 STORAGE = np.float64
 
 
-def factor_lazy(blocks, shift, pool):
+def factor_lazy(blocks, shift, pool, signs=None):
     """Fused assembly and two-ended factorization.
 
     Each sweep factors one chunk of freshly assembled diagonal blocks while a
@@ -336,8 +352,9 @@ def factor_lazy(blocks, shift, pool):
     shift = np.ascontiguousarray(shift, dtype=np.float64)
     G = pool.take((n, nv, nv), STORAGE) if pool is not None else np.empty((n, nv, nv), STORAGE)
     GP = np.empty((n, nv, blocks.lowP.shape[2]))
+    signs = np.zeros(n, np.int8) if signs is None else signs
     size = max(1, min(CHUNK_BYTES//(8*nv*nv), max(k, 1)))
-    common = (shift, blocks.lowD, blocks.lowP, blocks.lowQ, blocks.upD, blocks.upP, blocks.upQ, G, GP)
+    common = (shift, blocks.lowD, blocks.lowP, blocks.lowQ, blocks.upD, blocks.upP, blocks.upQ, G, GP, signs)
     workers = block_linear.pool()
 
     def take(count):
@@ -408,8 +425,11 @@ def parallel_solve(blocks, G, GP, k, rhs):
     return x.reshape(n*nv)
 
 
-def factor_structured(blocks, shift, threads=None, inplace=False, pool=None):
+def factor_structured(blocks, shift, threads=None, inplace=False, pool=None, signs=None):
     """Return (G, GP, k) for StructuredBlocks ``blocks`` with diagonal ``shift`` (n, nv).
+
+    ``signs`` (int8, n), when given, receives the determinant sign of each
+    pivot (see :func:`_invert_pivot`).
 
     ``inplace`` stores each pivot inverse over its own diagonal block (each
     block is copied into the Schur workspace before it is overwritten), so
@@ -424,8 +444,9 @@ def factor_structured(blocks, shift, threads=None, inplace=False, pool=None):
     else:
         G = pool.take((n, nv, nv)) if pool is not None else np.empty((n, nv, nv))
     GP = np.empty((n, nv, blocks.lowP.shape[2]))
+    signs = np.zeros(n, np.int8) if signs is None else signs
     arguments = (blocks.diag, np.ascontiguousarray(shift, dtype=np.float64), blocks.lowD, blocks.lowP,
-                 blocks.lowQ, blocks.upD, blocks.upP, blocks.upQ, k, G, GP, not inplace)
+                 blocks.lowQ, blocks.upD, blocks.upP, blocks.upQ, k, G, GP, not inplace, signs)
     threads = numba.get_num_threads() if threads is None else threads
     if n >= 8 and threads > 1:
         top = block_linear.pool().submit(structured_top, *arguments)
@@ -452,14 +473,15 @@ class StructuredFactor:
         self.n, self.nv, self.rdt = n, nv, rdt
         self.blocks = blocks
         self.fallback = None
+        self.signs = np.zeros(n, np.int8)
         if getattr(blocks, 'consumed', False):
             raise ValueError('structured blocks were consumed by an in-place factorization')
         try:
             if blocks.lazy:
-                self.G, self.GP, self.k = factor_lazy(blocks, rdt*blocks.mass.reshape(n, nv), pool)
+                self.G, self.GP, self.k = factor_lazy(blocks, rdt*blocks.mass.reshape(n, nv), pool, self.signs)
             else:
                 self.G, self.GP, self.k = factor_structured(blocks, rdt*blocks.mass.reshape(n, nv),
-                                                            inplace=inplace, pool=pool)
+                                                            inplace=inplace, pool=pool, signs=self.signs)
             column = np.zeros(n*nv)
             column[nv+1:(n-1)*nv:nv] = 1.
             self.v = self._solve(column)
@@ -481,6 +503,12 @@ class StructuredFactor:
 
     def _solve(self, rhs):
         return parallel_solve(self.blocks, self.G, self.GP, self.k, rhs)
+
+    def determinant_sign(self):
+        """Sign of det [[A, c], [r, 0]]: pivot signs times the Lambda Schur complement."""
+        if self.fallback is not None:
+            return self.fallback.determinant_sign()
+        return int(np.prod(self.signs, dtype=np.int64))*int(np.sign(self.schur))
 
     def solve(self, rhs):
         if self.fallback is not None:
